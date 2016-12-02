@@ -15,10 +15,10 @@ namespace CrowdSource.Models.CoreModels
         [Key]
         public int Id { get; set; }
 
-        [ForeignKey("GroupVersionForeignKey")]
-        public GroupVersion GroupVersion;
+        //[ForeignKey("GroupVersionForeignKey")]
+        public GroupVersion GroupVersion { get; set; }
 
-        [ForeignKey("SuggestionForeignKey")]
-        public Suggestion Suggestion;
+        //[ForeignKey("SuggestionForeignKey")]
+        public Suggestion Suggestion { get; set; }
     }
 }

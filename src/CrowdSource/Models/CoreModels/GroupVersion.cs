@@ -12,9 +12,17 @@ namespace CrowdSource.Models.CoreModels
         [Key]
         public int GroupVersionId { get; set; }
 
-        [ForeignKey("GroupForeignKey")]
+        [Required]
+        //[ForeignKey("GroupForeignKey")]
         public Group Group { get; set; }
 
+        //[ForeignKey("NextVersionForeignKey")]
         public GroupVersion NextVersion { get; set; }
+
+        public DataType Created { get; set; }
+
+        public List<GroupVersionRefersSuggestion> FieldSuggestions { get; set; }
+
+        public List<ApplicationUserEndorsesGroupVersion> UserReviews { get; set; }
     }
 }

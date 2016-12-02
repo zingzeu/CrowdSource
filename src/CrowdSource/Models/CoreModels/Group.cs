@@ -18,9 +18,9 @@ namespace CrowdSource.Models.CoreModels
         /// <summary>
         ///  属于哪个Collection
         /// </summary>
-        [ForeignKey("CollectionForeignKey")]
+        //[ForeignKey("CollectionForeignKey")]
         public Collection Collection { get; set; }
 
-        public List<Field> Fields;
+        public List<Field> Fields { get; set; }
     }
 }

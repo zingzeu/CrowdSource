@@ -4,13 +4,15 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using CrowdSource.Data;
+using System.ComponentModel.DataAnnotations;
 
-namespace CrowdSource.Data.Migrations
+namespace CrowdSource.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20161202150145_FirstModelMigration")]
+    partial class FirstModelMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.0-rtm-22752")
@@ -71,9 +73,17 @@ namespace CrowdSource.Data.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<int?>("GroupVersionId");
+
+                    b.Property<string>("UserId");
+
                     b.HasKey("Id");
 
-                    b.ToTable("AUEGVs");
+                    b.HasIndex("GroupVersionId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Reviews");
                 });
 
             modelBuilder.Entity("CrowdSource.Models.CoreModels.Collection", b =>
@@ -94,17 +104,18 @@ namespace CrowdSource.Data.Migrations
                     b.Property<int>("FieldId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("FieldMetadata");
+                    b.Property<string>("FieldMetadata")
+                        .IsRequired();
 
-                    b.Property<int?>("FieldTypeForeignKey");
+                    b.Property<int>("FieldTypeId");
 
-                    b.Property<int?>("GroupForeignKey");
+                    b.Property<int?>("GroupId");
 
                     b.HasKey("FieldId");
 
-                    b.HasIndex("FieldTypeForeignKey");
+                    b.HasIndex("FieldTypeId");
 
-                    b.HasIndex("GroupForeignKey");
+                    b.HasIndex("GroupId");
 
                     b.ToTable("Fields");
                 });
@@ -129,11 +140,11 @@ namespace CrowdSource.Data.Migrations
                     b.Property<int>("GroupId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int?>("CollectionForeignKey");
+                    b.Property<int?>("CollectionId");
 
                     b.HasKey("GroupId");
 
-                    b.HasIndex("CollectionForeignKey");
+                    b.HasIndex("CollectionId");
 
                     b.ToTable("Groups");
                 });
@@ -143,13 +154,15 @@ namespace CrowdSource.Data.Migrations
                     b.Property<int>("GroupVersionId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int?>("GroupForeignKey");
+                    b.Property<int>("Created");
+
+                    b.Property<int>("GroupId");
 
                     b.Property<int?>("NextVersionGroupVersionId");
 
                     b.HasKey("GroupVersionId");
 
-                    b.HasIndex("GroupForeignKey");
+                    b.HasIndex("GroupId");
 
                     b.HasIndex("NextVersionGroupVersionId");
 
@@ -161,7 +174,15 @@ namespace CrowdSource.Data.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<int?>("GroupVersionId");
+
+                    b.Property<int?>("SuggestionId");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("GroupVersionId");
+
+                    b.HasIndex("SuggestionId");
 
                     b.ToTable("GVSuggestions");
                 });
@@ -171,7 +192,7 @@ namespace CrowdSource.Data.Migrations
                     b.Property<int>("SuggestionId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("ApplicationUserForeignKey");
+                    b.Property<string>("AuthorId");
 
                     b.Property<string>("Content")
                         .IsRequired();
@@ -182,7 +203,7 @@ namespace CrowdSource.Data.Migrations
 
                     b.HasKey("SuggestionId");
 
-                    b.HasIndex("ApplicationUserForeignKey");
+                    b.HasIndex("AuthorId");
 
                     b.HasIndex("FieldForeignKey");
 
@@ -296,40 +317,64 @@ namespace CrowdSource.Data.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
+            modelBuilder.Entity("CrowdSource.Models.CoreModels.ApplicationUserEndorsesGroupVersion", b =>
+                {
+                    b.HasOne("CrowdSource.Models.CoreModels.GroupVersion", "GroupVersion")
+                        .WithMany("UserReviews")
+                        .HasForeignKey("GroupVersionId");
+
+                    b.HasOne("CrowdSource.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+                });
+
             modelBuilder.Entity("CrowdSource.Models.CoreModels.Field", b =>
                 {
                     b.HasOne("CrowdSource.Models.CoreModels.FieldType", "FieldType")
                         .WithMany()
-                        .HasForeignKey("FieldTypeForeignKey");
+                        .HasForeignKey("FieldTypeId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("CrowdSource.Models.CoreModels.Group", "Group")
-                        .WithMany()
-                        .HasForeignKey("GroupForeignKey");
+                        .WithMany("Fields")
+                        .HasForeignKey("GroupId");
                 });
 
             modelBuilder.Entity("CrowdSource.Models.CoreModels.Group", b =>
                 {
                     b.HasOne("CrowdSource.Models.CoreModels.Collection", "Collection")
-                        .WithMany()
-                        .HasForeignKey("CollectionForeignKey");
+                        .WithMany("Groups")
+                        .HasForeignKey("CollectionId");
                 });
 
             modelBuilder.Entity("CrowdSource.Models.CoreModels.GroupVersion", b =>
                 {
                     b.HasOne("CrowdSource.Models.CoreModels.Group", "Group")
                         .WithMany()
-                        .HasForeignKey("GroupForeignKey");
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("CrowdSource.Models.CoreModels.GroupVersion", "NextVersion")
                         .WithMany()
                         .HasForeignKey("NextVersionGroupVersionId");
                 });
 
+            modelBuilder.Entity("CrowdSource.Models.CoreModels.GroupVersionRefersSuggestion", b =>
+                {
+                    b.HasOne("CrowdSource.Models.CoreModels.GroupVersion", "GroupVersion")
+                        .WithMany("FieldSuggestions")
+                        .HasForeignKey("GroupVersionId");
+
+                    b.HasOne("CrowdSource.Models.CoreModels.Suggestion", "Suggestion")
+                        .WithMany("GroupVersionsReferredTo")
+                        .HasForeignKey("SuggestionId");
+                });
+
             modelBuilder.Entity("CrowdSource.Models.CoreModels.Suggestion", b =>
                 {
                     b.HasOne("CrowdSource.Models.ApplicationUser", "Author")
                         .WithMany()
-                        .HasForeignKey("ApplicationUserForeignKey");
+                        .HasForeignKey("AuthorId");
 
                     b.HasOne("CrowdSource.Models.CoreModels.Field", "Field")
                         .WithMany()

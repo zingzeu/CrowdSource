@@ -20,6 +20,6 @@ namespace CrowdSource.Models.CoreModels
         [Required]
         public string Name { get; set; }
 
-        public List<Group> Groups;
+        public List<Group> Groups { get; set; }
     }
 }

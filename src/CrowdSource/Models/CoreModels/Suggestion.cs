@@ -18,9 +18,11 @@ namespace CrowdSource.Models.CoreModels
         [Required]
         public string Content { get; set; }
 
-        [ForeignKey("ApplicationUserForeignKey")]
+        //[ForeignKey("ApplicationUserForeignKey")]
         public ApplicationUser Author { get; set; }
 
         public DateTime Created { get; set; }
+
+        public List<GroupVersionRefersSuggestion> GroupVersionsReferredTo { get; set; }
     }
 }

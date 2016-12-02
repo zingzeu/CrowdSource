@@ -17,10 +17,11 @@ namespace CrowdSource.Models.CoreModels
         [Key]
         public int Id { get; set; }
 
-        [ForeignKey("ApplicationUserForeignKey")]
-        public ApplicationUser User;
+        //[ForeignKey("ApplicationUserForeignKey")]
+        
+        public ApplicationUser User { get; set; }
 
-        [ForeignKey("GroupVersionForeignKey")]
-        public GroupVersion GroupVersion;
+        //[ForeignKey("GroupVersionForeignKey")]
+        public GroupVersion GroupVersion { get; set; }
     }
 }

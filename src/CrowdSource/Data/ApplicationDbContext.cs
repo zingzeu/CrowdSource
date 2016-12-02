@@ -31,7 +31,6 @@ namespace CrowdSource.Data
         public DbSet<Suggestion> Suggestions { get; set; }
         public DbSet<GroupVersion> GroupVersions { get; set; }
         public DbSet<GroupVersionRefersSuggestion> GVSuggestions { get; set; }
-        public DbSet<ApplicationUserEndorsesGroupVersion> AUEGVs { get; set; }
-
+        public DbSet<ApplicationUserEndorsesGroupVersion> Reviews { get; set; }
     }
 }
