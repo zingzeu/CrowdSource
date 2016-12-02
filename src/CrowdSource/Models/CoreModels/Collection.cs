@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace CrowdSource.Models.CoreModels
 {
@@ -11,10 +12,12 @@ namespace CrowdSource.Models.CoreModels
     /// </summary>
     public class Collection
     {
+        [Key]
         public int CollectionId { get; set; }
         /// <summary>
         /// 名称
         /// </summary>
+        [Required]
         public string Name { get; set; }
 
         public List<Group> Groups;

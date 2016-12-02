@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CrowdSource.Models.CoreModels
 {
@@ -12,10 +14,10 @@ namespace CrowdSource.Models.CoreModels
     /// </summary>
     public class ApplicationUserEndorsesGroupVersion
     {
-        public int UserId;
+        [ForeignKey("ApplicationUserForeignKey")]
         public ApplicationUser User;
 
-        public int GroupVersionId;
+        [ForeignKey("GroupVersionForeignKey")]
         public GroupVersion GroupVersion;
     }
 }

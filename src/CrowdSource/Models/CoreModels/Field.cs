@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CrowdSource.Models.CoreModels
 {
@@ -10,14 +12,13 @@ namespace CrowdSource.Models.CoreModels
     /// </summary>
     public class Field
     {
+        [Key]
         public int FieldId { get; set; }
 
-        // FOREIGH KEY
-        public int GroupId { get; set; }
+        [ForeignKey("GroupForeignKey")]
         public Group Group { get; set; }
 
-        // FOREIGH KEY
-        public int FieldTypeId { get; set; }
+        [ForeignKey("FieldTypeForeignKey")]
         public FieldType FieldType { get; set; }
         /// <summary>
         /// 用于显示和还原这个字段的信息。如字典中的页码，对应的图片文件名等。

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CrowdSource.Models.CoreModels
 {
@@ -11,12 +13,14 @@ namespace CrowdSource.Models.CoreModels
     /// </summary>
     public class Group
     {
+        [Key]
         public int GroupId { get; set; }
         /// <summary>
         ///  属于哪个Collection
         /// </summary>
+        [ForeignKey("CollectionForeignKey")]
         public Collection Collection { get; set; }
 
-        public Dictionary<FieldType, Field> Fields;
+        public List<Field> Fields;
     }
 }

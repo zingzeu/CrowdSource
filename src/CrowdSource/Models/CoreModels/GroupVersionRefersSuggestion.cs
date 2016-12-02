@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -10,10 +11,10 @@ namespace CrowdSource.Models.CoreModels
     /// </summary>
     public class GroupVersionRefersSuggestion
     {
-        public int GroupVersionId;
+        [ForeignKey("GroupVersionForeignKey")]
         public GroupVersion GroupVersion;
 
-        public int SuggestionId;
+        [ForeignKey("SuggestionForeignKey")]
         public Suggestion Suggestion;
     }
 }
