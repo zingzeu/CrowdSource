@@ -16,6 +16,7 @@ namespace CrowdSource.Models.CoreModels
         public int FieldId { get; set; }
 
         //[ForeignKey("GroupForeignKey")]
+        [Required]
         public Group Group { get; set; }
 
         [Required]

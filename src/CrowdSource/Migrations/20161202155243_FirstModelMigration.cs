@@ -136,7 +136,8 @@ namespace CrowdSource.Migrations
                 {
                     GroupId = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    CollectionId = table.Column<int>(nullable: true)
+                    CollectionId = table.Column<int>(nullable: false),
+                    GroupMetadata = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -146,7 +147,7 @@ namespace CrowdSource.Migrations
                         column: x => x.CollectionId,
                         principalTable: "Collections",
                         principalColumn: "CollectionId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -202,7 +203,7 @@ namespace CrowdSource.Migrations
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     FieldMetadata = table.Column<string>(nullable: false),
                     FieldTypeId = table.Column<int>(nullable: false),
-                    GroupId = table.Column<int>(nullable: true)
+                    GroupId = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -218,7 +219,7 @@ namespace CrowdSource.Migrations
                         column: x => x.GroupId,
                         principalTable: "Groups",
                         principalColumn: "GroupId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(

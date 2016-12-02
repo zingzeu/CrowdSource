@@ -16,11 +16,14 @@ namespace CrowdSource.Models.CoreModels
         [Key]
         public int GroupId { get; set; }
         /// <summary>
-        ///  属于哪个Collection
+        ///  属于哪个 Collection
         /// </summary>
         //[ForeignKey("CollectionForeignKey")]
+        [Required]
         public Collection Collection { get; set; }
 
+        [Required]
+        public string GroupMetadata { get; set; }
         public List<Field> Fields { get; set; }
     }
 }

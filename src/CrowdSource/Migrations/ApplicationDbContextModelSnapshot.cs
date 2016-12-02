@@ -108,7 +108,7 @@ namespace CrowdSource.Migrations
 
                     b.Property<int>("FieldTypeId");
 
-                    b.Property<int?>("GroupId");
+                    b.Property<int>("GroupId");
 
                     b.HasKey("FieldId");
 
@@ -139,7 +139,10 @@ namespace CrowdSource.Migrations
                     b.Property<int>("GroupId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int?>("CollectionId");
+                    b.Property<int>("CollectionId");
+
+                    b.Property<string>("GroupMetadata")
+                        .IsRequired();
 
                     b.HasKey("GroupId");
 
@@ -336,14 +339,16 @@ namespace CrowdSource.Migrations
 
                     b.HasOne("CrowdSource.Models.CoreModels.Group", "Group")
                         .WithMany("Fields")
-                        .HasForeignKey("GroupId");
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("CrowdSource.Models.CoreModels.Group", b =>
                 {
                     b.HasOne("CrowdSource.Models.CoreModels.Collection", "Collection")
                         .WithMany("Groups")
-                        .HasForeignKey("CollectionId");
+                        .HasForeignKey("CollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("CrowdSource.Models.CoreModels.GroupVersion", b =>
