@@ -14,6 +14,9 @@ namespace CrowdSource.Models.CoreModels
     /// </summary>
     public class ApplicationUserEndorsesGroupVersion
     {
+        [Key]
+        public int Id { get; set; }
+
         [ForeignKey("ApplicationUserForeignKey")]
         public ApplicationUser User;
 

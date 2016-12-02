@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using CrowdSource.Models;
+using CrowdSource.Models.CoreModels;
 
 namespace CrowdSource.Data
 {
@@ -22,5 +23,15 @@ namespace CrowdSource.Data
             // For example, you can rename the ASP.NET Identity table names and more.
             // Add your customizations after calling base.OnModelCreating(builder);
         }
+
+        public DbSet<Collection> Collections { get; set; }
+        public DbSet<Group> Groups { get; set; }
+        public DbSet<FieldType> FieldTypes { get; set; }
+        public DbSet<Field> Fields { get; set; }
+        public DbSet<Suggestion> Suggestions { get; set; }
+        public DbSet<GroupVersion> GroupVersions { get; set; }
+        public DbSet<GroupVersionRefersSuggestion> GVSuggestions { get; set; }
+        public DbSet<ApplicationUserEndorsesGroupVersion> AUEGVs { get; set; }
+
     }
 }
