@@ -6,11 +6,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using WebApplication1.Models;
-using WebApplication1.Models.ManageViewModels;
-using WebApplication1.Services;
+using CrowdSource.Models;
+using CrowdSource.Models.ManageViewModels;
+using CrowdSource.Services;
 
-namespace WebApplication1.Controllers
+namespace CrowdSource.Controllers
 {
     [Authorize]
     public class ManageController : Controller

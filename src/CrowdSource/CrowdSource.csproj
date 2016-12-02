@@ -9,6 +9,9 @@
   <PropertyGroup Label="Configuration">
     <AssemblyName>CrowdSource</AssemblyName>
     <RootNamespace>CrowdSource</RootNamespace>
+    <Optimize>True</Optimize>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <WarningLevel>3</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
     <OutputType>Exe</OutputType>

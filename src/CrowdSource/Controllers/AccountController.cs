@@ -8,11 +8,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
-using WebApplication1.Models;
-using WebApplication1.Models.AccountViewModels;
-using WebApplication1.Services;
+using CrowdSource.Models;
+using CrowdSource.Models.AccountViewModels;
+using CrowdSource.Services;
 
-namespace WebApplication1.Controllers
+namespace CrowdSource.Controllers
 {
     [Authorize]
     public class AccountController : Controller

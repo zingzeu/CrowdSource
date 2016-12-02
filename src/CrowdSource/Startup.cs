@@ -9,11 +9,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using WebApplication1.Data;
-using WebApplication1.Models;
-using WebApplication1.Services;
+using CrowdSource.Data;
+using CrowdSource.Models;
+using CrowdSource.Services;
 
-namespace WebApplication1
+namespace CrowdSource
 {
     public class Startup
     {
@@ -27,7 +27,7 @@ namespace WebApplication1
             if (env.IsDevelopment())
             {
                 // For more details on using the user secret store see http://go.microsoft.com/fwlink/?LinkID=532709
-                builder.AddUserSecrets("aspnet-WebApplication1-840eb12a-4b2d-402c-ba20-082f6ad09a5a");
+                builder.AddUserSecrets("aspnet-CrowdSource-840eb12a-4b2d-402c-ba20-082f6ad09a5a");
             }
 
             builder.AddEnvironmentVariables();
