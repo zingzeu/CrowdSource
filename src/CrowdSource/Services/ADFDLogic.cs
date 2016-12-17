@@ -27,7 +27,7 @@ namespace CrowdSource.Services
                 .Where(i => i.GroupVersion.GroupVersionId == version.GroupVersionId)
                 .ToList();
 
-            Dictionary<FieldType, string> a = new Dictionary<FieldType, string>;
+            Dictionary<FieldType, string> a = new Dictionary<FieldType, string>();
             foreach (var item in list)
             {
                 var sug = context.Entry(item)
@@ -64,6 +64,11 @@ namespace CrowdSource.Services
         }
 
         public void ReviewGroup(Group group)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<Field> GetOriginalFields(Group group)
         {
             throw new NotImplementedException();
         }
