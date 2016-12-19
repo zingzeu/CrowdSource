@@ -20,22 +20,27 @@ namespace CrowdSource.Services
             
             throw new NotImplementedException();
         }
-
+        /// <summary>
+        /// 获取一个修订版本的所有字段。
+        /// </summary>
+        /// <param name="version"></param>
+        /// <returns></returns>
         public Dictionary<FieldType, string> GetVersionFields(GroupVersion version)
         {
-            List<GroupVersionRefersSuggestion> list = context.GVSuggestions
+            // Get All GVRefersSuggestions for a version
+            List<GroupVersionRefersSuggestion> references = context.GVSuggestions
                 .Where(i => i.GroupVersion.GroupVersionId == version.GroupVersionId)
                 .ToList();
 
-            Dictionary<FieldType, string> a = new Dictionary<FieldType, string>();
-            foreach (var item in list)
+            Dictionary<FieldType, string> fields = new Dictionary<FieldType, string>();
+            foreach (var item in references)
             {
-                var sug = context.Entry(item)
+                var suggestion = context.Entry(item)
                      .Reference(i => i.Suggestion).Query().Single();
-                var tt = context.Entry(sug).Reference(i => i.Field).Query().Single().FieldType;
-                a.Add(tt, sug.Content);
+                var type = context.Entry(suggestion).Reference(i => i.Field).Query().Single().FieldType;
+                fields.Add(type, suggestion.Content);
             }
-            return a;
+            return fields;
 
         }
         public Dictionary<FieldType, string> GetLastestVersion(Group group)
