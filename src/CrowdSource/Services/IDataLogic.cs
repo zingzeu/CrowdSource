@@ -8,7 +8,7 @@ namespace CrowdSource.Services
 {
     public interface IDataLogic
     {
-        IEnumerable<Field> GetOriginalFields(Group group);
+        IEnumerable<Field> GetOriginalFields(int groupId);
 
         Dictionary<FieldType, string> GetLastestVersion(Group group);
 
