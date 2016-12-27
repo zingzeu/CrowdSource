@@ -1,0 +1,37 @@
+﻿@{
+    ViewData["Title"] = "TEST";
+}
+
+@inject CrowdSource.Services.ITaskDispatcher taskDispatcher;
+
+
+<h2>To Do</h2>
+
+<table>
+    <tr>
+        <th>GroupId</th>
+        <th>Added</th>
+    </tr>
+    @foreach (var i in taskDispatcher.ListToDo()) {
+    <tr>
+        <td>@i.group.GroupId</td>
+        <td>@i.added.ToString()</td>
+    </tr>
+    }
+</table>
+
+
+<h2>Doing</h2>
+
+<table>
+    <tr>
+        <th>GroupId</th>
+        <th>Added</th>
+    </tr>
+    @foreach (var i in taskDispatcher.ListDoing()) {
+        <tr>
+            <td>@i.group.GroupId</td>
+            <td>@i.added.ToString()</td>
+        </tr>
+    }
+</table>

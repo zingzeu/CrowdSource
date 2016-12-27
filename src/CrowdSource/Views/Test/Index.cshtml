@@ -4,5 +4,9 @@
 
 @inject CrowdSource.Services.ITaskDispatcher taskDispatcher;
 
+@{
+    int t = taskDispatcher.GetNextToDo()?.GroupId ?? 0;
+}
+Task I Got:@t;
 
-Task I Got:@taskDispatcher.GetNextToDo()?.GroupId;
+<a asp-controller="Test" asp-action="SubmitToDo" asp-route-gid="@t">Submit</a>
