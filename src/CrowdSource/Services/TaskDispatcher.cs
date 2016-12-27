@@ -23,7 +23,7 @@ namespace CrowdSource.Services
         private HashSet<QueueMember> _setDoing = new HashSet<QueueMember>();
         private Queue<QueueMember> _queueToReview = new Queue<QueueMember>();
         private HashSet<QueueMember> _setReviewing = new HashSet<QueueMember>();
-        private readonly TimeSpan DoingTimeOut = new TimeSpan(0,15,0); // 15min
+        private readonly TimeSpan DoingTimeOut = new TimeSpan(0,0,20); // 15min
         private readonly TimeSpan ReviewTimeout = new TimeSpan(0, 5, 0); //5min
 
         // Lock for thread safety
@@ -72,13 +72,22 @@ namespace CrowdSource.Services
         {
             lock (_locker)
             {
+                var requeued = new List<QueueMember>();
                 foreach (var member in _setDoing)
                 {
-                    if ((member.added - DateTime.Now) > DoingTimeOut)
+                    if ((DateTime.Now - member.added) > DoingTimeOut)
                     {
-                        _setDoing.Remove(member);
+                        _logger.LogInformation($"Doing GroupID {member.group.GroupId}, Timeout: {DateTime.Now - member.added}");
+                        // _setDoing.Remove(member);
+                        requeued.Add(member);
+                        _logger.LogInformation($"Requeuing {member.group.GroupId}");
                         _queueToDo.Enqueue(new QueueMember(member.group));
                     }
+                }
+
+                foreach (var i in requeued)
+                {
+                    _setDoing.Remove(i);
                 }
             }
         }
@@ -89,7 +98,7 @@ namespace CrowdSource.Services
             {
                 foreach (var member in _setReviewing)
                 {
-                    if ((member.added - DateTime.Now) > ReviewTimeout)
+                    if ((DateTime.Now - member.added) > ReviewTimeout)
                     {
                         _setReviewing.Remove(member);
                         _queueToReview.Enqueue(new QueueMember(member.group));
@@ -129,14 +138,24 @@ namespace CrowdSource.Services
             }
         }
 
-
+        private Timer aTimer;
         private void ScheduleTimers()
         {
-            var aTimer = new Timer(a => {
+            aTimer = new Timer(a => {
                 _logger.LogInformation("Timer");
                 CleanUpDoing();
                 CleanUpReviewing();
             },null,0,10000);
+        }
+
+        public IEnumerable<QueueMember> ListToDo()
+        {
+            return _queueToDo.OrderBy(t => t.added);
+        }
+
+        public IEnumerable<QueueMember> ListDoing()
+        {
+            return _setDoing.ToList().OrderBy(t => t.added);
         }
     }
 
@@ -155,8 +174,10 @@ namespace CrowdSource.Services
         /// <returns></returns>
         void Done(Group group);
         void DoneReview(Group group);
+        IEnumerable<QueueMember> ListToDo();
+        IEnumerable<QueueMember> ListDoing();
     }
-    class QueueMember
+    public class QueueMember
     {
         public Group group { get; set; }
         public DateTime added { get; set; }
