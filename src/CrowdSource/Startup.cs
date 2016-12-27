@@ -56,7 +56,7 @@ namespace CrowdSource
                 .AddDefaultTokenProviders();
 
             services.AddMvc();
-
+            services.AddSingleton<ITaskDispatcher, TaskDispatcher>();
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();
@@ -90,6 +90,7 @@ namespace CrowdSource
                 routes.MapRoute(
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
+
             });
         }
     }

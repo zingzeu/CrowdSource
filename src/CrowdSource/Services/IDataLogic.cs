@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CrowdSource.Models.CoreModels;
+using CrowdSource.Models;
 
 namespace CrowdSource.Services
 {
@@ -16,8 +17,7 @@ namespace CrowdSource.Services
 
         void GroupNewSuggestion(Group group, Dictionary<FieldType, string> fields);
 
-        void ReviewGroup(Group group);
-
+        void ReviewGroup(GroupVersion groupVesion, ApplicationUser user);
 
     }
 }

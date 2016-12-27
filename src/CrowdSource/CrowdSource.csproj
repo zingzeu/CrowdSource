@@ -21,6 +21,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <PackageTargetFallback>$(PackageTargetFallback);portable-net45+win8+wp8+wpa81;</PackageTargetFallback>
+    <UserSecretsId>9d79f19a-4428-4a17-aa2d-50605d9e795a</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="**\*.cs" Exclude="$(GlobalExclude)" />
