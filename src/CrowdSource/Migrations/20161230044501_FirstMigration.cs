@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace CrowdSource.Migrations
 {
-    public partial class FirstModelMigration : Migration
+    public partial class FirstMigration : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -39,7 +39,7 @@ namespace CrowdSource.Migrations
                 columns: table => new
                 {
                     CollectionId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     Name = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
@@ -52,7 +52,7 @@ namespace CrowdSource.Migrations
                 columns: table => new
                 {
                     FieldTypeId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     Description = table.Column<string>(nullable: true),
                     Name = table.Column<string>(nullable: false)
                 },
@@ -94,7 +94,7 @@ namespace CrowdSource.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     ClaimType = table.Column<string>(nullable: true),
                     ClaimValue = table.Column<string>(nullable: true),
                     UserId = table.Column<string>(nullable: false)
@@ -135,9 +135,9 @@ namespace CrowdSource.Migrations
                 columns: table => new
                 {
                     GroupId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     CollectionId = table.Column<int>(nullable: false),
-                    GroupMetadata = table.Column<string>(nullable: false)
+                    GroupMetadata = table.Column<string>(type: "jsonb", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -155,7 +155,7 @@ namespace CrowdSource.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     ClaimType = table.Column<string>(nullable: true),
                     ClaimValue = table.Column<string>(nullable: true),
                     RoleId = table.Column<string>(nullable: false)
@@ -200,7 +200,7 @@ namespace CrowdSource.Migrations
                 columns: table => new
                 {
                     FieldId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     FieldMetadata = table.Column<string>(nullable: false),
                     FieldTypeId = table.Column<int>(nullable: false),
                     GroupId = table.Column<int>(nullable: false)
@@ -227,7 +227,7 @@ namespace CrowdSource.Migrations
                 columns: table => new
                 {
                     GroupVersionId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     Created = table.Column<int>(nullable: false),
                     GroupId = table.Column<int>(nullable: false),
                     NextVersionGroupVersionId = table.Column<int>(nullable: true)
@@ -254,9 +254,9 @@ namespace CrowdSource.Migrations
                 columns: table => new
                 {
                     SuggestionId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     AuthorId = table.Column<string>(nullable: true),
-                    Content = table.Column<string>(nullable: false),
+                    Content = table.Column<string>(type: "jsonb", nullable: false),
                     Created = table.Column<DateTime>(nullable: false),
                     FieldForeignKey = table.Column<int>(nullable: true)
                 },
@@ -282,7 +282,7 @@ namespace CrowdSource.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     GroupVersionId = table.Column<int>(nullable: true),
                     UserId = table.Column<string>(nullable: true)
                 },
@@ -308,7 +308,7 @@ namespace CrowdSource.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     GroupVersionId = table.Column<int>(nullable: true),
                     SuggestionId = table.Column<int>(nullable: true)
                 },

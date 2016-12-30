@@ -14,8 +14,8 @@ namespace CrowdSource.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
             modelBuilder
-                .HasAnnotation("ProductVersion", "1.1.0-rtm-22752")
-                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+                .HasAnnotation("ProductVersion", "1.1.0-rtm-22752");
 
             modelBuilder.Entity("CrowdSource.Models.ApplicationUser", b =>
                 {
@@ -142,7 +142,8 @@ namespace CrowdSource.Migrations
                     b.Property<int>("CollectionId");
 
                     b.Property<string>("GroupMetadata")
-                        .IsRequired();
+                        .IsRequired()
+                        .HasAnnotation("Npgsql:ColumnType", "jsonb");
 
                     b.HasKey("GroupId");
 
@@ -197,7 +198,8 @@ namespace CrowdSource.Migrations
                     b.Property<string>("AuthorId");
 
                     b.Property<string>("Content")
-                        .IsRequired();
+                        .IsRequired()
+                        .HasAnnotation("Npgsql:ColumnType", "jsonb");
 
                     b.Property<DateTime>("Created");
 

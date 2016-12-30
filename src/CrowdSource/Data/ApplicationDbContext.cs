@@ -22,6 +22,15 @@ namespace CrowdSource.Data
             // Customize the ASP.NET Identity model and override the defaults if needed.
             // For example, you can rename the ASP.NET Identity table names and more.
             // Add your customizations after calling base.OnModelCreating(builder);
+
+            // Use JSONB data type in PostgreSQL
+            builder.Entity<Group>()
+            .Property(b => b.GroupMetadata)
+            .ForNpgsqlHasColumnType("jsonb");
+
+            builder.Entity<Suggestion>()
+            .Property(b => b.Content)
+            .ForNpgsqlHasColumnType("jsonb");
         }
 
         public DbSet<Collection> Collections { get; set; }
