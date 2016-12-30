@@ -15,8 +15,8 @@ namespace CrowdSource.Services
     public class TaskDispatcher : ITaskDispatcher
     {
         // ToDo -> Doing -> ToReview -> Reviewing -> Done
-        //                      ^                     |
-        //                      |                     |
+        //                      ^           |         |
+        //                      |           |         |
         //                      ----------------------- 
 
         private Queue<QueueMember> _queueToDo = new Queue<QueueMember>();
@@ -39,8 +39,10 @@ namespace CrowdSource.Services
 
             for (int i = 1; i<=100; ++i)
             {
-                var t = new Group();
-                t.GroupId = i;
+                var t = new Group()
+                {
+                    GroupId = i
+                };
                 _queueToDo.Enqueue(new QueueMember(t));
             }
 
@@ -89,6 +91,21 @@ namespace CrowdSource.Services
                 {
                     _setDoing.Remove(i);
                 }
+            }
+        }
+
+        public void RequeueToDo(Group group)
+        {
+            lock (_locker)
+            {
+                var member = _setDoing.Single(t => t.group.GroupId == group.GroupId);
+                if (member != null)
+                {
+                    _setDoing.Remove(member);
+                    _logger.LogInformation($"Manually Requeuing {member.group.GroupId}");
+                    _queueToDo.Enqueue(new QueueMember(member.group));
+                }
+
             }
         }
 
@@ -157,7 +174,22 @@ namespace CrowdSource.Services
         {
             return _setDoing.ToList().OrderBy(t => t.added);
         }
+
+        public void RequeueToReview(Group group)
+        {
+            lock (_locker)
+            {
+                var member = _setReviewing.Single(t => t.group.GroupId == group.GroupId);
+                if (member !=null)
+                {
+                    _setReviewing.Remove(member);
+                    _logger.LogInformation($"Manually Requeuing {member.group.GroupId}");
+                    _queueToReview.Enqueue(new QueueMember(member.group));
+                }
+            }
+        }
     }
+
 
     public interface ITaskDispatcher
     {
@@ -174,9 +206,21 @@ namespace CrowdSource.Services
         /// <returns></returns>
         void Done(Group group);
         void DoneReview(Group group);
+        /// <summary>
+        /// 手动重新加入到 ToDo 队列
+        /// </summary>
+        /// <param name="group"></param>
+        void RequeueToDo(Group group);
+        /// <summary>
+        /// 手动重新加入到 ToReview 队列
+        /// </summary>
+        /// <param name="group"></param>
+        void RequeueToReview(Group group);
+
         IEnumerable<QueueMember> ListToDo();
         IEnumerable<QueueMember> ListDoing();
     }
+
     public class QueueMember
     {
         public Group group { get; set; }
