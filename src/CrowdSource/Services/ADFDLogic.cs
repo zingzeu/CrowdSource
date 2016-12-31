@@ -95,7 +95,6 @@ namespace CrowdSource.Services
                     var latestVersion = context.GroupVersions
                         .Single(i => i.Group.GroupId == group.GroupId && i.NextVersion == null);
 
-
                     // for each field type
                     // check if the existing suggestion is the same
                     // add a new Suggestion if changed

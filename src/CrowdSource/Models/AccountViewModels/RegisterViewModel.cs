@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CrowdSource.Models.AccountViewModels
 {
-    public class RegisterViewModel
+    public class GroupViewModel
     {
         [Required]
         [EmailAddress]
