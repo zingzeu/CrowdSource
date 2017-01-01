@@ -16,13 +16,13 @@ namespace Tests
         public void TestBanJiao()
         {
 
-            Assert.Equal(new TextSanitizer().BanJiao("abc£¨£©£¬£»"), "abc(),;");
+            Assert.Equal(new TextSanitizer().BanJiao("abcï¼ˆï¼‰ï¼Œï¼›"), "abc(),;");
             // Unicode extended
-            Assert.Equal(new TextSanitizer().BanJiao("abc£¨£©??"), "abc()??");
+            Assert.Equal(new TextSanitizer().BanJiao("abcï¼ˆï¼‰ğª´¯ğ¢²«"), "abc()ğª´¯ğ¢²«");
             // BUC
-            Assert.Equal(new TextSanitizer().BanJiao("abc£¨£©??ng??ng¨¦??ng¨¦??k??ng¨º??ng??k"), "abc()??ng??ng¨¦??ng¨¦??k??ng¨º??ng??k");
-            // ÖĞÎÄ¾äºÅ²»»á±ä³É¾äµã
-            Assert.Equal(new TextSanitizer().BanJiao("¡£"), "¡£");
+            Assert.Equal(new TextSanitizer().BanJiao("abcï¼ˆï¼‰á¹³Ì†ngá¹³Ì„ngÃ©Ì¤á¹³ngÃ©Ì¤á¹³ká¹³Ì€ngÃªÌ¤á¹³ngá¹³Ì†k"), "abc()á¹³Ì†ngá¹³Ì„ngÃ©Ì¤á¹³ngÃ©Ì¤á¹³ká¹³Ì€ngÃªÌ¤á¹³ngá¹³Ì†k");
+            // ä¸­æ–‡å¥å·ä¸ä¼šå˜æˆå¥ç‚¹
+            Assert.Equal(new TextSanitizer().BanJiao("ã€‚"), "ã€‚");
 
         }
     }
