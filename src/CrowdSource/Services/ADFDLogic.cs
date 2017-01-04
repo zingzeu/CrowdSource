@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CrowdSource.Models.CoreModels;
 using CrowdSource.Models;
+using Newtonsoft.Json;
 
 namespace CrowdSource.Services
 {
@@ -152,6 +153,11 @@ namespace CrowdSource.Services
             context.SaveChanges();
         }
 
+        public Dictionary<string,string> GetGroupMetadata(int groupId)
+        {
+            var group = context.Groups.Single(g => g.GroupId == groupId);
+            return JsonConvert.DeserializeObject<Dictionary<string,string>>(group.GroupMetadata);
+        }
     }
 }
 

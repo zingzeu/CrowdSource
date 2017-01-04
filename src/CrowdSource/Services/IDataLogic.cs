@@ -19,5 +19,7 @@ namespace CrowdSource.Services
 
         void ReviewGroup(GroupVersion groupVesion, ApplicationUser user);
 
+        Dictionary<string,string> GetGroupMetadata(int groupId);
+
     }
 }
