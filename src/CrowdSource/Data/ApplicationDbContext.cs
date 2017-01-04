@@ -28,9 +28,6 @@ namespace CrowdSource.Data
             .Property(b => b.GroupMetadata)
             .ForNpgsqlHasColumnType("jsonb");
 
-            builder.Entity<Suggestion>()
-            .Property(b => b.Content)
-            .ForNpgsqlHasColumnType("jsonb");
         }
 
         public DbSet<Collection> Collections { get; set; }

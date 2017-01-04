@@ -13,5 +13,12 @@ namespace CrowdSource.Models.CoreModels
         [Required]
         public string Name { get; set; }
         public string Description { get; set; }
+        public FieldDataType DataType { get; set; }
+    }
+
+    public enum FieldDataType
+    {
+        StringType,
+        BooleanType
     }
 }
