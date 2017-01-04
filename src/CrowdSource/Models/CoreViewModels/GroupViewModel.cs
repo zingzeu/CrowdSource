@@ -23,8 +23,23 @@ namespace CrowdSource.Models.CoreViewModels
         /// </summary>
         public bool IsLiterary { get; set; }
 
+        /// <summary>
+        /// 是否是关键行
+        /// </summary>
         public bool IsPivotRow { get; set; }
+        /**
+         * IF IT IS A PIVOT ROW 
+         **/
 
+       
+        public string BoPoMoFo { get; set; }
+
+        public string Radical { get; set; }
+
+        /**
+         * END IF
+         **/
+        
         /// <summary>
         /// 异常标记
         /// If flagged, a group will be removed from the queue.
