@@ -10,7 +10,7 @@ using System.ComponentModel.DataAnnotations;
 namespace CrowdSource.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20170105165007_FirstMigration")]
+    [Migration("20170105174836_FirstMigration")]
     partial class FirstMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -127,6 +127,8 @@ namespace CrowdSource.Migrations
                         .ValueGeneratedOnAdd();
 
                     b.Property<int>("CollectionId");
+
+                    b.Property<int>("FlagType");
 
                     b.Property<string>("GroupMetadata")
                         .IsRequired()
