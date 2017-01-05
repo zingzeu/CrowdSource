@@ -27,6 +27,6 @@ namespace CrowdSource.Models.CoreModels
 
         public IEnumerable<GroupVersion> Versions;
 
-        public FlagEnum FlagType { get; set; }
+        public FlagEnum? FlagType { get; set; }
     }
 }

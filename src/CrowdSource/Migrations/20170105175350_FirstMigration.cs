@@ -166,7 +166,7 @@ namespace CrowdSource.Migrations
                     GroupId = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     CollectionId = table.Column<int>(nullable: false),
-                    FlagType = table.Column<int>(nullable: false),
+                    FlagType = table.Column<int>(nullable: true),
                     GroupMetadata = table.Column<string>(type: "jsonb", nullable: false)
                 },
                 constraints: table =>

@@ -127,7 +127,7 @@ namespace CrowdSource.Migrations
 
                     b.Property<int>("CollectionId");
 
-                    b.Property<int>("FlagType");
+                    b.Property<int?>("FlagType");
 
                     b.Property<string>("GroupMetadata")
                         .IsRequired()
