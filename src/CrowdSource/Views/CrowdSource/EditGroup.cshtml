@@ -1,15 +1,26 @@
-﻿@model GroupViewModel
-<h1>编辑</h1>
+﻿@*
+  录入View
+    同时录入  罗马字、汉字、英文
+*@
+@model GroupViewModel
+<h1>录入 / 编辑</h1>
 
 <form asp-controller="CrowdSource" asp-action="SubmitGroup" method="post" role="form">
     <div class="row" style="padding: 5px; background: yellow;">
         @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.GroupId })
     </div>
     <div class="row">
-        <h3>关键行</h3>
-        <input class="checkbox" asp-for="IsPivotRow" />
+        
+        
     </div>
-    
+    @*
+        提示行    
+    *@
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6"></div>
+    </div>
     <div class="row">
         <div class="col-md-3">
             <h3>罗马字</h3>
@@ -20,12 +31,28 @@
 
             <input class="form-control" asp-for="TextChinese" />
             <div class="row">
+                <h4>标志</h4>
                 <div class="col-sm-6"><img src="~/images/oral.png" height="20" />：<input class="checkbox-inline" asp-for="IsOral" /></div>
                 <div class="col-sm-6">
                     <img src="~/images/literary.png" height="20" />：<input class="checkbox-inline" asp-for="IsLiterary" />
                 </div>
             </div>
-            
+            <div class="row">
+                <h4>关键行</h4>
+                <div class="col-sm-12">
+                    <input class="checkbox-inline" asp-for="IsPivotRow" /> 这是关键行
+                </div>
+                
+                <div id="PivotRowSpecificFields" >
+                    <div class="col-sm-12">
+                        偏旁： <input class="form-control" asp-for="Radical" />
+                    </div>
+                    <div class="col-sm-12">
+                        国语注音： <input class="form-control" asp-for="BoPoMoFo" />
+                    </div>
+                </div>
+
+            </div>
             
         </div>
         <div class="col-md-6">
@@ -34,13 +61,25 @@
             <input class="form-control" asp-for="TextEnglish" />
         </div>
     </div>
-
+    @*
+      Helpers    
+    *@
+    <div class="row">
+        <div class="col-md-3"></div>
+        <div class="col-md-3"></div>
+        <div class="col-md-6"></div>
+    </div>
     <div class="row">
         <div class="col-md-8">
-            <button type="button" class="btn btn-danger">图片切割错误 / 空白</button>
+            <a asp-controller="CrowdSource"
+               asp-action="ReportError"
+               asp-route-GroupId="@Model.GroupId"
+               class="btn btn-danger">图片切割错误 / 空白</a>
         </div>
         <div class="col-md-4">
-            <button type="button" class="btn btn-warning">换一条</button>
+            <a asp-controller="CrowdSource"
+               asp-action="EditGroup"
+               class="btn btn-warning">换一条</a>
             <button type="submit" class="btn btn-primary btn-lg">提交 & 下一条</button>
         </div>
     </div>
