@@ -28,12 +28,14 @@ namespace CrowdSource.Data
             .Property(b => b.GroupMetadata)
             .ForNpgsqlHasColumnType("jsonb");
 
+            builder.Entity<GroupVersionRefersSuggestion>()
+                .HasKey(g => new { g.GroupVersionForeignKey, g.FieldTypeForeignKey });
+
         }
 
         public DbSet<Collection> Collections { get; set; }
         public DbSet<Group> Groups { get; set; }
         public DbSet<FieldType> FieldTypes { get; set; }
-        public DbSet<Field> Fields { get; set; }
         public DbSet<Suggestion> Suggestions { get; set; }
         public DbSet<GroupVersion> GroupVersions { get; set; }
         public DbSet<GroupVersionRefersSuggestion> GVSuggestions { get; set; }

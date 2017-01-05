@@ -4,12 +4,13 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using CrowdSource.Data;
+using CrowdSource.Models.CoreModels;
 using System.ComponentModel.DataAnnotations;
 
 namespace CrowdSource.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20161230044501_FirstMigration")]
+    [Migration("20170105165007_FirstMigration")]
     partial class FirstMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -99,31 +100,14 @@ namespace CrowdSource.Migrations
                     b.ToTable("Collections");
                 });
 
-            modelBuilder.Entity("CrowdSource.Models.CoreModels.Field", b =>
-                {
-                    b.Property<int>("FieldId")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("FieldMetadata")
-                        .IsRequired();
-
-                    b.Property<int>("FieldTypeId");
-
-                    b.Property<int>("GroupId");
-
-                    b.HasKey("FieldId");
-
-                    b.HasIndex("FieldTypeId");
-
-                    b.HasIndex("GroupId");
-
-                    b.ToTable("Fields");
-                });
-
             modelBuilder.Entity("CrowdSource.Models.CoreModels.FieldType", b =>
                 {
                     b.Property<int>("FieldTypeId")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<int?>("CollectionId");
+
+                    b.Property<int>("DataType");
 
                     b.Property<string>("Description");
 
@@ -131,6 +115,8 @@ namespace CrowdSource.Migrations
                         .IsRequired();
 
                     b.HasKey("FieldTypeId");
+
+                    b.HasIndex("CollectionId");
 
                     b.ToTable("FieldTypes");
                 });
@@ -175,16 +161,15 @@ namespace CrowdSource.Migrations
 
             modelBuilder.Entity("CrowdSource.Models.CoreModels.GroupVersionRefersSuggestion", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                    b.Property<int>("GroupVersionForeignKey");
 
-                    b.Property<int?>("GroupVersionId");
+                    b.Property<int>("FieldTypeForeignKey");
 
                     b.Property<int?>("SuggestionId");
 
-                    b.HasKey("Id");
+                    b.HasKey("GroupVersionForeignKey", "FieldTypeForeignKey");
 
-                    b.HasIndex("GroupVersionId");
+                    b.HasIndex("FieldTypeForeignKey");
 
                     b.HasIndex("SuggestionId");
 
@@ -199,18 +184,13 @@ namespace CrowdSource.Migrations
                     b.Property<string>("AuthorId");
 
                     b.Property<string>("Content")
-                        .IsRequired()
-                        .HasAnnotation("Npgsql:ColumnType", "jsonb");
+                        .IsRequired();
 
                     b.Property<DateTime>("Created");
-
-                    b.Property<int?>("FieldForeignKey");
 
                     b.HasKey("SuggestionId");
 
                     b.HasIndex("AuthorId");
-
-                    b.HasIndex("FieldForeignKey");
 
                     b.ToTable("Suggestions");
                 });
@@ -333,17 +313,11 @@ namespace CrowdSource.Migrations
                         .HasForeignKey("UserId");
                 });
 
-            modelBuilder.Entity("CrowdSource.Models.CoreModels.Field", b =>
+            modelBuilder.Entity("CrowdSource.Models.CoreModels.FieldType", b =>
                 {
-                    b.HasOne("CrowdSource.Models.CoreModels.FieldType", "FieldType")
-                        .WithMany()
-                        .HasForeignKey("FieldTypeId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("CrowdSource.Models.CoreModels.Group", "Group")
-                        .WithMany("Fields")
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                    b.HasOne("CrowdSource.Models.CoreModels.Collection", "Collection")
+                        .WithMany("FieldTypes")
+                        .HasForeignKey("CollectionId");
                 });
 
             modelBuilder.Entity("CrowdSource.Models.CoreModels.Group", b =>
@@ -368,9 +342,15 @@ namespace CrowdSource.Migrations
 
             modelBuilder.Entity("CrowdSource.Models.CoreModels.GroupVersionRefersSuggestion", b =>
                 {
+                    b.HasOne("CrowdSource.Models.CoreModels.FieldType", "FieldType")
+                        .WithMany()
+                        .HasForeignKey("FieldTypeForeignKey")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("CrowdSource.Models.CoreModels.GroupVersion", "GroupVersion")
                         .WithMany("FieldSuggestions")
-                        .HasForeignKey("GroupVersionId");
+                        .HasForeignKey("GroupVersionForeignKey")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("CrowdSource.Models.CoreModels.Suggestion", "Suggestion")
                         .WithMany("GroupVersionsReferredTo")
@@ -382,10 +362,6 @@ namespace CrowdSource.Migrations
                     b.HasOne("CrowdSource.Models.ApplicationUser", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId");
-
-                    b.HasOne("CrowdSource.Models.CoreModels.Field", "Field")
-                        .WithMany()
-                        .HasForeignKey("FieldForeignKey");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRoleClaim<string>", b =>

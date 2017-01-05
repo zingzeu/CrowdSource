@@ -48,20 +48,6 @@ namespace CrowdSource.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "FieldTypes",
-                columns: table => new
-                {
-                    FieldTypeId = table.Column<int>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    Description = table.Column<string>(nullable: true),
-                    Name = table.Column<string>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_FieldTypes", x => x.FieldTypeId);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
                 {
@@ -87,6 +73,27 @@ namespace CrowdSource.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUserTokens", x => new { x.UserId, x.LoginProvider, x.Name });
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Suggestions",
+                columns: table => new
+                {
+                    SuggestionId = table.Column<int>(nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    AuthorId = table.Column<string>(nullable: true),
+                    Content = table.Column<string>(nullable: false),
+                    Created = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Suggestions", x => x.SuggestionId);
+                    table.ForeignKey(
+                        name: "FK_Suggestions_AspNetUsers_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -128,6 +135,28 @@ namespace CrowdSource.Migrations
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "FieldTypes",
+                columns: table => new
+                {
+                    FieldTypeId = table.Column<int>(nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    CollectionId = table.Column<int>(nullable: true),
+                    DataType = table.Column<int>(nullable: false),
+                    Description = table.Column<string>(nullable: true),
+                    Name = table.Column<string>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FieldTypes", x => x.FieldTypeId);
+                    table.ForeignKey(
+                        name: "FK_FieldTypes_Collections_CollectionId",
+                        column: x => x.CollectionId,
+                        principalTable: "Collections",
+                        principalColumn: "CollectionId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -196,33 +225,6 @@ namespace CrowdSource.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Fields",
-                columns: table => new
-                {
-                    FieldId = table.Column<int>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    FieldMetadata = table.Column<string>(nullable: false),
-                    FieldTypeId = table.Column<int>(nullable: false),
-                    GroupId = table.Column<int>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Fields", x => x.FieldId);
-                    table.ForeignKey(
-                        name: "FK_Fields_FieldTypes_FieldTypeId",
-                        column: x => x.FieldTypeId,
-                        principalTable: "FieldTypes",
-                        principalColumn: "FieldTypeId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Fields_Groups_GroupId",
-                        column: x => x.GroupId,
-                        principalTable: "Groups",
-                        principalColumn: "GroupId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "GroupVersions",
                 columns: table => new
                 {
@@ -246,34 +248,6 @@ namespace CrowdSource.Migrations
                         column: x => x.NextVersionGroupVersionId,
                         principalTable: "GroupVersions",
                         principalColumn: "GroupVersionId",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Suggestions",
-                columns: table => new
-                {
-                    SuggestionId = table.Column<int>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    AuthorId = table.Column<string>(nullable: true),
-                    Content = table.Column<string>(type: "jsonb", nullable: false),
-                    Created = table.Column<DateTime>(nullable: false),
-                    FieldForeignKey = table.Column<int>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Suggestions", x => x.SuggestionId);
-                    table.ForeignKey(
-                        name: "FK_Suggestions_AspNetUsers_AuthorId",
-                        column: x => x.AuthorId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Suggestions_Fields_FieldForeignKey",
-                        column: x => x.FieldForeignKey,
-                        principalTable: "Fields",
-                        principalColumn: "FieldId",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -307,20 +281,25 @@ namespace CrowdSource.Migrations
                 name: "GVSuggestions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    GroupVersionId = table.Column<int>(nullable: true),
+                    GroupVersionForeignKey = table.Column<int>(nullable: false),
+                    FieldTypeForeignKey = table.Column<int>(nullable: false),
                     SuggestionId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_GVSuggestions", x => x.Id);
+                    table.PrimaryKey("PK_GVSuggestions", x => new { x.GroupVersionForeignKey, x.FieldTypeForeignKey });
                     table.ForeignKey(
-                        name: "FK_GVSuggestions_GroupVersions_GroupVersionId",
-                        column: x => x.GroupVersionId,
+                        name: "FK_GVSuggestions_FieldTypes_FieldTypeForeignKey",
+                        column: x => x.FieldTypeForeignKey,
+                        principalTable: "FieldTypes",
+                        principalColumn: "FieldTypeId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_GVSuggestions_GroupVersions_GroupVersionForeignKey",
+                        column: x => x.GroupVersionForeignKey,
                         principalTable: "GroupVersions",
                         principalColumn: "GroupVersionId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_GVSuggestions_Suggestions_SuggestionId",
                         column: x => x.SuggestionId,
@@ -351,14 +330,9 @@ namespace CrowdSource.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Fields_FieldTypeId",
-                table: "Fields",
-                column: "FieldTypeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Fields_GroupId",
-                table: "Fields",
-                column: "GroupId");
+                name: "IX_FieldTypes_CollectionId",
+                table: "FieldTypes",
+                column: "CollectionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Groups_CollectionId",
@@ -376,9 +350,9 @@ namespace CrowdSource.Migrations
                 column: "NextVersionGroupVersionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_GVSuggestions_GroupVersionId",
+                name: "IX_GVSuggestions_FieldTypeForeignKey",
                 table: "GVSuggestions",
-                column: "GroupVersionId");
+                column: "FieldTypeForeignKey");
 
             migrationBuilder.CreateIndex(
                 name: "IX_GVSuggestions_SuggestionId",
@@ -389,11 +363,6 @@ namespace CrowdSource.Migrations
                 name: "IX_Suggestions_AuthorId",
                 table: "Suggestions",
                 column: "AuthorId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Suggestions_FieldForeignKey",
-                table: "Suggestions",
-                column: "FieldForeignKey");
 
             migrationBuilder.CreateIndex(
                 name: "RoleNameIndex",
@@ -446,6 +415,9 @@ namespace CrowdSource.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "FieldTypes");
+
+            migrationBuilder.DropTable(
                 name: "GroupVersions");
 
             migrationBuilder.DropTable(
@@ -455,16 +427,10 @@ namespace CrowdSource.Migrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
-
-            migrationBuilder.DropTable(
-                name: "Fields");
-
-            migrationBuilder.DropTable(
-                name: "FieldTypes");
-
-            migrationBuilder.DropTable(
                 name: "Groups");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "Collections");

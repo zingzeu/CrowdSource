@@ -14,6 +14,12 @@ namespace CrowdSource.Models.CoreModels
         public string Name { get; set; }
         public string Description { get; set; }
         public FieldDataType DataType { get; set; }
+        public Collection Collection { get; set; }
+
+        public override int GetHashCode()
+        {
+            return FieldTypeId;
+        }
     }
 
     public enum FieldDataType

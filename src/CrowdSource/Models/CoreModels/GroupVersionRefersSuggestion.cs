@@ -12,11 +12,15 @@ namespace CrowdSource.Models.CoreModels
     /// </summary>
     public class GroupVersionRefersSuggestion
     {
-        [Key]
-        public int Id { get; set; }
+        public int GroupVersionForeignKey { get; set; }
+        public int FieldTypeForeignKey { get; set; }
 
-        //[ForeignKey("GroupVersionForeignKey")]
+        //FK,PK set up in FluentAPI
+        [ForeignKey("GroupVersionForeignKey")]
         public GroupVersion GroupVersion { get; set; }
+        [ForeignKey("FieldTypeForeignKey")]
+        public FieldType FieldType { get; set; }
+
 
         //[ForeignKey("SuggestionForeignKey")]
         public Suggestion Suggestion { get; set; }

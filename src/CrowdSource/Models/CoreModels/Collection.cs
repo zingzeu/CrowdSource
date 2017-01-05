@@ -21,5 +21,7 @@ namespace CrowdSource.Models.CoreModels
         public string Name { get; set; }
 
         public List<Group> Groups { get; set; }
+
+        public IEnumerable<FieldType> FieldTypes { get; set; }
     }
 }

@@ -12,9 +12,6 @@ namespace CrowdSource.Models.CoreModels
         [Key]
         public int SuggestionId { get; set; }
 
-        [ForeignKey("FieldForeignKey")]
-        public Field Field { get; set; }
-
         [Required]
         public string Content { get; set; }
 
