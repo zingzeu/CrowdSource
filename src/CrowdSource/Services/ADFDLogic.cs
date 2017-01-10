@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using CrowdSource.Models.CoreModels;
 using CrowdSource.Models;
 using Newtonsoft.Json;
+using Microsoft.EntityFrameworkCore;
+using System.Data.Common;
 
 namespace CrowdSource.Services
 {
@@ -20,24 +22,49 @@ namespace CrowdSource.Services
             this.context = _context;
         }
 
+        public IEnumerable<FieldType> GetAllFieldTypes(int CollectionId)
+        {
+            //TODO resolve reference
+            return context.FieldTypes
+                .Include(f=>f.Collection)
+                .Where(t => t.Collection.CollectionId == CollectionId)
+                .ToList();
+        }
+
+        public IEnumerable<FieldType> GetAllFieldTypesByGroup(int groupId)
+        {
+            return GetAllFieldTypes(
+                context
+                .Groups
+                .Include(g=>g.Collection)
+                .Single(g => g.GroupId == groupId)
+                .Collection
+                .CollectionId);
+        }
+
         /// <summary>
-        /// 获取一个词条的全部版本.
+        /// 获取一个词条的全部版本。
         /// </summary>
         /// <param name="group"></param>
         /// <returns></returns>
-        public IEnumerable<Dictionary<FieldType, string>> GetAllVersions(Group group)
+        public IEnumerable<GroupVersion> GetAllVersions(int groupId)
         {
-            var versions = context.GroupVersions
-                .Where(i => i.Group.GroupId == group.GroupId)
-                .ToList();
-
-            List<Dictionary<FieldType, string>> result = new List<Dictionary<FieldType, string>>();
-
-            foreach (var item in versions)
+            var versions = new List<GroupVersion>();
+            try
             {
-                result.Add(GetVersionFields(item));
+                versions = context.GroupVersions
+                           .Include(v => v.Group)
+                               .ThenInclude(g => g.Collection)
+                            .Include(v => v.NextVersion)
+                           .Where(v => v.Group.GroupId == groupId)
+                           .OrderBy(v => v.GroupVersionId)
+                           .ToList();
+            } catch(Exception e)
+            {
+                Console.WriteLine("ERROR in GetALLVERSIONs");
             }
-            return result;
+                
+            return versions;
         }
 
         /// <summary>
@@ -47,97 +74,138 @@ namespace CrowdSource.Services
         /// <returns></returns>
         public Dictionary<FieldType, string> GetVersionFields(GroupVersion version)
         {
-            // Get All GVRefersSuggestions for a version
-            List<GroupVersionRefersSuggestion> references = context.GVSuggestions
-                .Where(i => i.GroupVersion.GroupVersionId == version.GroupVersionId)
-                .ToList();
+            // Get All FieldTypes
+            var fieldTypes = GetAllFieldTypes(version.Group.Collection.CollectionId);
 
             Dictionary<FieldType, string> fields = new Dictionary<FieldType, string>();
+
+            foreach (var type in fieldTypes)
+            {
+                fields[type] = null;
+            }
+
+            if (version == null)
+            {
+                return fields;
+            }
+
+            // Get All GVRefersSuggestions for a version
+            List<GroupVersionRefersSuggestion> references = new List<GroupVersionRefersSuggestion>();
+            
+            if (context.GVSuggestions.Count()>0){
+                references = context.GVSuggestions.Include(i=> i.GroupVersion)
+                .Where(i => i.GroupVersion.GroupVersionId == version.GroupVersionId)
+                .ToList();
+            }
+
+
             foreach (var item in references)
             {
                 var suggestion = context.Entry(item)
                      .Reference(i => i.Suggestion).Query().Single();
-                var type = context.Entry(suggestion).Reference(i => i.Field).Query().Single().FieldType;
-                fields.Add(type, suggestion.Content);
+                fields[item.FieldType] = suggestion.Content;
             }
+            
             return fields;
 
         }
-        public Dictionary<FieldType, string> GetLastestVersion(Group group)
+
+        public GroupVersion GetLastestVersion(int groupId)
         {
-            context.Entry(group);
             var version = context.GroupVersions
-                .Single(i => i.Group.GroupId == group.GroupId && i.NextVersion == null);
-            return GetVersionFields(version);
+                .Include(v => v.Group)
+                    .ThenInclude(g=> g.Collection)
+                .Include(v => v.NextVersion)
+                .SingleOrDefault(i => i.Group.GroupId == groupId && i.NextVersion == null);
+            return version;
         }
 
-        public IEnumerable<Field> GetOriginalFields(int groupId)
+        public Dictionary<FieldType, string> GetLastestVersionFields(int groupId)
         {
-            var g = context.Groups.Single(b => b.GroupId == groupId);
-
-            var list = context.Entry(g)
-                .Collection(b => b.Fields)
-                .Query()
-                .ToList();
-            return list;
+            var version = GetLastestVersion(groupId);
+            if (version != null)
+            {
+                return GetVersionFields(version);
+            }
+            else
+            {
+                var types = GetAllFieldTypesByGroup(groupId);
+                var fields = new Dictionary<FieldType, string>();
+                foreach (var t in types)
+                {
+                    fields.Add(t, null);
+                }
+                return fields;
+            }
         }
+
 
         /// <summary>
         /// 添加一条新Suggestion (用户提交)
         /// </summary>
         /// <param name="group"></param>
         /// <param name="fields"></param>
-        public void GroupNewSuggestion(Group group, Dictionary<FieldType, string> fields)
+        public void GroupNewSuggestion(int groupId, Dictionary<FieldType, string> newFields)
         {
-            using (var transaction = context.Database.BeginTransaction())
+            var fieldTypes = GetAllFieldTypesByGroup(groupId);
+            var oldFields = GetLastestVersionFields(groupId);
+            var latestVersion = GetLastestVersion(groupId);
+
+
+            // for each field type
+            // check if the existing suggestion is the same
+            // add a new Suggestion if changed
+            // add GroupVersionRefersSuggestion for each field type
+            var newVersion = new GroupVersion()
             {
-                try
+                Group = context.Groups.Single(g => g.GroupId == groupId),
+                NextVersion = null
+                // CREATED TIME.
+            };
+            foreach (var type in fieldTypes)
+            {
+                var newReference = new GroupVersionRefersSuggestion()
                 {
-                    var latestVersion = context.GroupVersions
-                        .Single(i => i.Group.GroupId == group.GroupId && i.NextVersion == null);
-
-                    // for each field type
-                    // check if the existing suggestion is the same
-                    // add a new Suggestion if changed
-                    // add GroupVersionRefersSuggestion for each field type
-                    var newVersion = new GroupVersion();
-
-                    foreach (KeyValuePair<FieldType, string> entry in fields)
+                    FieldType = type,
+                    GroupVersion = newVersion
+                };
+                if (newFields[type] != null)
+                {
+                    if ((latestVersion == null) || (oldFields[type] == null) || (oldFields[type] != null && oldFields[type] != newFields[type]))
                     {
-                        var fieldType = entry.Key;
-                        var newValue = entry.Value;
-                        var newReference = new GroupVersionRefersSuggestion();
-                        newReference.GroupVersion = newVersion;
-                        var oldSuggestion = latestVersion?.FieldSuggestions.Single(i => i.Suggestion.Field.FieldType.FieldTypeId == fieldType.FieldTypeId).Suggestion;
-                        if (oldSuggestion.Content != newValue)
+                        var newSuggestion = new Suggestion()
                         {
-                            var newSuggestion = new Suggestion();
-                            newSuggestion.Content = newValue;
-                            newSuggestion.Field = null;//;
-                            newReference.Suggestion = newSuggestion;
-                        }
-                        else
-                        {
-                            newReference.Suggestion = oldSuggestion;
-                        }
+                            Content = newFields[type]
+                            // Author = CURRENT USER,
+                            // CREATED = time 
+                        };
+                        newReference.Suggestion = newSuggestion;
+                        context.Suggestions.Add(newSuggestion);
+                    } else
+                    {
+                        var oldSuggestion = context.Entry(latestVersion)
+                                        .Collection(v => v.FieldSuggestions)
+                                        .Query()
+                                        .Include(f => f.Suggestion)
+                                        .Single(f => f.FieldType == type).Suggestion;
 
-                        newVersion.FieldSuggestions.Add(newReference);
+                        newReference.Suggestion = oldSuggestion;
                     }
-
-                    if (latestVersion!=null)
-                        latestVersion.NextVersion = newVersion;
-                    context.GroupVersions.Add(newVersion);
-                    context.SaveChanges();
-                    transaction.Commit();
-                    
-                } 
-                catch (Exception)
-                {
-                    Console.WriteLine("Error");
-                    transaction.Rollback();
+                    context.GVSuggestions.Add(newReference);
                 }
+                else
+                {
+                    //Don't add suggestion
+                    // do nothing
+                }
+                
             }
-     
+ 
+            if (latestVersion!=null)
+                latestVersion.NextVersion = newVersion;
+            context.GroupVersions.Add(newVersion);
+
+            context.SaveChanges();
         }
 
         /// <summary>
@@ -146,12 +214,16 @@ namespace CrowdSource.Services
         /// <param name="group"></param>
         public void ReviewGroup(GroupVersion groupVesion, ApplicationUser user)
         {
-            var review = new ApplicationUserEndorsesGroupVersion();
-            review.User = user;
-            review.GroupVersion = groupVesion;
+            var review = new ApplicationUserEndorsesGroupVersion()
+            {
+                User = user,
+                GroupVersion = groupVesion
+            };
             context.Reviews.Add(review);
             context.SaveChanges();
         }
+
+        
 
         public Dictionary<string,string> GetGroupMetadata(int groupId)
         {

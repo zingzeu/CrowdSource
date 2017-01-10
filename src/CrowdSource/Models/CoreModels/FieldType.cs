@@ -20,6 +20,11 @@ namespace CrowdSource.Models.CoreModels
         {
             return FieldTypeId;
         }
+
+        public override bool Equals(Object obj)
+        {
+            return obj!=null && (obj as FieldType).FieldTypeId == FieldTypeId;
+        }
     }
 
     public enum FieldDataType

@@ -1,0 +1,21 @@
+@model IEnumerable<Group>
+
+
+<h1>Collection # 中的全部条目</h1>
+
+<table class="table table-bordered">
+    <tr>
+        <th>GroupId</th>
+        <th>Image</th>
+        <th>Actions</th>
+        
+    </tr>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.GroupId</td>
+            <td>@await Component.InvokeAsync("DisplayGroup", new { GroupId = item.GroupId })</td>
+            <td></td>
+        </tr>
+    }
+</table>

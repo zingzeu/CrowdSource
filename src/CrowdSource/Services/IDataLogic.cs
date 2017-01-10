@@ -9,13 +9,18 @@ namespace CrowdSource.Services
 {
     public interface IDataLogic
     {
-        IEnumerable<Field> GetOriginalFields(int groupId);
+        Dictionary<FieldType, string> GetLastestVersionFields(int groupId);
 
-        Dictionary<FieldType, string> GetLastestVersion(Group group);
+        IEnumerable<GroupVersion> GetAllVersions(int groupId);
+        GroupVersion GetLastestVersion(int groupId);
 
-        IEnumerable<Dictionary<FieldType, string>> GetAllVersions(Group group);
+        Dictionary<FieldType, string> GetVersionFields(GroupVersion version);
 
-        void GroupNewSuggestion(Group group, Dictionary<FieldType, string> fields);
+        IEnumerable<FieldType> GetAllFieldTypes(int CollectionId);
+
+        IEnumerable<FieldType> GetAllFieldTypesByGroup(int groupId);
+
+        void GroupNewSuggestion(int groupId, Dictionary<FieldType, string> newFields);
 
         void ReviewGroup(GroupVersion groupVesion, ApplicationUser user);
 

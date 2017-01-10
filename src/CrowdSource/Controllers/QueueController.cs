@@ -7,21 +7,20 @@ using Microsoft.Extensions.Logging;
 
 namespace CrowdSource.Controllers
 {
-    public class TestController : Controller
+    public class QueueController : Controller
     {
-        private ILogger<TestController> _logger;
-        public TestController(ILoggerFactory loggerFactory)
+        private ILogger<QueueController> _logger;
+        public QueueController(ILoggerFactory loggerFactory)
         {
-            _logger = loggerFactory.CreateLogger<TestController>();
-        }
-        public IActionResult Index()
-        {
-            return View();
+            _logger = loggerFactory.CreateLogger<QueueController>();
         }
 
+
+        [Route("Admin/Queue/List")]
         public IActionResult List()
         {
-            return View();
+            //TODO: Authentication: Admin only
+            return View("List");
         }
 
         public IActionResult SubmitToDo(int gid)

@@ -19,6 +19,7 @@ namespace CrowdSource.ViewComponents
 
         public async Task<IViewComponentResult> InvokeAsync (int GroupId)
         {
+            ViewData["FileName"] = GetGroupImgUrl(GroupId);
             return View("DisplayGroup","/segments/"+GetGroupImgUrl(GroupId));
         }
 

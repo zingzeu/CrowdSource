@@ -1,0 +1,28 @@
+﻿@model GroupDetailsViewModel
+
+<h1>View Group #@Model.Group.GroupId</h1>
+@await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.Group.GroupId })
+<table class="table">
+    <tr>
+        <th>#</th>
+        @foreach (var fieldType in Model.FieldTypes)
+        {
+            <th>
+                @fieldType.Name (@fieldType.DataType)
+            </th>
+        }
+    </tr>
+    @{var i = 0; }
+    @foreach (var version in Model.Versions)
+    {
+        <tr>
+            <td>@(++i)</td>
+            @foreach (var fieldType in Model.FieldTypes)
+            {
+                <td>
+                    @(version[fieldType] ?? "NULL")
+                </td>
+            }
+        </tr>
+    }
+</table>

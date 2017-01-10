@@ -9,6 +9,7 @@
     <div class="row" style="padding: 5px; background: yellow;">
         @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.GroupId })
     </div>
+    <input type="hidden" asp-for="GroupId" />
     <div class="row">
         
         

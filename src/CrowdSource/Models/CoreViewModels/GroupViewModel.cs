@@ -46,12 +46,8 @@ namespace CrowdSource.Models.CoreViewModels
         /// </summary>
         public bool Flagged { get; set; }
 
-        public FlagEnum FlagType { get; set; }
+        public CoreModels.FlagEnum? FlagType { get; set; }
     }
 
-    public enum FlagEnum
-    {
-        SegmentationError, //图片切割错误
-        OtherError
-    }
+
 }
