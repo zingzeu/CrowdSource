@@ -5,11 +5,15 @@ using System.Threading.Tasks;
 
 namespace CrowdSource.Services
 {
-    public class TextSanitizer : ITextSantizer
+    public class TextSanitizer : ITextSanitizer
     {
         //http://www.cnblogs.com/songtzu/archive/2012/08/07/2627239.html
         public string BanJiao(string input)
         {
+            if (input == null)
+            {
+                return null;
+            }
             char[] cc = input.ToCharArray();
             for (int i = 0; i < cc.Length; i++)
             {
@@ -29,7 +33,7 @@ namespace CrowdSource.Services
         }
     }
 
-    public interface ITextSantizer
+    public interface ITextSanitizer
     {
         string BanJiao(string input);
     }

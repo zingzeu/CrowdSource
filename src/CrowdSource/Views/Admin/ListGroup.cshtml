@@ -1,5 +1,10 @@
 @model IEnumerable<Group>
 
+<form asp-controller="Admin"  asp-action="ListGroupsInOneCollection" method="get" role="form">
+    SearchFileName:<input id="SearchFileName" name="SearchFileName" type="text" />
+    Flagged: <input id="ShowFlagged" name="ShowFlagged" type="checkbox" value="true" />
+    <button type="submit" class="btn btn-primary">Filter</button>
+</form>
 
 <h1>Collection # 中的全部条目</h1>
 
@@ -8,6 +13,7 @@
         <th>GroupId</th>
         <th>Image</th>
         <th>Actions</th>
+        <th>Flags</th>
         
     </tr>
     @foreach (var item in Model)
@@ -15,7 +21,14 @@
         <tr>
             <td>@item.GroupId</td>
             <td>@await Component.InvokeAsync("DisplayGroup", new { GroupId = item.GroupId })</td>
-            <td></td>
+            <td>
+                <a asp-controller="CrowdSource" asp-action="EditGroup" asp-route-id="@item.GroupId">Edit</a> | 
+                <a asp-controller="Admin" asp-action="GroupDetails" asp-route-id="@item.GroupId">History</a> | 
+                <a asp-controller="Admin" asp-action="GroupDelete" asp-route-id="@item.GroupId">Delete</a> |
+            </td>
+            <td>
+                @item.FlagType?.ToString()
+            </td>
         </tr>
     }
 </table>

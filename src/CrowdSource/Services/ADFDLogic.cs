@@ -223,7 +223,10 @@ namespace CrowdSource.Services
             context.SaveChanges();
         }
 
-        
+        public async Task<bool> GroupExists(int groupId)
+        {
+            return await context.Groups.AnyAsync(g => g.GroupId == groupId);
+        }
 
         public Dictionary<string,string> GetGroupMetadata(int groupId)
         {

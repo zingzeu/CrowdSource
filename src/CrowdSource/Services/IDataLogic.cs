@@ -24,6 +24,8 @@ namespace CrowdSource.Services
 
         void ReviewGroup(GroupVersion groupVesion, ApplicationUser user);
 
+        Task<bool> GroupExists(int groupId);
+
         Dictionary<string,string> GetGroupMetadata(int groupId);
 
     }

@@ -70,6 +70,15 @@
         <div class="col-md-3"></div>
         <div class="col-md-6"></div>
     </div>
+    @if ((bool)ViewData["Admin"])
+    {
+        <div class="row">
+            Flag: @(Model.FlagType?.ToString() ?? "NULL")
+        </div>
+        <a class="btn btn-warning" asp-controller="Admin" asp-action="UnsetGroupError" asp-route-id="@Model.GroupId">消除标记</a>
+        <a class="btn btn-danger" asp-controller="Admin" asp-action="GroupDelete" asp-route-id="@Model.GroupId">删除</a>
+    }
+
     <div class="row">
         <div class="col-md-8">
             <a asp-controller="CrowdSource"
@@ -78,10 +87,21 @@
                class="btn btn-danger">图片切割错误 / 空白</a>
         </div>
         <div class="col-md-4">
-            <a asp-controller="CrowdSource"
-               asp-action="EditGroup"
-               class="btn btn-warning">换一条</a>
-            <button type="submit" class="btn btn-primary btn-lg">提交 & 下一条</button>
+            @if (!(bool)ViewData["Admin"])
+            {
+                // 众包状态
+                <a asp-controller="CrowdSource"
+                   asp-action="EditGroup"
+                   class="btn btn-warning"
+                   asp-route-id="">换一条</a>
+                <button type="submit" class="btn btn-primary btn-lg">提交 & 下一条</button>
+            }
+            else
+            {
+                // 编辑状态
+                <input type="hidden" name="Admin" id="Admin" value="true"/>
+                <button type="submit" class="btn btn-success">保存修改</button>
+            }
         </div>
     </div>
 </form>

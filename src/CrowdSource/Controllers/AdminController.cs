@@ -28,11 +28,28 @@ namespace CrowdSource.Controllers
         }
 
         [Route("Admin/Collection/{id}/Group")]
-        public IActionResult ListGroupsInOneCollection(int id)
+        public async Task<IActionResult> ListGroupsInOneCollection(int id, [FromQuery]string SearchFileName, [FromQuery]bool? ShowFlagged)
         {
             //TODO: Authentication: Admin Only
+            //TODO: ADD PAGER
             //_logic.GetAllGroupViewModels();
-            List<Group> groups = _context.Groups.Where(g => g.Collection.CollectionId == id).ToList();
+            var groups = new List<Group>();
+            if (ShowFlagged ?? false)
+            {
+                groups = await _context.Groups.Where(g => g.Collection.CollectionId == id && g.FlagType != null).ToListAsync();
+            }
+            else if (SearchFileName == null || SearchFileName == "")
+            {
+                groups = await _context.Groups.Where(g => g.Collection.CollectionId == id).ToListAsync();
+            }
+            else
+            {
+                groups = await _context
+                    .Groups
+                    .FromSql("SELECT * FROM \"Groups\" WHERE \"GroupMetadata\"->>'ImgFileName' LIKE {0}", "%" + SearchFileName + "%")
+                    .Where(g => g.Collection.CollectionId == id)
+                    .ToListAsync();
+            }
 
             return View("ListGroup", groups);
         }
@@ -56,6 +73,47 @@ namespace CrowdSource.Controllers
             };
 
             return View("GroupDetails", vm);
+        }
+
+        // GET: Groups/Delete/5
+        [Route("Admin/Group/Delete/{id}")]
+        public async Task<IActionResult> GroupDelete(int id)
+        {
+            var @group = await _context.Groups
+                .Include(g=> g.Collection)
+                .SingleOrDefaultAsync(m => m.GroupId == id);
+            if (@group == null)
+            {
+                return NotFound();
+            }
+
+            return View("GroupDeleteConfirm",@group);
+        }
+
+        // POST: Groups/Delete/5
+        [HttpPost]
+        [Route("Admin/Group/Delete/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GroupDeleteConfirmed(int id)
+        {
+            var @group = await _context.Groups
+                .Include(g=>g.Collection)
+                .SingleOrDefaultAsync(m => m.GroupId == id);
+            var collectionId = @group.Collection.CollectionId;
+            _context.Groups.Remove(@group);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("ListGroupsInOneCollection",new { id = collectionId });
+        }
+
+        [Route("Admin/Group/UnsetError/{id}")]
+        public async Task<IActionResult> UnsetGroupError(int id)
+        {
+            //TODO: auth admin
+            var @group = await _context.Groups
+                .SingleOrDefaultAsync(g => g.GroupId == id);
+            @group.FlagType = null;
+            await _context.SaveChangesAsync();
+            return RedirectToAction("EditGroup", "CrowdSource", new { id = id });
         }
 
 
