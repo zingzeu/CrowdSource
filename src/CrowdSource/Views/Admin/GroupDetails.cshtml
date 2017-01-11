@@ -1,5 +1,7 @@
 ﻿@model GroupDetailsViewModel
-
+@{
+    ViewData["Title"] = "条目历史";
+}
 <h1>View Group #@Model.Group.GroupId</h1>
 @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.Group.GroupId })
 <table class="table">

@@ -3,11 +3,17 @@
     同时录入  罗马字、汉字、英文
 *@
 @model GroupViewModel
+@{
+    ViewData["Title"] = "编辑";
+}
 <h1>录入 / 编辑</h1>
 
 <form asp-controller="CrowdSource" asp-action="SubmitGroup" method="post" role="form">
-    <div class="row" style="padding: 5px; background: yellow;">
-        @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.GroupId })
+    <div class="panel panel-warning">
+        <div class="panel-heading">编号 #@Model.GroupId</div>
+        <div class="panel-body">
+            @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.GroupId })
+        </div>
     </div>
     <input type="hidden" asp-for="GroupId" />
     <div class="row">

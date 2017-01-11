@@ -4,15 +4,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authorization;
+using CrowdSource.Services;
 
 namespace CrowdSource.Controllers
 {
+    [Authorize]
     public class QueueController : Controller
     {
         private ILogger<QueueController> _logger;
-        public QueueController(ILoggerFactory loggerFactory)
+        private readonly ITaskDispatcher _taskDispatcher;
+
+        public QueueController(ILoggerFactory loggerFactory, ITaskDispatcher taskDispatcher)
         {
             _logger = loggerFactory.CreateLogger<QueueController>();
+            _taskDispatcher = taskDispatcher;
         }
 
 
@@ -23,10 +29,11 @@ namespace CrowdSource.Controllers
             return View("List");
         }
 
-        public IActionResult SubmitToDo(int gid)
+        [Route("Admin/Queue/Reload")]
+        public IActionResult Reload()
         {
-            _logger.LogInformation($"{gid} submitted");
-            return View("List");
+            _taskDispatcher.Reload();
+            return RedirectToAction("List");
         }
 
     }

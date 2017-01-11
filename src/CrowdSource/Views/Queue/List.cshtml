@@ -1,11 +1,12 @@
 ﻿@{
-    ViewData["Title"] = "TEST";
+    ViewData["Title"] = "队列管理";
 }
 
 @inject CrowdSource.Services.ITaskDispatcher taskDispatcher;
 
+<a class="btn btn-danger" asp-controller="Queue" asp-action="Reload">Reload 队列</a>
 
-<h2>To Do</h2>
+<h2>待录入</h2>
 
 <table>
     <tr>

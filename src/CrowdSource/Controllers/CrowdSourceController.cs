@@ -92,7 +92,20 @@ namespace CrowdSource.Controllers
             _logic.GroupNewSuggestion(id, fields);
             if (Admin ?? false) {
                 return RedirectToAction("EditGroup", new { id = id });
+            } else
+            {
+                if (fields[types.Single(t => t.Name == "TextBUC")] != null && 
+                    fields[types.Single(t => t.Name == "TextChinese")] != null && 
+                    fields[types.Single(t => t.Name == "TextEnglish")] != null)
+                {
+                    _taskDispatcher.Done(new Group { GroupId = data.GroupId });
+                } else
+                {
+                    _taskDispatcher.RequeueToDo(new Group { GroupId = data.GroupId });
+                }
             }
+
+
             return RedirectToAction("EditGroup");
         }
 

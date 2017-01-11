@@ -25,9 +25,10 @@
                 @Html.DisplayFor(modelItem => item.Name)
             </td>
             <td>
-                <a asp-action="Edit" asp-route-id="@item.CollectionId">Edit</a> |
+                <a asp-action="Edit" asp-route-id="@item.CollectionId">编辑</a> |
+                <a asp-action="ListGroupsInOneCollection" asp-controller="Admin" asp-route-id="@item.CollectionId">查看条目</a> |
                 <a asp-action="Details" asp-route-id="@item.CollectionId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.CollectionId">Delete</a>
+                <a asp-action="Delete" asp-route-id="@item.CollectionId">删除</a>
             </td>
         </tr>
 }

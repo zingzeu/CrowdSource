@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using CrowdSource.Models.CoreModels;
 using Microsoft.Extensions.Logging;
 using System.Threading;
+using CrowdSource.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace CrowdSource.Services
 {
@@ -23,28 +25,24 @@ namespace CrowdSource.Services
         private HashSet<QueueMember> _setDoing = new HashSet<QueueMember>();
         private Queue<QueueMember> _queueToReview = new Queue<QueueMember>();
         private HashSet<QueueMember> _setReviewing = new HashSet<QueueMember>();
-        private readonly TimeSpan DoingTimeOut = new TimeSpan(0,0,20); // 15min
-        private readonly TimeSpan ReviewTimeout = new TimeSpan(0, 5, 0); //5min
+        private readonly TimeSpan DoingTimeOut = new TimeSpan(0,10,0); // 10min
+        private readonly TimeSpan ReviewTimeout = new TimeSpan(0, 3, 0); //3min
 
         // Lock for thread safety
         // Because ASP.NET MVC will handle requests in multiple threads
         readonly object _locker = new object();
 
         private readonly ILogger<TaskDispatcher> _logger;
+        private readonly ApplicationDbContext _context;
 
-        public TaskDispatcher(ILoggerFactory loggerFactory)
+        public TaskDispatcher(ILoggerFactory loggerFactory, ApplicationDbContext context)
         {
             _logger = loggerFactory.CreateLogger<TaskDispatcher>();
-            _logger.LogInformation("Starting a TaskDispatcher Instance");
+            _context = context;
+            _logger.LogInformation("Loading From DB...");
 
-            for (int i = 1; i<=100; ++i)
-            {
-                var t = new Group()
-                {
-                    GroupId = i
-                };
-                _queueToDo.Enqueue(new QueueMember(t));
-            }
+
+            LoadToDoFromDB();
 
             _logger.LogInformation($"Queue length: {_queueToDo.Count}");
 
@@ -98,12 +96,25 @@ namespace CrowdSource.Services
         {
             lock (_locker)
             {
-                var member = _setDoing.Single(t => t.group.GroupId == group.GroupId);
+                var member = _setDoing.SingleOrDefault(t => t.group.GroupId == group.GroupId);
                 if (member != null)
                 {
                     _setDoing.Remove(member);
-                    _logger.LogInformation($"Manually Requeuing {member.group.GroupId}");
-                    _queueToDo.Enqueue(new QueueMember(member.group));
+                    FlagEnum? flagtype = null;
+                    try
+                    {
+                       flagtype = _context.Groups.SingleOrDefault(g => g.GroupId == group.GroupId).FlagType;
+                    }
+                    catch (Exception e)
+                    {
+
+                    }
+                    if (flagtype==null)
+                    {
+                        _logger.LogInformation($"Manually Requeuing {member.group.GroupId}");
+                        _queueToDo.Enqueue(new QueueMember(member.group));
+                    }
+
                 }
 
             }
@@ -126,14 +137,67 @@ namespace CrowdSource.Services
 
         private void LoadToDoFromDB()
         {
+            lock (_locker)
+            {
+                _queueToDo.Clear();
+                _queueToReview.Clear();
+                _setDoing.Clear();
+                _setReviewing.Clear();
+                List<Group> todo = _context
+                    .Groups
+                    .FromSql("SELECT * FROM \"Groups\" AS \"gg\" \n" +
+                    "WHERE\n" +
+                    "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM\n" +
+                    "  \"GVSuggestions\"\n" +
+                    "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"\n" +
+                    "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"\n" +
+                    " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"\n" +
+                    " AND \"FieldTypes\".\"Name\" IN('TextBUC', 'TextEnglish', 'TextChinese')\n" +
+                    " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL\n" +
+                    ") < 3\n" + //罗 英 中 还不全
+                    " AND \"gg\".\"FlagType\" IS NULL\n" 
+                    )
+                    .OrderBy(g => g.GroupId).ToList();
+                List<Group> toreview = _context
+                    .Groups
+                    .FromSql("SELECT * FROM \"Groups\" AS \"gg\"" +
+                    "WHERE" +
+                    "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM" +
+                    "  \"GVSuggestions\"" +
+                    "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"" +
+                    "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"" +
+                    " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"" +
+                    " AND \"FieldTypes\".\"Name\" IN('TextBUC', 'TextEnglish', 'TextChinese')" +
+                    " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL" +
+                    ") >= 3" + //罗 英 中 都有内容
+                    "AND" +
+                    "(" +
+                    " SELECT COUNT(DISTINCT \"Reviews\".\"Id\") FROM \"Reviews\"" +
+                    "   INNER JOIN \"GroupVersions\" ON \"Reviews\".\"GroupVersionId\" = \"GroupVersions\".\"GroupVersionId\"" +
+                    "   WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"" +
+                    "   AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL" +
+                    ") < 2" +  // Review 少于二次
+                    " AND \"gg\".\"FlagType\" IS NULL" 
+                    )
+                    .OrderBy(g => g.GroupId).ToList();
+                
+                for (int i = 0; i < todo.Count; ++i)
+                {
+                    _queueToDo.Enqueue(new QueueMember(todo[i]));
+                }
 
+                for (int i = 0; i < toreview.Count; ++i)
+                {
+                    _queueToReview.Enqueue(new QueueMember(toreview[i]));
+                }
+            }
         }
 
         public void Done(Group group)
         {
             lock (_locker)
             {
-                var member = _setDoing.Where(m => m.group.GroupId == group.GroupId).Single();
+                var member = _setDoing.SingleOrDefault(m => m.group.GroupId == group.GroupId);
                 if (member != null)
                 {
                     _setDoing.Remove(member);
@@ -146,11 +210,10 @@ namespace CrowdSource.Services
         {
             lock (_locker)
             {
-                var member = _setReviewing.Where(m => m.group.GroupId == group.GroupId).Single();
+                var member = _setReviewing.SingleOrDefault(m => m.group.GroupId == group.GroupId);
                 if (member != null)
                 {
                     _setReviewing.Remove(member);
-                 
                 }
             }
         }
@@ -159,7 +222,7 @@ namespace CrowdSource.Services
         private void ScheduleTimers()
         {
             aTimer = new Timer(a => {
-                _logger.LogInformation("Timer");
+                //_logger.LogInformation("Timer");
                 CleanUpDoing();
                 CleanUpReviewing();
             },null,0,10000);
@@ -175,17 +238,53 @@ namespace CrowdSource.Services
             return _setDoing.ToList().OrderBy(t => t.added);
         }
 
+        public IEnumerable<QueueMember> ListReviewing()
+        {
+            return _setReviewing.ToList().OrderBy(t => t.added);
+        }
+
+        public int CountToDo()
+        {
+            return _queueToDo.Count;
+        }
+
+        public int CountToReview()
+        {
+            return _queueToReview.Count;
+        }
+
         public void RequeueToReview(Group group)
         {
             lock (_locker)
             {
-                var member = _setReviewing.Single(t => t.group.GroupId == group.GroupId);
+                var member = _setReviewing.SingleOrDefault(t => t.group.GroupId == group.GroupId);
                 if (member !=null)
                 {
                     _setReviewing.Remove(member);
-                    _logger.LogInformation($"Manually Requeuing {member.group.GroupId}");
-                    _queueToReview.Enqueue(new QueueMember(member.group));
+                    FlagEnum? flagtype = null;
+                    try
+                    {
+                        flagtype = _context.Groups.SingleOrDefault(g => g.GroupId == group.GroupId).FlagType;
+                    }
+                    catch (Exception e)
+                    {
+
+                    }
+                    if (flagtype == null)
+                    {
+                        _logger.LogInformation($"Manually Requeuing {member.group.GroupId}");
+                        _queueToReview.Enqueue(new QueueMember(member.group));
+                    }
                 }
+            }
+        }
+
+        public void Reload()
+        {
+            lock (_locker)
+            {
+                _logger.LogInformation("Reloading from DB....");
+                LoadToDoFromDB();
             }
         }
     }
@@ -217,8 +316,13 @@ namespace CrowdSource.Services
         /// <param name="group"></param>
         void RequeueToReview(Group group);
 
+        void Reload();
+
         IEnumerable<QueueMember> ListToDo();
         IEnumerable<QueueMember> ListDoing();
+        IEnumerable<QueueMember> ListReviewing();
+        int CountToDo();
+        int CountToReview();
     }
 
     public class QueueMember

@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using CrowdSource.Data;
 using CrowdSource.Models.CoreModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CrowdSource.Controllers
 {
+    [Authorize]
     public class CollectionsController : Controller
     {
         private readonly ApplicationDbContext _context;

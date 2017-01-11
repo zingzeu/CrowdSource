@@ -9,9 +9,11 @@ using CrowdSource.Data;
 using CrowdSource.Models.CoreModels;
 using CrowdSource.Models.CoreViewModels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CrowdSource.Controllers
 {
+    [Authorize]
     public class AdminController : Controller
     {
         private readonly IDataLogic _logic;
@@ -28,29 +30,34 @@ namespace CrowdSource.Controllers
         }
 
         [Route("Admin/Collection/{id}/Group")]
-        public async Task<IActionResult> ListGroupsInOneCollection(int id, [FromQuery]string SearchFileName, [FromQuery]bool? ShowFlagged)
+        public async Task<IActionResult> ListGroupsInOneCollection(int id, [FromQuery]string SearchFileName, [FromQuery]bool? ShowFlagged, [FromQuery]int? page)
         {
-            //TODO: Authentication: Admin Only
-            //TODO: ADD PAGER
-            //_logic.GetAllGroupViewModels();
+
+            ViewData["CollectionId"] = id;
+            ViewData["SearchFileName"] = SearchFileName;
+            ViewData["ShowFlagged"] = ShowFlagged ?? false;
             var groups = new List<Group>();
+            IQueryable<Group> @query;
+            Pager @pager; 
             if (ShowFlagged ?? false)
             {
-                groups = await _context.Groups.Where(g => g.Collection.CollectionId == id && g.FlagType != null).ToListAsync();
+                @query = _context.Groups.Where(g => g.Collection.CollectionId == id && g.FlagType != null);
             }
             else if (SearchFileName == null || SearchFileName == "")
             {
-                groups = await _context.Groups.Where(g => g.Collection.CollectionId == id).ToListAsync();
+                @query = _context.Groups.Where(g => g.Collection.CollectionId == id);
             }
             else
             {
-                groups = await _context
+                @query = _context
                     .Groups
                     .FromSql("SELECT * FROM \"Groups\" WHERE \"GroupMetadata\"->>'ImgFileName' LIKE {0}", "%" + SearchFileName + "%")
-                    .Where(g => g.Collection.CollectionId == id)
-                    .ToListAsync();
+                    .Where(g => g.Collection.CollectionId == id);       
             }
-
+            var count = await @query.CountAsync();
+            @pager = new Pager(count, page ?? 1, 20);
+            ViewData["pager"] = @pager;
+            groups = await query.OrderBy(g => g.GroupId).Skip(@pager.PageSkip).Take(@pager.PageSize).ToListAsync();
             return View("ListGroup", groups);
         }
 
@@ -105,6 +112,7 @@ namespace CrowdSource.Controllers
             return RedirectToAction("ListGroupsInOneCollection",new { id = collectionId });
         }
 
+
         [Route("Admin/Group/UnsetError/{id}")]
         public async Task<IActionResult> UnsetGroupError(int id)
         {
@@ -118,4 +126,43 @@ namespace CrowdSource.Controllers
 
 
     }
+}
+
+
+public class Pager
+{
+    public int PageIndex { get; private set; }
+    public int TotalPages { get; private set; }
+    public int PageSize { get; private set; }
+
+    public Pager(int count, int pageIndex, int pageSize)
+    {
+        PageIndex = pageIndex;
+        TotalPages = (int)Math.Ceiling(count / (double)pageSize);
+        PageSize = pageSize;
+    }
+
+    public bool HasPreviousPage
+    {
+        get
+        {
+            return (PageIndex > 1);
+        }
+    }
+
+    public bool HasNextPage
+    {
+        get
+        {
+            return (PageIndex < TotalPages);
+        }
+    }
+    public int PageSkip
+    {
+        get
+        {
+            return (PageIndex - 1) * PageSize;
+        }
+    }
+
 }
