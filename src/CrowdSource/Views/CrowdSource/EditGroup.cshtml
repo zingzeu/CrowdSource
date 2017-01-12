@@ -34,7 +34,7 @@
             <input class="form-control" asp-for="TextBUC" />
         </div>
         <div class="col-md-3">
-            <h3>汉字</h3>
+            <h3>汉字<a class="text text-info" href="#" style="font-size:80%">繁体字/疑难字帮助</a></h3>
 
             <input class="form-control" asp-for="TextChinese" />
             <div class="row">
@@ -45,9 +45,9 @@
                 </div>
             </div>
             <div class="row">
-                <h4>关键行</h4>
+                <h4>字头 <a class="text text-info" href="#" style="font-size:80%">什么是【字头】?</a></h4>
                 <div class="col-sm-12">
-                    <input class="checkbox-inline" asp-for="IsPivotRow" /> 这是关键行
+                    <input class="checkbox-inline" asp-for="IsPivotRow" /> 这行是【字头】
                 </div>
                 
                 <div id="PivotRowSpecificFields" >
