@@ -18,11 +18,13 @@ namespace CrowdSource.Controllers
     {
         private readonly IDataLogic _logic;
         private readonly ApplicationDbContext _context;
+        private readonly IDbConfig _config;
 
-        public AdminController(ILoggerFactory loggerFactory, IDataLogic logic, ApplicationDbContext context)
+        public AdminController(ILoggerFactory loggerFactory, IDataLogic logic, ApplicationDbContext context, IDbConfig config)
         {
             _logic = logic;
             _context = context;
+            _config = config;
         }
         public IActionResult Index()
         {
@@ -125,6 +127,23 @@ namespace CrowdSource.Controllers
             return RedirectToAction("EditGroup", "CrowdSource", new { id = id });
         }
 
+
+        [Route("Admin/Options")]
+        public async Task<IActionResult> Options()
+        {
+            ViewData["ReviewEnabled"] = _config.Get("ReviewEnabled");
+            ViewData["ReviewThreshold"] = _config.Get("ReviewThreshold");
+            return View();
+        }
+
+        [HttpPost]
+        [Route("Admin/Options")]
+        public async Task<IActionResult> OptionsSubmit([FromForm] string ReviewEnabled, [FromForm] int ReviewThreshold)
+        {
+            _config.Set("ReviewEnabled", ReviewEnabled);
+            _config.Set("ReviewThreshold", ReviewThreshold.ToString());
+            return RedirectToAction("Options");
+        }
 
     }
 }

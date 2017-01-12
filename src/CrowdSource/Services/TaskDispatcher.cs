@@ -34,11 +34,14 @@ namespace CrowdSource.Services
 
         private readonly ILogger<TaskDispatcher> _logger;
         private readonly ApplicationDbContext _context;
+        private readonly IDbConfig _config;
 
-        public TaskDispatcher(ILoggerFactory loggerFactory, ApplicationDbContext context)
+        public TaskDispatcher(ILoggerFactory loggerFactory, ApplicationDbContext context, IDbConfig config)
         {
             _logger = loggerFactory.CreateLogger<TaskDispatcher>();
             _context = context;
+            _config = config;
+
             _logger.LogInformation("Loading From DB...");
 
 
@@ -158,6 +161,13 @@ namespace CrowdSource.Services
                     " AND \"gg\".\"FlagType\" IS NULL\n" 
                     )
                     .OrderBy(g => g.GroupId).ToList();
+                int minimumReview = 2; //默认值2
+                string minimumReviewFromConfig = _config.Get("ReviewThreshold");
+                
+                if (minimumReviewFromConfig != null)
+                {
+                    int.TryParse(minimumReviewFromConfig, out minimumReview); 
+                }
                 List<Group> toreview = _context
                     .Groups
                     .FromSql("SELECT * FROM \"Groups\" AS \"gg\"" +
@@ -176,8 +186,9 @@ namespace CrowdSource.Services
                     "   INNER JOIN \"GroupVersions\" ON \"Reviews\".\"GroupVersionId\" = \"GroupVersions\".\"GroupVersionId\"" +
                     "   WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"" +
                     "   AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL" +
-                    ") < 2" +  // Review 少于二次
-                    " AND \"gg\".\"FlagType\" IS NULL" 
+                    ") < {0}" +  // Review 少于二次
+                    " AND \"gg\".\"FlagType\" IS NULL",
+                    minimumReview
                     )
                     .OrderBy(g => g.GroupId).ToList();
                 

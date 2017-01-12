@@ -56,8 +56,9 @@ namespace CrowdSource
                 .AddDefaultTokenProviders();
 
             services.AddMvc();
-
+            services.AddScoped<IDbConfig, DbConfig>();
             services.AddScoped<IDataLogic, ADFDLogic>();
+            
             services.AddSingleton<ITaskDispatcher, TaskDispatcher>();
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();

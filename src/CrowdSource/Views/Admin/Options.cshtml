@@ -1,0 +1,15 @@
+@{
+    ViewData["Title"] = "全局选项";
+}
+
+<h1>全局选项</h1>
+
+<form asp-controller="Admin" asp-action="OptionsSubmit" method="post" role="form">
+  <div>
+    开放“校对”: <input id="ReviewEnabled" name="ReviewEnabled" type="checkbox" value="true" checked="@((string)ViewData["ReviewEnabled"] == "true")" />
+	</div>
+   <div> 校对次数（每个词条版本被认为“已校对”所需的最少校对次数，默认2）<input id="ReviewThreshold" name="ReviewThreshold" type="number" value="@ViewData["ReviewThreshold"]" />
+
+	</div>
+	    <button type="submit" class="btn btn-primary">保存</button>
+</form>
