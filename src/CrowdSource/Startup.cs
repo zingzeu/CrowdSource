@@ -60,6 +60,7 @@ namespace CrowdSource
             services.AddScoped<IDataLogic, ADFDLogic>();
             
             services.AddSingleton<ITaskDispatcher, TaskDispatcher>();
+            services.AddSingleton<IAnalytics, Analytics>();
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();
