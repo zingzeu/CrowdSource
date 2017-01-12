@@ -21,7 +21,7 @@ namespace CrowdSource
 
             if (args.Length > 0)
             {
-                CommandLineToolsLauncher.Main(host, args).Wait();
+                CommandLineToolsLauncher.MainAsync(host, args).Wait();
             }
             else
             {

@@ -13,7 +13,7 @@ namespace CrowdSource.Tools
 {
     class CommandLineToolsLauncher
     {
-        public static async Task Main(IWebHost host, string[] args)
+        public static async Task MainAsync(IWebHost host, string[] args)
         {
             String command = "";
             if (args.Count() > 0)
