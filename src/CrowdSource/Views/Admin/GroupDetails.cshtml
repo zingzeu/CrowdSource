@@ -7,24 +7,28 @@
 <table class="table">
     <tr>
         <th>#</th>
+        <th>Id</th>
         @foreach (var fieldType in Model.FieldTypes)
         {
             <th>
                 @fieldType.Name (@fieldType.DataType)
             </th>
         }
+        <th>Review Count</th>
     </tr>
     @{var i = 0; }
     @foreach (var version in Model.Versions)
     {
         <tr>
             <td>@(++i)</td>
+            <td>@Model.RawVersions[i-1].GroupVersionId</td>
             @foreach (var fieldType in Model.FieldTypes)
             {
                 <td>
                     @(version[fieldType] ?? "NULL")
                 </td>
             }
+            <td>@Model.RawVersions[i-1].UserReviews.Count</td>
         </tr>
     }
 </table>

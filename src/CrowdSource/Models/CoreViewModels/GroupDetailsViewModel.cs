@@ -9,6 +9,7 @@ namespace CrowdSource.Models.CoreViewModels
     public class GroupDetailsViewModel
     {
         public IEnumerable<Dictionary<FieldType, string>> Versions { get; set; }
+        public List<GroupVersion> RawVersions { get; set; }
         public Group Group { get; set; }
         public IEnumerable<FieldType> FieldTypes { get; set; }
     }

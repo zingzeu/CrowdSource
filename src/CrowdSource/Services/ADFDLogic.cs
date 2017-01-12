@@ -56,6 +56,7 @@ namespace CrowdSource.Services
                            .Include(v => v.Group)
                                .ThenInclude(g => g.Collection)
                             .Include(v => v.NextVersion)
+                            .Include(v => v.UserReviews)
                            .Where(v => v.Group.GroupId == groupId)
                            .OrderBy(v => v.GroupVersionId)
                            .ToList();

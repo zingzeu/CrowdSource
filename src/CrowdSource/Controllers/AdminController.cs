@@ -76,6 +76,7 @@ namespace CrowdSource.Controllers
             {
                 Group = _context.Groups.Single(g => g.GroupId == id),
                 Versions = versionsWithFields,
+                RawVersions = versions.ToList(),
                 FieldTypes = _logic.GetAllFieldTypesByGroup(id)
             };
 
