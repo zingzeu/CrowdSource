@@ -4,7 +4,7 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 
-@if (SignInManager.IsSignedIn(User) /*&& is Admin*/ )
+@if (SignInManager.IsSignedIn(User) && User.IsInRole("Administrator"))
 {
     <ul class="nav navbar-nav navbar-left">
         <li><a asp-area="" asp-controller="Collections" asp-action="Index">管理条目</a></li>

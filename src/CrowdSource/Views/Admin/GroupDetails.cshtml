@@ -4,7 +4,7 @@
 }
 <h1>View Group #@Model.Group.GroupId</h1>
 @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.Group.GroupId })
-<table class="table">
+<table class="table table-striped">
     <tr>
         <th>#</th>
         <th>Id</th>
@@ -14,6 +14,7 @@
                 @fieldType.Name (@fieldType.DataType)
             </th>
         }
+        <th>创建时间</th>
         <th>Review Count</th>
     </tr>
     @{var i = 0; }
@@ -28,7 +29,9 @@
                     @(version[fieldType] ?? "NULL")
                 </td>
             }
+            <td>@Model.RawVersions[i-1].Created</td>
             <td>@Model.RawVersions[i-1].UserReviews.Count</td>
+            
         </tr>
     }
 </table>
