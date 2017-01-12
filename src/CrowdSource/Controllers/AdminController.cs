@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace CrowdSource.Controllers
 {
-    [Authorize]
+    [Authorize(Roles="Administrator")]
     public class AdminController : Controller
     {
         private readonly IDataLogic _logic;

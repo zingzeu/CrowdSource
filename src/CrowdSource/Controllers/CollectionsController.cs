@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace CrowdSource.Controllers
 {
-    [Authorize]
+    [Authorize(Roles="Administrator")]
     public class CollectionsController : Controller
     {
         private readonly ApplicationDbContext _context;

@@ -9,7 +9,7 @@ using CrowdSource.Services;
 
 namespace CrowdSource.Controllers
 {
-    [Authorize]
+    [Authorize(Roles="Administrator")]
     public class QueueController : Controller
     {
         private ILogger<QueueController> _logger;
@@ -21,11 +21,9 @@ namespace CrowdSource.Controllers
             _taskDispatcher = taskDispatcher;
         }
 
-
         [Route("Admin/Queue/List")]
         public IActionResult List()
         {
-            //TODO: Authentication: Admin only
             return View("List");
         }
 
