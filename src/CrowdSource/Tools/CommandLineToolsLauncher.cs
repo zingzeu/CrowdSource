@@ -7,12 +7,13 @@ using System.Linq;
 using CrowdSource.Models.CoreModels;
 using CrowdSource.Tools.Commands;
 using Microsoft.AspNetCore.Hosting;
+using System.Threading.Tasks;
 
 namespace CrowdSource.Tools
 {
     class CommandLineToolsLauncher
     {
-        public static void Main(IWebHost host, string[] args)
+        public static async Task Main(IWebHost host, string[] args)
         {
             String command = "";
             if (args.Count() > 0)
@@ -23,12 +24,12 @@ namespace CrowdSource.Tools
             if (command == "SetUserRole")
             {
                 var runner = new AddUserToRoleCommand();
-                runner.Run(host, args.Skip(1).ToArray());
+                await runner.RunAsync(host, args.Skip(1).ToArray());
             }
             else if (command == "SeedDb")
             {
                 var runner = new SeedDbCommand();
-                runner.Run(host, args.Skip(1).ToArray());
+                await runner.RunAsync(host, args.Skip(1).ToArray());
             }
             else
             {

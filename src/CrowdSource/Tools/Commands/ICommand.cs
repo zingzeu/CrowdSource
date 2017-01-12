@@ -2,11 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace CrowdSource.Tools.Commands
 {
     public interface ICommand
     {
-        void Run(IWebHost host, string[] args);
+        Task RunAsync(IWebHost host, string[] args);
     }
 }

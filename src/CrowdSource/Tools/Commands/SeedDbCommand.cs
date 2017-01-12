@@ -11,7 +11,7 @@ namespace CrowdSource.Tools.Commands
 {
     public class SeedDbCommand : ICommand
     {
-        public void Run(IWebHost host, string[] args)
+        public async Task RunAsync(IWebHost host, string[] args)
         {
             var services = (IServiceScopeFactory)host.Services.GetService(typeof(IServiceScopeFactory));
             using (var scope = services.CreateScope())
@@ -24,7 +24,7 @@ namespace CrowdSource.Tools.Commands
                 if (context.Collections.Count() == 0)
                 {
                     context.Collections.Add(new Collection { Name = "ADFD" });
-                    context.SaveChanges();
+                    await context.SaveChangesAsync();
                 }
                 else
                 {
@@ -101,7 +101,7 @@ namespace CrowdSource.Tools.Commands
                         Description = ""
                     });
 
-                    context.SaveChanges();
+                    await context.SaveChangesAsync();
                 }
                 else
                 {
