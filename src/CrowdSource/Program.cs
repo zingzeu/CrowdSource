@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
+using CrowdSource.Tools;
 
 namespace CrowdSource
 {
@@ -18,7 +19,16 @@ namespace CrowdSource
                 .UseStartup<Startup>()
                 .Build();
 
-            host.Run();
+            if (args.Length > 0)
+            {
+                CommandLineToolsLauncher.Main(host, args);
+            }
+            else
+            {
+                host.Run();
+            }
+
+
         }
     }
 }

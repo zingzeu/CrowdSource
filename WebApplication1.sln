@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CrowdSource", "src\CrowdSou
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CrowdSource.Test", "test\CrowdSource.Test\CrowdSource.Test.csproj", "{91BCA19A-1C50-4361-9F05-BBA1EDE82059}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrowdSource.Tools", "src\CrowdSource.Tools\CrowdSource.Tools.csproj", "{A8DF837A-173F-4475-B47A-E50CB35FDCF7}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,18 +44,6 @@ Global
 		{91BCA19A-1C50-4361-9F05-BBA1EDE82059}.Release|x64.Build.0 = Release|x64
 		{91BCA19A-1C50-4361-9F05-BBA1EDE82059}.Release|x86.ActiveCfg = Release|x86
 		{91BCA19A-1C50-4361-9F05-BBA1EDE82059}.Release|x86.Build.0 = Release|x86
-		{A8DF837A-173F-4475-B47A-E50CB35FDCF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A8DF837A-173F-4475-B47A-E50CB35FDCF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A8DF837A-173F-4475-B47A-E50CB35FDCF7}.Debug|x64.ActiveCfg = Debug|x64
-		{A8DF837A-173F-4475-B47A-E50CB35FDCF7}.Debug|x64.Build.0 = Debug|x64
-		{A8DF837A-173F-4475-B47A-E50CB35FDCF7}.Debug|x86.ActiveCfg = Debug|x86
-		{A8DF837A-173F-4475-B47A-E50CB35FDCF7}.Debug|x86.Build.0 = Debug|x86
-		{A8DF837A-173F-4475-B47A-E50CB35FDCF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A8DF837A-173F-4475-B47A-E50CB35FDCF7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A8DF837A-173F-4475-B47A-E50CB35FDCF7}.Release|x64.ActiveCfg = Release|x64
-		{A8DF837A-173F-4475-B47A-E50CB35FDCF7}.Release|x64.Build.0 = Release|x64
-		{A8DF837A-173F-4475-B47A-E50CB35FDCF7}.Release|x86.ActiveCfg = Release|x86
-		{A8DF837A-173F-4475-B47A-E50CB35FDCF7}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
