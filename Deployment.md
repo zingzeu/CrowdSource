@@ -11,3 +11,10 @@ dotnet run -- SetUserRole <email> Administrator
 ```
 4. SeedDb or import SQL
 5. (Preferably) Set global options
+
+
+## Backup
+
+```
+pg_dump --dbname=crowdsource --username= --password -f <file location>
+```
