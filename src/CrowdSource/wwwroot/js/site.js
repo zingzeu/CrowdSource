@@ -234,5 +234,24 @@ $(document).ready(function () {
     $('#Radical').keyboard(optionsRadicals);
 
     $('#BoPoMoFo').keyboard(optionsBoPoMoFo);
+
+
+    // 在校对状态下
+    var btnSubmit = $("#btnSubmit");
+    var btnReview = $("#btnReview");
+    
+    // when reviewing
+    function fieldChanged(e) {
+        btnReview.hide();
+        btnSubmit.show();
+    }
+    $('#TextChinese').change(fieldChanged);
+    $('#TextBUC').change(fieldChanged);
+    $('#TextEnglish').change(fieldChanged);
+    $('#Radical').change(fieldChanged);
+    $('#BoPoMoFo').change(fieldChanged);
+    $('#IsPivotRow').change(fieldChanged);
+    $('#IsOral').change(fieldChanged);
+    $('#IsLiterary').change(fieldChanged);
 });
 

@@ -20,14 +20,23 @@ namespace CrowdSource.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ITaskDispatcher _taskDispatcher;
         private readonly ITextSanitizer _textSanitizer;
+        private readonly IDbConfig _config;
 
-        public CrowdSourceController(ILoggerFactory loggerFactory, IDataLogic logic, ApplicationDbContext context, ITaskDispatcher taskDispatcher, ITextSanitizer textSanitizer)
+        public CrowdSourceController(
+            ILoggerFactory loggerFactory,
+            IDataLogic logic,
+            ApplicationDbContext context,
+            ITaskDispatcher taskDispatcher,
+            ITextSanitizer textSanitizer,
+            IDbConfig config
+            )
         {
             _context = context;
             _logger = loggerFactory.CreateLogger<CrowdSourceController>();
             _logic = logic;
             _taskDispatcher = taskDispatcher;
             _textSanitizer = textSanitizer;
+            _config = config;
         }
         public IActionResult Index()
         {
@@ -44,7 +53,13 @@ namespace CrowdSource.Controllers
                 ViewData["Admin"] = true;
             } else
             {
-                gid = _taskDispatcher.GetNextToDo().GroupId;
+                var t = _taskDispatcher.GetNextToDo()?.GroupId;
+                if (t == null)
+                {
+                    // no more tasks
+                    return View("NoTasks");
+                }
+                gid = (int)t;
                 ViewData["Admin"] = false;
             }
 
@@ -54,59 +69,102 @@ namespace CrowdSource.Controllers
             var fields = _logic.GetLastestVersionFields(gid);
             var types = _logic.GetAllFieldTypesByGroup(gid);
             
-            return View(new GroupViewModel()
-            {
-                GroupId = gid,
-                TextBUC = fields[types.Single(t => t.Name == "TextBUC")],
-                TextChinese = fields[types.Single(t => t.Name == "TextChinese")],
-                TextEnglish = fields[types.Single(t => t.Name == "TextEnglish")],
-                IsOral = (fields[types.Single(t => t.Name == "IsOral")] == "True"),
-                IsLiterary = (fields[types.Single(t => t.Name == "IsLiterary")] == "True"),
-                IsPivotRow = (fields[types.Single(t => t.Name == "IsPivotRow")] == "True"),
-                BoPoMoFo = fields[types.Single(t => t.Name == "BoPoMoFo")],
-                Radical = fields[types.Single(t => t.Name == "Radical")],
-                FlagType = _context.Groups.Single(g => g.GroupId == gid).FlagType,
-                //Flagged = (_context.Groups.Single(g => g.GroupId == id).FlagType != null)
-            });
+            return View(await FieldsToGroupViewModel(gid,fields,types));
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult SubmitGroup(GroupViewModel data, [FromForm]bool? Admin)
+        public async Task<IActionResult> SubmitGroup(GroupViewModel data, [FromForm]bool? Admin, [FromForm]bool? Review)
         {
 
             _logger.LogInformation(JsonConvert.SerializeObject(data));
-            var id = data.GroupId;
-            var fields = new Dictionary<FieldType, string>();
-            var types = _logic.GetAllFieldTypesByGroup(id);
 
-            fields[types.Single(t => t.Name == "TextBUC")] = _textSanitizer.BanJiao(data.TextBUC);
-            fields[types.Single(t => t.Name == "TextChinese")] = _textSanitizer.BanJiao(data.TextChinese);
-            fields[types.Single(t => t.Name == "TextEnglish")] = _textSanitizer.BanJiao(data.TextEnglish);
-            fields[types.Single(t => t.Name == "IsOral")] = data.IsOral.ToString();
-            fields[types.Single(t => t.Name == "IsLiterary")] = data.IsLiterary.ToString();
-            fields[types.Single(t => t.Name == "IsPivotRow")] = data.IsPivotRow.ToString();
-            fields[types.Single(t => t.Name == "BoPoMoFo")] = _textSanitizer.BanJiao(data.BoPoMoFo);
-            fields[types.Single(t => t.Name == "Radical")] = _textSanitizer.BanJiao(data.Radical);
+            var types = _logic.GetAllFieldTypesByGroup(data.GroupId);
+            var fields = await GroupViewModelToFields(data, types);
+            _logic.GroupNewSuggestion(data.GroupId, fields);
 
-
-            _logic.GroupNewSuggestion(id, fields);
             if (Admin ?? false) {
-                return RedirectToAction("EditGroup", new { id = id });
+                return RedirectToAction("EditGroup", new { id = data.GroupId });
+            } else if (Review ?? false)
+            {
+                return RedirectToAction("ReviewGroup");
             } else
             {
                 if (fields[types.Single(t => t.Name == "TextBUC")] != null && 
                     fields[types.Single(t => t.Name == "TextChinese")] != null && 
                     fields[types.Single(t => t.Name == "TextEnglish")] != null)
                 {
+                    _logger.LogDebug($"Done : Group {data.GroupId}");
                     _taskDispatcher.Done(new Group { GroupId = data.GroupId });
                 } else
                 {
+                    _logger.LogDebug($"Still has empty fields, requeuing: Group {data.GroupId}");
                     _taskDispatcher.RequeueToDo(new Group { GroupId = data.GroupId });
                 }
             }
 
-
             return RedirectToAction("EditGroup");
+        }
+
+        [Route("CrowdSource/ReviewGroup")]
+        public async Task<IActionResult> ReviewGroup()
+        {
+            var t = _taskDispatcher.GetNextReview()?.GroupId;
+            if (t == null)
+            {
+                // no more tasks
+                return View("NoTasks");
+            }
+            var gid = (int)t;
+            ViewData["Admin"] = false;
+            ViewData["Review"] = true;
+
+            if (!(await _logic.GroupExists(gid)))
+            {
+                return View("Error");
+            }
+            var fields = _logic.GetLastestVersionFields(gid);
+            var types = _logic.GetAllFieldTypesByGroup(gid);
+
+            return View("EditGroup",await FieldsToGroupViewModel(gid, fields, types));
+        }
+
+        [HttpGet]
+        public IActionResult ReviewGroupSubmit(int groupId)
+        {
+            _logger.LogInformation($"Review Submitted. GroupId = {groupId}");
+     
+            _logic.ReviewGroup(groupId);
+
+            // find review numbers
+            var group = _context.Groups
+                .Include(g => g.Versions)
+                    .ThenInclude(v => v.UserReviews)
+                .Where(g => g.GroupId == groupId).SingleOrDefault();
+            var reviewedCount = group?.Versions.FirstOrDefault()?.UserReviews.Count() ?? 0;
+
+            // load config for minimal review
+            int minimumReview = 2; //Ä¬ÈÏÖµ2
+            string minimumReviewFromConfig = _config.Get("ReviewThreshold");
+
+            if (minimumReviewFromConfig != null)
+            {
+                int.TryParse(minimumReviewFromConfig, out minimumReview);
+            }
+
+            _logger.LogDebug($"Group {groupId} has {reviewedCount} reviews for last version.");
+            if (reviewedCount >= minimumReview)
+            {
+                _logger.LogDebug($"Done Review: Group {groupId}");
+                _taskDispatcher.DoneReview(new Group { GroupId = groupId });
+            } else
+            {
+                _logger.LogDebug($"Requeued to Review: Group {groupId}");
+                _taskDispatcher.RequeueToReview(new Group { GroupId = groupId });
+            }
+            
+
+            return RedirectToAction("ReviewGroup");
         }
 
         [HttpGet] 
@@ -120,6 +178,40 @@ namespace CrowdSource.Controllers
             _context.SaveChanges();
 
             return RedirectToAction("EditGroup");
+        }
+
+        private async Task<Dictionary<FieldType,string>> GroupViewModelToFields(GroupViewModel data, IEnumerable<FieldType> types)
+        {
+            var id = data.GroupId;
+            var fields = new Dictionary<FieldType, string>();
+
+            fields[types.Single(t => t.Name == "TextBUC")] = _textSanitizer.BanJiao(data.TextBUC?.Trim());
+            fields[types.Single(t => t.Name == "TextChinese")] = _textSanitizer.BanJiao(data.TextChinese?.Trim());
+            fields[types.Single(t => t.Name == "TextEnglish")] = _textSanitizer.BanJiao(data.TextEnglish?.Trim());
+            fields[types.Single(t => t.Name == "IsOral")] = data.IsOral.ToString();
+            fields[types.Single(t => t.Name == "IsLiterary")] = data.IsLiterary.ToString();
+            fields[types.Single(t => t.Name == "IsPivotRow")] = data.IsPivotRow.ToString();
+            fields[types.Single(t => t.Name == "BoPoMoFo")] = _textSanitizer.BanJiao(data.BoPoMoFo?.Trim());
+            fields[types.Single(t => t.Name == "Radical")] = _textSanitizer.BanJiao(data.Radical?.Trim());
+
+            return fields;
+        }
+
+        private async Task<GroupViewModel> FieldsToGroupViewModel(int gid, Dictionary<FieldType, string> fields, IEnumerable<FieldType>types)
+        {
+            return new GroupViewModel()
+            {
+                GroupId = gid,
+                TextBUC = fields[types.Single(t => t.Name == "TextBUC")],
+                TextChinese = fields[types.Single(t => t.Name == "TextChinese")],
+                TextEnglish = fields[types.Single(t => t.Name == "TextEnglish")],
+                IsOral = (fields[types.Single(t => t.Name == "IsOral")] == "True"),
+                IsLiterary = (fields[types.Single(t => t.Name == "IsLiterary")] == "True"),
+                IsPivotRow = (fields[types.Single(t => t.Name == "IsPivotRow")] == "True"),
+                BoPoMoFo = fields[types.Single(t => t.Name == "BoPoMoFo")],
+                Radical = fields[types.Single(t => t.Name == "Radical")],
+                FlagType = _context.Groups.Single(g => g.GroupId == gid).FlagType
+            };
         }
     }
 }

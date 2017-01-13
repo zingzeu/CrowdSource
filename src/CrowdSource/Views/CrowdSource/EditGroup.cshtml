@@ -1,12 +1,44 @@
 ﻿@*
   录入View
     同时录入  罗马字、汉字、英文
+  
+    这个View 同时也用作管理和校对。
 *@
 @model GroupViewModel
-@{
-    ViewData["Title"] = "编辑";
+@{ 
+    Object tmp = null;
+    ViewData.TryGetValue("Review", out tmp);
+    bool isReview = false;
+
+    if (tmp !=null && (bool)tmp)
+    {
+        isReview = true;
+    }
+
+    bool isAdmin = (bool)ViewData["Admin"];
 }
-<h1>录入 / 编辑</h1>
+@{
+    string SubmitButtonText;
+    if (!isReview)
+    {
+        SubmitButtonText = "提交 & 下一条(ENTER)";
+        ViewData["Title"] = "编辑 / 录入";
+    }
+    else
+    {
+        SubmitButtonText = "保存修改";
+        ViewData["Title"] = "校对";
+    }
+}
+@if (isReview)
+{
+    <h1>校对</h1>
+}
+else
+{
+    <h1>录入 / 编辑</h1>
+}
+
 
 <form asp-controller="CrowdSource" asp-action="SubmitGroup" method="post" role="form" autocomplete="off">
     <div class="panel panel-warning">
@@ -68,14 +100,7 @@
             <input class="form-control" asp-for="TextEnglish" />
         </div>
     </div>
-    @*
-      Helpers    
-    *@
-    <div class="row">
-        <div class="col-md-3"></div>
-        <div class="col-md-3"></div>
-        <div class="col-md-6"></div>
-    </div>
+
     @if ((bool)ViewData["Admin"])
     {
         <div class="row">
@@ -86,28 +111,68 @@
     }
 
     <div class="row">
+        @if (!isReview) {
         <div class="col-md-8">
             <a asp-controller="CrowdSource"
                asp-action="ReportError"
                asp-route-GroupId="@Model.GroupId"
                class="btn btn-danger">图片切割错误 / 空白</a>
         </div>
+        }
         <div class="col-md-4">
-            @if (!(bool)ViewData["Admin"])
+            @if (isReview)
             {
-                // 众包状态
+                <input type="hidden" name="Review" id="Review" value="true" />
+            }
+            @if (isAdmin) {
+                <input type="hidden" name="Admin" id="Admin" value="true" />
+            }
+
+            @if (!isAdmin && !isReview)
+            {
+                // 众包录入
                 <a asp-controller="CrowdSource"
                    asp-action="EditGroup"
                    class="btn btn-warning"
                    asp-route-id="">换一条</a>
-                <button type="submit" class="btn btn-primary btn-lg">提交 & 下一条</button>
+            }
+            else if (!isAdmin && isReview)
+            {
+                // 众包校对
+                <a asp-controller="CrowdSource"
+                   asp-action="ReviewGroup"
+                   class="btn btn-warning"
+                   asp-route-id="">换一条</a>
+            }
+
+            @if (!isAdmin && !isReview)
+            {
+                // 众包录入
+                <button type="submit" class="btn btn-primary btn-lg">提交 & 下一条(ENTER)</button>
+            }
+            else if (!isAdmin && isReview)
+            {
+                // 众包校对
+                <a id="btnReview" asp-controller="CrowdSource"
+                   asp-action="ReviewGroupSubmit"
+                   class="btn btn-success btn-lg"
+                   asp-route-groupId="@Model.GroupId">确认无误</a>
+                <button id="btnSubmit" type="submit" class="btn btn-primary btn-lg" style="display:none;">保存修改</button>
             }
             else
             {
                 // 编辑状态
-                <input type="hidden" name="Admin" id="Admin" value="true"/>
                 <button type="submit" class="btn btn-success">保存修改</button>
             }
         </div>
     </div>
 </form>
+
+@if (isReview)
+{
+    <style>
+        body {
+            background: #c8e6c9;
+        }
+    </style>
+} 
