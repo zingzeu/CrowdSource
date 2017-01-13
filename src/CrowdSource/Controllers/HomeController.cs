@@ -23,8 +23,8 @@ namespace CrowdSource.Controllers
             ViewData["Done"] = _analytics.Done;
             ViewData["ReviewTotal"] = _analytics.ReviewTotal;
             ViewData["Reviewed"] = _analytics.Reviewed;
-            int percentDone = (int)_analytics.Done * 100 / _analytics.ToDoTotal;
-            int percentReviewd = (int)_analytics.Reviewed * 100 / _analytics.ReviewTotal;
+            int percentDone = _analytics.ToDoTotal>0 ? (int)_analytics.Done * 100 / _analytics.ToDoTotal : 0;
+            int percentReviewd = _analytics.ReviewTotal>0 ? (int)_analytics.Reviewed * 100 / _analytics.ReviewTotal : 0;
             ViewData["DonePercent"] = percentDone;
             ViewData["ReviewPercent"] = percentReviewd;
             return View();
