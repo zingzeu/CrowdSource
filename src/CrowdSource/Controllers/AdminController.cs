@@ -85,7 +85,6 @@ namespace CrowdSource.Controllers
             return View("GroupDetails", vm);
         }
 
-        // GET: Groups/Delete/5
         [Route("Admin/Group/Delete/{id}")]
         public async Task<IActionResult> GroupDelete(int id)
         {
@@ -100,7 +99,6 @@ namespace CrowdSource.Controllers
             return View("GroupDeleteConfirm",@group);
         }
 
-        // POST: Groups/Delete/5
         [HttpPost]
         [Route("Admin/Group/Delete/{id}")]
         [ValidateAntiForgeryToken]

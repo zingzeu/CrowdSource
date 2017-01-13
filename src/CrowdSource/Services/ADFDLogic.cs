@@ -213,12 +213,13 @@ namespace CrowdSource.Services
         /// User Endorse a version
         /// </summary>
         /// <param name="group"></param>
-        public void ReviewGroup(GroupVersion groupVesion, ApplicationUser user)
+        public void ReviewGroup(int groupId, ApplicationUser user = null)
         {
+            var groupVersion = GetLastestVersion(groupId);
             var review = new ApplicationUserEndorsesGroupVersion()
             {
                 User = user,
-                GroupVersion = groupVesion
+                GroupVersion = groupVersion
             };
             context.Reviews.Add(review);
             context.SaveChanges();

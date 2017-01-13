@@ -22,7 +22,7 @@ namespace CrowdSource.Services
 
         void GroupNewSuggestion(int groupId, Dictionary<FieldType, string> newFields);
 
-        void ReviewGroup(GroupVersion groupVesion, ApplicationUser user);
+        void ReviewGroup(int groupId, ApplicationUser user = null);
 
         Task<bool> GroupExists(int groupId);
 
