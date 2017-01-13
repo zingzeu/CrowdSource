@@ -31,6 +31,11 @@ namespace CrowdSource.Tools
                 var runner = new SeedDbCommand();
                 await runner.RunAsync(host, args.Skip(1).ToArray());
             }
+            else if (command == "ImportEnglishText")
+            {
+                var runner = new ImportEnglishTextCommand();
+                await runner.RunAsync(host, args.Skip(1).ToArray());
+            }
             else
             {
                 Console.WriteLine("Command Not Found.");
