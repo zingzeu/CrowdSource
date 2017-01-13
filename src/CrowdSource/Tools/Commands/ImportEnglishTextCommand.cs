@@ -44,6 +44,11 @@ namespace CrowdSource.Tools.Commands
                 var firstCollection = context.Collections.First();
                 var englishType = context.FieldTypes.Single(t => t.Name == "TextEnglish" && t.Collection.CollectionId == firstCollection.CollectionId);
                 int i = 0;
+                if (context.Groups.Any())
+                {
+                    Console.WriteLine("Rows existed in Groups. Exiting...");
+                    return;
+                }
                 while (csv.Read())
                 {
                     var now = DateTime.UtcNow;
@@ -58,7 +63,8 @@ namespace CrowdSource.Tools.Commands
                         GroupMetadata = JsonConvert.SerializeObject(new Dictionary<string, string>
                         {
                             {"ImgFileName", filename }
-                        })
+                        }),
+                        GroupId = i,
                     };
                     context.Groups.Add(newGroup);
                     var newVersion = new GroupVersion()
@@ -80,10 +86,10 @@ namespace CrowdSource.Tools.Commands
                         Suggestion = newSuggestion
                     };
                     context.GVSuggestions.Add(newGVSuggestion);
-                    context.SaveChanges();
+
                 }
 
-               
+                context.SaveChanges();
                 Console.WriteLine($"{i} rows imported.");
             }// using scope
             
