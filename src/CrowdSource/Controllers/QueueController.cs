@@ -22,9 +22,30 @@ namespace CrowdSource.Controllers
         }
 
         [Route("Admin/Queue/List")]
-        public IActionResult List()
+        public async Task<IActionResult> List([FromQuery]int? page)
         {
+            Pager @pager;
+            var todos = _taskDispatcher.ListToDo();
+            @pager = new Pager(todos.Count(), page ?? 1, 20);
+            ViewData["pager"] = @pager;
+            var shownTodos = todos.Skip(@pager.PageSkip).Take(@pager.PageSize).ToList();
+            ViewData["ToDo"] = shownTodos;
+            ViewData["Doing"] = _taskDispatcher.ListDoing();
             return View("List");
+        }
+
+
+        [Route("Admin/Queue/ListReview")]
+        public async Task<IActionResult> ListReview([FromQuery]int? page)
+        {
+            Pager @pager;
+            var todos = _taskDispatcher.ListToReview();
+            @pager = new Pager(todos.Count(), page ?? 1, 20);
+            ViewData["pager"] = @pager;
+            var shownTodos = todos.Skip(@pager.PageSkip).Take(@pager.PageSize).ToList();
+            ViewData["ToReview"] = shownTodos;
+            ViewData["Reviewing"] = _taskDispatcher.ListReviewing();
+            return View("ListReview");
         }
 
         [Route("Admin/Queue/Reload")]

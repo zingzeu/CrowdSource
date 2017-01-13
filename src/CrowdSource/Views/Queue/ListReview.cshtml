@@ -4,14 +4,14 @@
 @using CrowdSource.Services;
 <a class="btn btn-danger" asp-controller="Queue" asp-action="Reload">Reload 队列</a>
 
-<h2>待录入</h2>
+<h2>待校对</h2>
 
 <table class="table table-striped">
     <tr>
         <th>GroupId</th>
         <th>Added</th>
     </tr>
-    @foreach (var i in (IEnumerable<QueueMember>)ViewData["ToDo"]) {
+    @foreach (var i in (IEnumerable<QueueMember>)ViewData["ToReview"]) {
     <tr>
         <td>@i.group.GroupId</td>
         <td>@i.added.ToString()</td>
@@ -25,12 +25,12 @@
     var nextDisabled = !pager.HasNextPage ? "disabled" : "";
 }
 
-<a asp-action="List"
+<a asp-action="ListReview"
    asp-route-page="@(pager.PageIndex - 1)"
    class="btn btn-default @prevDisabled btn">
     Previous
 </a>
-<a asp-action="List"
+<a asp-action="ListReview"
    asp-route-page="@(pager.PageIndex + 1)"
    class="btn btn-default @nextDisabled btn">
     Next
@@ -41,14 +41,14 @@ Page @pager.PageIndex / @pager.TotalPages
 
 
 
-<h2>录入中</h2>
+<h2>校对中</h2>
 
 <table class="table table-striped">
     <tr>
         <th>GroupId</th>
         <th>Added</th>
     </tr>
-    @foreach (var i in (IEnumerable<QueueMember>)ViewData["Doing"]) {
+    @foreach (var i in (IEnumerable<QueueMember>)ViewData["Reviewing"]) {
         <tr>
             <td>@i.group.GroupId</td>
             <td>@i.added.ToString()</td>
