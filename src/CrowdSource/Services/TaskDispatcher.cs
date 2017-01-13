@@ -69,7 +69,21 @@ namespace CrowdSource.Services
         }
 
         public Group GetNextReview()
-        { throw new NotImplementedException(); }
+        {
+            lock (_locker)
+            {
+                if (_queueToReview.Count > 0)
+                {
+                    var toreview = _queueToReview.Dequeue();
+                    _setReviewing.Add(new QueueMember(toreview.group));
+                    return toreview.group;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
 
         private void CleanUpDoing()
         {
@@ -239,6 +253,11 @@ namespace CrowdSource.Services
             },null,0,10000);
         }
 
+        public IEnumerable<QueueMember> ListToReview()
+        {
+            return _queueToReview.OrderBy(t => t.added);
+        }
+
         public IEnumerable<QueueMember> ListToDo()
         {
             return _queueToDo.OrderBy(t => t.added);
@@ -330,6 +349,7 @@ namespace CrowdSource.Services
         void Reload();
 
         IEnumerable<QueueMember> ListToDo();
+        IEnumerable<QueueMember> ListToReview();
         IEnumerable<QueueMember> ListDoing();
         IEnumerable<QueueMember> ListReviewing();
         int CountToDo();
