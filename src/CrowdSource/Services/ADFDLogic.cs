@@ -151,7 +151,7 @@ namespace CrowdSource.Services
             var fieldTypes = GetAllFieldTypesByGroup(groupId);
             var oldFields = GetLastestVersionFields(groupId);
             var latestVersion = GetLastestVersion(groupId);
-
+            var now = DateTime.UtcNow;
 
             // for each field type
             // check if the existing suggestion is the same
@@ -160,8 +160,8 @@ namespace CrowdSource.Services
             var newVersion = new GroupVersion()
             {
                 Group = context.Groups.Single(g => g.GroupId == groupId),
-                NextVersion = null
-                // CREATED TIME.
+                NextVersion = null,
+                Created = now
             };
             foreach (var type in fieldTypes)
             {
@@ -176,9 +176,9 @@ namespace CrowdSource.Services
                     {
                         var newSuggestion = new Suggestion()
                         {
-                            Content = newFields[type]
+                            Content = newFields[type],
                             // Author = CURRENT USER,
-                            // CREATED = time 
+                            Created = now
                         };
                         newReference.Suggestion = newSuggestion;
                         context.Suggestions.Add(newSuggestion);

@@ -63,7 +63,7 @@ namespace CrowdSource.Tools.Commands
                     context.Groups.Add(newGroup);
                     var newVersion = new GroupVersion()
                     {
-                        //Created = DateTime.UtcNow,
+                        Created = now,
                         Group = newGroup,
                     };
                     context.GroupVersions.Add(newVersion);
@@ -80,10 +80,10 @@ namespace CrowdSource.Tools.Commands
                         Suggestion = newSuggestion
                     };
                     context.GVSuggestions.Add(newGVSuggestion);
-                    
+                    context.SaveChanges();
                 }
 
-                context.SaveChanges();
+               
                 Console.WriteLine($"{i} rows imported.");
             }// using scope
             

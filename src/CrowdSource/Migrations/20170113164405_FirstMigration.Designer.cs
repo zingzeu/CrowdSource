@@ -5,13 +5,12 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using CrowdSource.Data;
 using CrowdSource.Models.CoreModels;
-using System.ComponentModel.DataAnnotations;
 
 namespace CrowdSource.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20170112155824_ConfigurationInDb")]
-    partial class ConfigurationInDb
+    [Migration("20170113164405_FirstMigration")]
+    partial class FirstMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -158,7 +157,7 @@ namespace CrowdSource.Migrations
                     b.Property<int>("GroupVersionId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int>("Created");
+                    b.Property<DateTime>("Created");
 
                     b.Property<int>("GroupId");
 

@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using CrowdSource.Data;
 using CrowdSource.Models.CoreModels;
-using System.ComponentModel.DataAnnotations;
 
 namespace CrowdSource.Migrations
 {
@@ -157,7 +156,7 @@ namespace CrowdSource.Migrations
                     b.Property<int>("GroupVersionId")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int>("Created");
+                    b.Property<DateTime>("Created");
 
                     b.Property<int>("GroupId");
 

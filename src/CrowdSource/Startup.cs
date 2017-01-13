@@ -31,7 +31,7 @@ namespace CrowdSource
             }
 
             builder.AddEnvironmentVariables();
-            Configuration = builder.Build();
+            Configuration = builder.Build(); 
         }
 
         public IConfigurationRoot Configuration { get; }

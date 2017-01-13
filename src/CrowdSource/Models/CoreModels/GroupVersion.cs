@@ -19,7 +19,7 @@ namespace CrowdSource.Models.CoreModels
         //[ForeignKey("NextVersionForeignKey")]
         public GroupVersion NextVersion { get; set; }
 
-        public DataType Created { get; set; }
+        public DateTime Created { get; set; }
 
         public List<GroupVersionRefersSuggestion> FieldSuggestions { get; set; }
 

@@ -35,6 +35,18 @@ namespace CrowdSource.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Configurations",
+                columns: table => new
+                {
+                    Key = table.Column<string>(nullable: false),
+                    Value = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Configurations", x => x.Key);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Collections",
                 columns: table => new
                 {
@@ -231,7 +243,7 @@ namespace CrowdSource.Migrations
                 {
                     GroupVersionId = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
-                    Created = table.Column<int>(nullable: false),
+                    Created = table.Column<DateTime>(nullable: false),
                     GroupId = table.Column<int>(nullable: false),
                     NextVersionGroupVersionId = table.Column<int>(nullable: true)
                 },
@@ -394,6 +406,9 @@ namespace CrowdSource.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Configurations");
+
             migrationBuilder.DropTable(
                 name: "Reviews");
 
