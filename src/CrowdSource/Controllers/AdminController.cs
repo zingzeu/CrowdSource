@@ -131,15 +131,17 @@ namespace CrowdSource.Controllers
         {
             ViewData["ReviewEnabled"] = _config.Get("ReviewEnabled");
             ViewData["ReviewThreshold"] = _config.Get("ReviewThreshold");
+            ViewData["Randomize"] = _config.Get("Randomize");
             return View();
         }
 
         [HttpPost]
         [Route("Admin/Options")]
-        public async Task<IActionResult> OptionsSubmit([FromForm] string ReviewEnabled, [FromForm] int ReviewThreshold)
+        public async Task<IActionResult> OptionsSubmit([FromForm] string ReviewEnabled, [FromForm] string Randomize, [FromForm] int ReviewThreshold)
         {
             _config.Set("ReviewEnabled", ReviewEnabled);
             _config.Set("ReviewThreshold", ReviewThreshold.ToString());
+            _config.Set("Randomize", Randomize);
             return RedirectToAction("Options");
         }
 

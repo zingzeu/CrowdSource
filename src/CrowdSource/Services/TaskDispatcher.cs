@@ -175,6 +175,7 @@ namespace CrowdSource.Services
                     " AND \"gg\".\"FlagType\" IS NULL\n" 
                     )
                     .OrderBy(g => g.GroupId).ToList();
+
                 int minimumReview = 2; //默认值2
                 string minimumReviewFromConfig = _config.Get("ReviewThreshold");
                 
@@ -205,7 +206,15 @@ namespace CrowdSource.Services
                     minimumReview
                     )
                     .OrderBy(g => g.GroupId).ToList();
-                
+
+                if (_config.Get("Randomize") == "true")
+                {
+                    // shuffle
+                    _logger.LogInformation("Randomizing");
+                    Shuffle.DoShuffle(todo);
+                    Shuffle.DoShuffle(toreview);
+                }
+
                 for (int i = 0; i < todo.Count; ++i)
                 {
                     _queueToDo.Enqueue(new QueueMember(todo[i]));

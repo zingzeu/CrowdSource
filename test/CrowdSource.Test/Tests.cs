@@ -1,6 +1,7 @@
 using System;
 using Xunit;
 using CrowdSource.Services;
+using System.Collections.Generic;
 
 namespace Tests
 {
@@ -25,5 +26,39 @@ namespace Tests
             Assert.Equal(new TextSanitizer().BanJiao("。"), "。");
 
         }
+
+        [Fact]
+        public void TestShuffle()
+        {
+            var aList = new List<int>();
+            for (int i = 1; i <= 100; ++i)
+            {
+                aList.Add(i);
+            }
+            var oldLength = aList.Count;
+            Shuffle.DoShuffle(aList);
+
+            Assert.Equal(aList.Count, oldLength);
+
+            bool inverseOrder = false;
+            for (int i =0; i<aList.Count; ++i)
+            {
+                if (aList[i]!=i)
+                {
+                    inverseOrder = true;
+                    break;
+                }
+            }
+            Assert.True(inverseOrder);
+
+            // 确保没有丢东西
+            var intSet = new HashSet<int>();
+            foreach (var item in aList)
+            {
+                intSet.Add(item);
+            }
+            Assert.Equal(intSet.Count, oldLength);
+        }
+
     }
 }
