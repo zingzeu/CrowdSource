@@ -239,10 +239,11 @@ $(document).ready(function () {
     // 在校对状态下
     var btnSubmit = $("#btnSubmit");
     var btnReview = $("#btnReview");
-    
+    var promptModified = $("#promptModified");
     // when reviewing
     function fieldChanged(e) {
-        btnReview.hide();
+        //  btnReview.hide();
+        promptModified.text("*你做出了修改。若要保存新的修改，请按“保存修改”。如果是误修改，请按“这条没错”。");
         btnSubmit.show();
     }
     $('#TextChinese').change(fieldChanged);

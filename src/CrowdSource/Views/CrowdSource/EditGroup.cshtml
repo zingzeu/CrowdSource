@@ -66,7 +66,7 @@ else
             <input class="form-control" asp-for="TextBUC" />
         </div>
         <div class="col-md-3">
-            <h3>汉字<a class="text text-info" href="#" style="font-size:80%">繁体字/疑难字帮助</a></h3>
+            <h3>汉字<a target="_blank" class="text text-info" href="~/help/index.html#chinese" style="font-size:80%">繁体字/疑难字帮助</a></h3>
 
             <input class="form-control" asp-for="TextChinese" />
             <div class="row">
@@ -77,9 +77,9 @@ else
                 </div>
             </div>
             <div class="row">
-                <h4>字头 <a class="text text-info" href="#" style="font-size:80%">什么是【字头】?</a></h4>
+                <h4>单字条目 <a target="_blank" class="text text-info" href="~/help/index.html#pivot" style="font-size:80%">什么是【单字条目】?</a></h4>
                 <div class="col-sm-12">
-                    <input class="checkbox-inline" asp-for="IsPivotRow" /> 这行是【字头】
+                    <input class="checkbox-inline" asp-for="IsPivotRow" /> 这行是【单字条目】
                 </div>
                 
                 <div id="PivotRowSpecificFields" >
@@ -109,16 +109,19 @@ else
         <a class="btn btn-warning" asp-controller="Admin" asp-action="UnsetGroupError" asp-route-id="@Model.GroupId">消除标记</a>
         <a class="btn btn-danger" asp-controller="Admin" asp-action="GroupDelete" asp-route-id="@Model.GroupId">删除</a>
     }
-
     <div class="row">
-        @if (!isReview) {
+        <a id="promptModified"></a>
+    </div>
+    <div class="row">
         <div class="col-md-8">
-            <a asp-controller="CrowdSource"
-               asp-action="ReportError"
-               asp-route-GroupId="@Model.GroupId"
-               class="btn btn-danger">图片切割错误 / 空白</a>
+            @if (!isReview)
+            {
+                <a asp-controller="CrowdSource"
+                   asp-action="ReportError"
+                   asp-route-GroupId="@Model.GroupId"
+                   class="btn btn-danger">图片切割错误 / 空白</a>
+            }
         </div>
-        }
         <div class="col-md-4">
             @if (isReview)
             {
@@ -156,7 +159,8 @@ else
                 <a id="btnReview" asp-controller="CrowdSource"
                    asp-action="ReviewGroupSubmit"
                    class="btn btn-success btn-lg"
-                   asp-route-groupId="@Model.GroupId">确认无误</a>
+                   asp-route-groupId="@Model.GroupId">这条没错</a>
+              
                 <button id="btnSubmit" type="submit" class="btn btn-primary btn-lg" style="display:none;">保存修改</button>
             }
             else

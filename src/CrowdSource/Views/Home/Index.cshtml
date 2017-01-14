@@ -25,7 +25,7 @@
             </div>
     }
 
-
+    <p>建议使用电脑进行操作。推荐使用最新版本的Chrome / Firefox 浏览器。</p>
     <p>
         <a class="btn btn-success btn-lg" asp-controller="CrowdSource" asp-action="EditGroup" role="button">我来录入</a>
 @if (Config.Get("ReviewEnabled") == "true")
@@ -34,6 +34,6 @@
 
 }
 
-        <a class="text text-info" href="#">帮助</a>
+        <a class="text text-info" target="_blank" href="~/help/index.html">帮助</a>
     </p>
 </div>
