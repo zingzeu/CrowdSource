@@ -223,13 +223,17 @@ $(document).ready(function () {
     var optionsBUC = JSON.parse(JSON.stringify(defaultKeyboardOptions));
     var optionsBoPoMoFo = JSON.parse(JSON.stringify(defaultKeyboardOptions));
     var optionsRadicals = JSON.parse(JSON.stringify(defaultKeyboardOptions));
+    var optionsCDO = JSON.parse(JSON.stringify(defaultKeyboardOptions));
     optionsBUC['layout'] = 'buc';
     optionsBoPoMoFo['layout'] = 'bopomofo';
     optionsRadicals['layout'] = 'radicals';
+    optionsCDO['layout'] = 'cdo';
     
     $('#TextBUC').keyboard(optionsBUC);
 
     $('#TextEnglish').keyboard(optionsBUC);
+
+    $('#TextChinese').keyboard(optionsCDO);
 
     $('#Radical').keyboard(optionsRadicals);
 

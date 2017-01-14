@@ -109,9 +109,16 @@ else
         <a class="btn btn-warning" asp-controller="Admin" asp-action="UnsetGroupError" asp-route-id="@Model.GroupId">消除标记</a>
         <a class="btn btn-danger" asp-controller="Admin" asp-action="GroupDelete" asp-route-id="@Model.GroupId">删除</a>
     }
-    <div class="row">
-        <a id="promptModified"></a>
-    </div>
+    @if (!isAdmin && isReview)
+    {
+        // 众包校对
+        // 如果校对的时候又修改了
+        // 显示提示
+        <div class="row">
+            <a id="promptModified"></a>
+        </div>
+    }
+
     <div class="row">
         <div class="col-md-8">
             @if (!isReview)
