@@ -20,7 +20,7 @@ namespace CrowdSource.Services
 
         IEnumerable<FieldType> GetAllFieldTypesByGroup(int groupId);
 
-        void GroupNewSuggestion(int groupId, Dictionary<FieldType, string> newFields);
+        void GroupNewSuggestion(int groupId, Dictionary<FieldType, string> newFields, ApplicationUser user = null);
 
         void ReviewGroup(int groupId, ApplicationUser user = null);
 

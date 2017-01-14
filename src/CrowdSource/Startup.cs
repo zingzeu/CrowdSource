@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using CrowdSource.Data;
 using CrowdSource.Models;
 using CrowdSource.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace CrowdSource
 {
@@ -58,7 +59,8 @@ namespace CrowdSource
             services.AddMvc();
             services.AddScoped<IDbConfig, DbConfig>();
             services.AddScoped<IDataLogic, ADFDLogic>();
-            
+
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<ITaskDispatcher, TaskDispatcher>();
             services.AddSingleton<IAnalytics, Analytics>();
             // Add application services.

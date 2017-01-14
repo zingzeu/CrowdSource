@@ -10,6 +10,9 @@ using CrowdSource.Services;
 using Microsoft.EntityFrameworkCore;
 using CrowdSource.Data;
 using CrowdSource.Models.CoreModels;
+using Microsoft.AspNetCore.Identity;
+using CrowdSource.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace CrowdSource.Controllers
 {
@@ -21,6 +24,8 @@ namespace CrowdSource.Controllers
         private readonly ITaskDispatcher _taskDispatcher;
         private readonly ITextSanitizer _textSanitizer;
         private readonly IDbConfig _config;
+        private readonly UserManager<ApplicationUser> _userMan;
+        private readonly IHttpContextAccessor _httpContext;
 
         public CrowdSourceController(
             ILoggerFactory loggerFactory,
@@ -28,7 +33,9 @@ namespace CrowdSource.Controllers
             ApplicationDbContext context,
             ITaskDispatcher taskDispatcher,
             ITextSanitizer textSanitizer,
-            IDbConfig config
+            IDbConfig config,
+            UserManager<ApplicationUser> userMan,
+            IHttpContextAccessor httpContext
             )
         {
             _context = context;
@@ -37,6 +44,8 @@ namespace CrowdSource.Controllers
             _taskDispatcher = taskDispatcher;
             _textSanitizer = textSanitizer;
             _config = config;
+            _httpContext = httpContext;
+            _userMan = userMan;
         }
         public IActionResult Index()
         {
@@ -76,12 +85,14 @@ namespace CrowdSource.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitGroup(GroupViewModel data, [FromForm]bool? Admin, [FromForm]bool? Review)
         {
+            var currentUser = await _userMan.GetUserAsync(_httpContext.HttpContext.User);
 
+            _logger.LogInformation($"User {currentUser?.Email ?? "NotLoggedIn"}");
             _logger.LogInformation(JsonConvert.SerializeObject(data));
 
             var types = _logic.GetAllFieldTypesByGroup(data.GroupId);
             var fields = await GroupViewModelToFields(data, types);
-            _logic.GroupNewSuggestion(data.GroupId, fields);
+            _logic.GroupNewSuggestion(data.GroupId, fields, currentUser);
 
             if (Admin ?? false) {
                 return RedirectToAction("EditGroup", new { id = data.GroupId });
@@ -130,11 +141,13 @@ namespace CrowdSource.Controllers
         }
 
         [HttpGet]
-        public IActionResult ReviewGroupSubmit(int groupId)
+        public async Task<IActionResult> ReviewGroupSubmit(int groupId)
         {
+            var currentUser = await _userMan.GetUserAsync(_httpContext.HttpContext.User);
+
             _logger.LogInformation($"Review Submitted. GroupId = {groupId}");
      
-            _logic.ReviewGroup(groupId);
+            _logic.ReviewGroup(groupId,currentUser);
 
             // find review numbers
             var group = _context.Groups

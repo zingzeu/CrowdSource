@@ -146,7 +146,7 @@ namespace CrowdSource.Services
         /// </summary>
         /// <param name="group"></param>
         /// <param name="fields"></param>
-        public void GroupNewSuggestion(int groupId, Dictionary<FieldType, string> newFields)
+        public void GroupNewSuggestion(int groupId, Dictionary<FieldType, string> newFields, ApplicationUser user = null)
         {
             var fieldTypes = GetAllFieldTypesByGroup(groupId);
             var oldFields = GetLastestVersionFields(groupId);
@@ -177,7 +177,7 @@ namespace CrowdSource.Services
                         var newSuggestion = new Suggestion()
                         {
                             Content = newFields[type],
-                            // Author = CURRENT USER,
+                            Author = user,
                             Created = now
                         };
                         newReference.Suggestion = newSuggestion;
