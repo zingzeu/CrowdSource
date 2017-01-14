@@ -25,7 +25,7 @@ namespace CrowdSource.Models.CoreModels
         [Required]
         public string GroupMetadata { get; set; }
 
-        public IEnumerable<GroupVersion> Versions;
+        public IEnumerable<GroupVersion> Versions { get; set; }
 
         public FlagEnum? FlagType { get; set; }
     }

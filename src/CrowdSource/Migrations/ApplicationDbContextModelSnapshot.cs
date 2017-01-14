@@ -343,7 +343,7 @@ namespace CrowdSource.Migrations
             modelBuilder.Entity("CrowdSource.Models.CoreModels.GroupVersion", b =>
                 {
                     b.HasOne("CrowdSource.Models.CoreModels.Group", "Group")
-                        .WithMany()
+                        .WithMany("Versions")
                         .HasForeignKey("GroupId")
                         .OnDelete(DeleteBehavior.Cascade);
 
