@@ -43,8 +43,14 @@ else
 <form asp-controller="CrowdSource" asp-action="SubmitGroup" method="post" role="form" autocomplete="off">
     <div class="panel panel-warning">
         <div class="panel-heading">编号 #@Model.GroupId</div>
-        <div class="panel-body">
+        <div class="panel-body" style="height: 90px; overflow: scroll;">
             @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.GroupId })
+        </div>
+    </div>
+    <div class="panel panel-success">
+        <div class="panel-heading">预览 (<a id="previewerToggle">显示/隐藏</a>)</div>
+        <div class="panel-body"  id="previewPanel">
+            @await Html.PartialAsync("_PreviewerPartial")
         </div>
     </div>
     <input type="hidden" asp-for="GroupId" />

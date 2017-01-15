@@ -16,6 +16,9 @@ $(document).ready(function () {
         }
     }); 
 
+    updatePreview();
+    showhidePreviewer();
+
     var defaultKeyboardOptions = {
         rtl: false,
         // Used by jQuery UI position utility
@@ -227,6 +230,8 @@ $(document).ready(function () {
     optionsBUC['layout'] = 'buc';
     optionsBoPoMoFo['layout'] = 'bopomofo';
     optionsRadicals['layout'] = 'radicals';
+      optionsRadicals['position']['my'] = 'left top';
+      optionsRadicals['position']['at2'] = 'right top';
     optionsCDO['layout'] = 'cdo';
     
     $('#TextBUC').keyboard(optionsBUC);
@@ -239,6 +244,48 @@ $(document).ready(function () {
 
     $('#BoPoMoFo').keyboard(optionsBoPoMoFo);
 
+    function updatePreview() {
+        $("#previewBUC").text($("#TextBUC").val());
+        $("#previewEnglish").text($("#TextEnglish").val());
+        $("#previewChineseWithRadicals").text(
+            (
+                $("#IsPivotRow").is(':checked')?
+                $("#Radical").val():""
+            )
+            +
+            $("#TextChinese").val()
+        );
+        $("#previewBoPoMoFo").text(
+            $("#IsPivotRow").is(':checked') ?
+            $("#BoPoMoFo").val() : ""
+        );
+        $("#previewLabel").text( 
+              (($("#IsOral").is(':checked')) ? "俗" : "") +
+              (($("#IsLiterary").is(':checked')) ? "文" : "") 
+        );
+    }
+
+    function getPreviewerState() {
+        var currentState = localStorage.getItem("ShowPreviewer");
+        if (currentState==null) currentState = false;
+        return currentState == "true";
+    }
+
+    function showhidePreviewer() {
+        if (getPreviewerState()) {
+            $('#previewPanel').show();
+        } else {
+            $('#previewPanel').hide();
+        }
+    }
+
+    function togglePreviewer(){
+        var newState = !getPreviewerState();    
+        localStorage.setItem("ShowPreviewer", newState?"true":"false");
+        showhidePreviewer();
+    }
+
+    $("#previewerToggle").click(togglePreviewer);
 
     // 在校对状态下
     var btnSubmit = $("#btnSubmit");
@@ -247,6 +294,7 @@ $(document).ready(function () {
     // when reviewing
     function fieldChanged(e) {
         //  btnReview.hide();
+        updatePreview();
         promptModified.text("*你做出了修改。若要保存新的修改，请按“保存修改”。如果是误修改，请按“这条没错”。");
         btnSubmit.show();
     }
