@@ -8,6 +8,9 @@
 
 <h3>Are you sure you want to delete this?</h3>
 <div>
+    @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.GroupId })
+</div>
+<div>
     <h4>Group @Model.GroupId</h4>
     <hr />
     <dl class="dl-horizontal">
