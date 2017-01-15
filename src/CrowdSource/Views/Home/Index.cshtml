@@ -30,22 +30,28 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-3">
-            <h4>罗马字 @ViewData["DoneBUC"] / @ViewData["ToDoTotal"]</h4>
-            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:@ViewData["DonePercentBUC"]%;">
-                @ViewData["DonePercentBUC"]%
+        <div class="col-md-4">
+            <h4>罗马字 @ViewData["DoneBUC"] / @ViewData["ToDoTotal"]</h4>        
+            <div class="progress">
+                <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:@ViewData["DonePercentBUC"]%;">
+                    @ViewData["DonePercentBUC"]%
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <h4>汉字 @ViewData["DoneChinese"] / @ViewData["ToDoTotal"]</h4>
-            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:@ViewData["DonePercentChinese"]%;">
-                @ViewData["DonePercentChinese"]%
+            <div class="progress">
+                <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:@ViewData["DonePercentChinese"]%;">
+                    @ViewData["DonePercentChinese"]%
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <h4>英文 @ViewData["DoneEnglish"] / @ViewData["ToDoTotal"]</h4>
-            <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:@ViewData["DonePercentEnglish"]%;">
-                @ViewData["DonePercentEnglish"]
+            <div class="progress">
+                <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:@ViewData["DonePercentEnglish"]%;">
+                    @ViewData["DonePercentEnglish"]%
+                </div>
             </div>
         </div>
     </div>

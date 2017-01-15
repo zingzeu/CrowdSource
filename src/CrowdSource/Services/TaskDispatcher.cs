@@ -141,13 +141,22 @@ namespace CrowdSource.Services
         {
             lock (_locker)
             {
+                var requeued = new List<QueueMember>();
                 foreach (var member in _setReviewing)
                 {
                     if ((DateTime.Now - member.added) > ReviewTimeout)
                     {
-                        _setReviewing.Remove(member);
+                        _logger.LogInformation($"Doing GroupID {member.group.GroupId}, ReviewTimeout: {DateTime.Now - member.added}");
+                        //_setReviewing.Remove(member);
+                        requeued.Add(member);
+                        _logger.LogInformation($"Requeuing {member.group.GroupId}");
                         _queueToReview.Enqueue(new QueueMember(member.group));
                     }
+                }
+
+                foreach (var i in requeued)
+                {
+                    _setReviewing.Remove(i);
                 }
             }
         }
