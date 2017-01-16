@@ -159,5 +159,8 @@
 <form id="reportForm" asp-controller="CrowdSource" asp-action="ReportError" method="post" role="form" autocomplete="off">
     <input type="hidden" asp-for="GroupId" />
 </form>
+
+<form id="skipForm" asp-controller="CrowdSource" asp-action="RedirectToEditGroup" method="post" role="form" autocomplete="off">
+</form>
 @await Html.PartialAsync("_HelpPartial")
 @await Html.PartialAsync("_TourPartial")

@@ -34,7 +34,7 @@
     });
 
     function skipCurrent() {
-        location.reload();
+        $("#skipForm").submit();
     }
 
     function submitReportForm(){

@@ -229,5 +229,14 @@ namespace CrowdSource.Controllers
                 FlagType = _context.Groups.Single(g => g.GroupId == gid).FlagType
             };
         }
+
+
+        // use this to redirect the user back to EditGroup (Skip Group)
+        // avoid using location.reload on client side (causes cache to reload)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult RedirectToEditGroup() {
+            return RedirectToAction("EditGroup");
+        }
     }
 }
