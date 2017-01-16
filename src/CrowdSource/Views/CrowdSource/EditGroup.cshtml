@@ -42,7 +42,16 @@ else
 
 <form asp-controller="CrowdSource" asp-action="SubmitGroup" method="post" role="form" autocomplete="off">
     <div class="panel panel-warning">
-        <div class="panel-heading">编号 #@Model.GroupId</div>
+        <div class="panel-heading">编号 #@Model.GroupId
+            @if (!isReview)
+            {
+                <a style="float:right"
+                   asp-controller="CrowdSource"
+                   asp-action="ReportError"
+                   asp-route-GroupId="@Model.GroupId"
+                   class="btn btn-danger btn-sm">图片不清楚</a>
+            }
+        </div>
         <div class="panel-body" style="height: 130px; overflow: scroll;">
             @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.GroupId })
         </div>
@@ -70,6 +79,7 @@ else
         <div class="col-md-3">
             <h3>罗马字</h3>
             <input class="form-control" asp-for="TextBUC" />
+            <button class="button" id="BUCSetEmptyBtn" type="button">这栏是空白</button>
         </div>
         <div class="col-md-3">
             <h3>汉字<a target="_blank" class="text text-info" href="~/help/index.html#chinese" style="font-size:80%">繁体字/疑难字帮助</a></h3>
@@ -127,13 +137,7 @@ else
 
     <div class="row">
         <div class="col-md-8">
-            @if (!isReview)
-            {
-                <a asp-controller="CrowdSource"
-                   asp-action="ReportError"
-                   asp-route-GroupId="@Model.GroupId"
-                   class="btn btn-danger">图片切割错误 / 空白</a>
-            }
+
         </div>
         <div class="col-md-4">
             @if (isReview)
