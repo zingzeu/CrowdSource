@@ -60,6 +60,7 @@
                     </div>
                     <div class="uk-background-muted uk-padding-small">
                         @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.GroupId })
+                        @await Html.PartialAsync("_ModeIndicatorPartial")
                     </div>
                     <div class="uk-background uk-padding-small">
                         <span class="uk-text-large uk-text-muted">鼠标移上去放大。</span>
@@ -107,7 +108,7 @@
 
                     <div id="editorChinese">
                         <h2 class="uk-heading-divider">汉字</h2>
-                        <input tabindex="2" class="uk-input" asp-for="TextChinese" placeholder="Input">
+                        <input tabindex="2" class="uk-input" asp-for="TextChinese" placeholder="在这里打左边图片中的汉字...">
                         <h3 class="uk-heading-divider">标志<a class="uk-text-primary uk-text-small" href="#modal-help-marks" tabindex="-1" uk-toggle>这是什么?</a></h3>
                         <div class="uk-margin uk-grid-small uk-child-width-auto" uk-grid>
                             <label><input tabindex="3" class="uk-checkbox" asp-for="IsOral"> 
@@ -131,7 +132,7 @@
 
                     <div id="editorEnglish">
                         <h2 class="uk-heading-divider">英文</h2>
-                        <input tabindex="8" class="uk-input" asp-for="TextEnglish" placeholder="Input">
+                        <input tabindex="8" class="uk-input" asp-for="TextEnglish" placeholder="在这里打左边图片中的英文...">
                         <hr class="uk-divider-icon">
                     </div>
                     <input type="hidden" asp-for="GroupId" />

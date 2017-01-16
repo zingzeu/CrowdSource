@@ -37,7 +37,10 @@
             return currentState;
         }
 
-
+        function toggleIndicator(name, state) {
+            $("#ModeIndicator__"+name+"__on").toggle(!!state);
+            $("#ModeIndicator__"+name+"__off").toggle(!state);
+    }
 
         function switchEdtior() {
             var mode = getEditorMode();
@@ -45,6 +48,9 @@
             $("#editorBUC").toggle(!!window.editorOptions[mode]['buc']);
             $("#editorChinese").toggle(!!window.editorOptions[mode]['chi']);
             $("#editorEnglish").toggle(!!window.editorOptions[mode]['eng']);
+            toggleIndicator('buc',window.editorOptions[mode]['buc']);
+            toggleIndicator('chi',window.editorOptions[mode]['chi']);
+            toggleIndicator('eng',window.editorOptions[mode]['eng']);
             $(window.autofocusItem[mode]).focus();
         }
 
