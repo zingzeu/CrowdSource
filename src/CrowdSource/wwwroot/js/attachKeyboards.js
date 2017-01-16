@@ -51,11 +51,11 @@
                 // input & preview
                 input: 'ui-widget-content ui-corner-all',
                 // keyboard container
-                container: 'ui-widget-content ui-widget ui-corner-all ui-helper-clearfix',
+                container: 'ui-widget-content ui-corner-all ui-helper-clearfix',
                 // keyboard container extra class (same as container, but separate)
                 popup: '',
                 // default state
-                buttonDefault: 'ui-state-default ui-corner-all',
+                buttonDefault: 'ui-state-default ui-corner-all myKeyButton',
                 // hovered button
                 buttonHover: 'ui-state-hover',
                 // Action keys (e.g. Accept, Cancel, Tab, etc);
@@ -210,6 +210,8 @@
         var optionsCDO = JSON.parse(JSON.stringify(defaultKeyboardOptions));
         optionsBUC['layout'] = 'buc';
         optionsBoPoMoFo['layout'] = 'bopomofo';
+        optionsBoPoMoFo['position']['my'] = 'left top';
+        optionsBoPoMoFo['position']['at2'] = 'right top';
         optionsRadicals['layout'] = 'radicals';
         optionsRadicals['position']['my'] = 'left top';
         optionsRadicals['position']['at2'] = 'right top';
