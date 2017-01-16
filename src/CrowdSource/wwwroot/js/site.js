@@ -41,6 +41,8 @@ $(document).ready(function () {
     $('#IsOral').change(fieldChanged);
     $('#IsLiterary').change(fieldChanged);
 
-
+    $('#btnReport').click(function () {
+        $('#reportForm').submit();
+    });
 });
 

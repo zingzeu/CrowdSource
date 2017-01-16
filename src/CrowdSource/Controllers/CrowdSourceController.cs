@@ -78,6 +78,8 @@ namespace CrowdSource.Controllers
             var fields = _logic.GetLastestVersionFields(gid);
             var types = _logic.GetAllFieldTypesByGroup(gid);
             
+            //legacy view
+            if (id != null) return View("LegacyEditGroup", await FieldsToGroupViewModel(gid,fields,types));
             return View(await FieldsToGroupViewModel(gid,fields,types));
         }
 
@@ -137,7 +139,7 @@ namespace CrowdSource.Controllers
             var fields = _logic.GetLastestVersionFields(gid);
             var types = _logic.GetAllFieldTypesByGroup(gid);
 
-            return View("EditGroup",await FieldsToGroupViewModel(gid, fields, types));
+            return View("LegacyEditGroup",await FieldsToGroupViewModel(gid, fields, types));
         }
 
         [HttpGet]
