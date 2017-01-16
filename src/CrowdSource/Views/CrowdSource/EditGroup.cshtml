@@ -24,7 +24,6 @@
     }
 
 }
-
 <div class="uk-flex uk-flex-column" id="container">
     <nav id="nav" class="uk-navbar-container uk-margin" uk-navbar>
         <!-- left -->
@@ -54,13 +53,12 @@
                     <h3 class="uk-heading-divider">原始图片 #@Model.GroupId</h3>
                 </div>
                 <div class="uk-flex-1 uk-flex-column uk-flex-left">
-                    <div class="uk-alert-warning" uk-alert  id="narrowScreenWarning">
+                    <div class="uk-alert-warning" uk-alert id="narrowScreenWarning">
                         <a class="uk-alert-close" uk-close></a>
                         <p>屏幕窗口太窄了。请最大化窗口。或按 Ctrl+减号 缩小网页。</p>
                     </div>
                     <div class="uk-background-muted uk-padding-small">
-                        @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.GroupId })
-                        @await Html.PartialAsync("_ModeIndicatorPartial")
+                        @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.GroupId }) @await Html.PartialAsync("_ModeIndicatorPartial")
                     </div>
                     <div class="uk-background uk-padding-small">
                         <span class="uk-text-large uk-text-muted">鼠标移上去放大。</span>
@@ -79,25 +77,25 @@
 
         <div id="rightPanel" class="uk-flex uk-flex-column uk-background uk-background-muted">
 
-                <div id="rightPanel__title">
-                    <h2 class="uk-text-bold">录入模式</h2>
+            <div id="rightPanel__title">
+                <h2 class="uk-text-bold">录入模式</h2>
+            </div>
+            <div id="selector" class="uk-background-muted uk-flex uk-flex-row">
+
+                <div class="uk-form-label uk-text" id="selector__label">
+                    我要录入:
                 </div>
-                <div id="selector" class="uk-background-muted uk-flex uk-flex-row">
 
-                    <div class="uk-form-label uk-text" id="selector__label">
-                        我要录入:
-                    </div>
-
-                    <select tabindex="-1" id="editorMode" class="uk-select uk-text-large uk-flex-1">
+                <select tabindex="-1" id="editorMode" class="uk-select uk-text-large uk-flex-1">
                          <option value="all">全部都打 （罗马字+汉字+英文）</option>
                           <option value="buc">只打 罗马字</option>
                           <option value="chi">只打 汉字</option>
                           <option value="eng">只打 英文</option>
                     </select>
-                </div>
+            </div>
 
-                <div id="editor" class="uk-padding-small uk-background uk-flex-1">
-                    <form id="editorForm" asp-controller="CrowdSource" asp-action="SubmitGroup" method="post" role="form" autocomplete="off">
+            <div id="editor" class="uk-padding-small uk-background uk-flex-1">
+                <form id="editorForm" asp-controller="CrowdSource" asp-action="SubmitGroup" method="post" role="form" autocomplete="off">
 
                     <div id="editorBUC">
                         <h2 class="uk-heading-divider">罗马字</h2>
@@ -108,6 +106,10 @@
 
                     <div id="editorChinese">
                         <h2 class="uk-heading-divider">汉字</h2>
+                        <div class="uk-alert-warning" uk-alert>
+                            <a class="uk-alert-close" uk-close></a>
+                            <p>繁体字也要如实打哦。</p>
+                        </div>
                         <input tabindex="2" class="uk-input" asp-for="TextChinese" placeholder="在这里打左边图片中的汉字...">
                         <h3 class="uk-heading-divider">标志<a class="uk-text-primary uk-text-small" href="#modal-help-marks" tabindex="-1" uk-toggle>这是什么?</a></h3>
                         <div class="uk-margin uk-grid-small uk-child-width-auto" uk-grid>
@@ -121,11 +123,11 @@
                         <h3 class="uk-heading-divider">单字条目<a class="uk-text-primary uk-text-small" href="#modal-help-pivot" tabindex="-1" uk-toggle>这是什么?</a>
                         </h3>
                         <label><input tabindex="5" class="uk-checkbox" asp-for="IsPivotRow" >这行是【单字条目】</label>
-                        <div id="PivotRowSpecificFields" >
-                        <h4 class="uk-heading-divider">偏旁</h4>
-                        <input tabindex="6" class="uk-input" asp-for="Radical" />
-                        <h4 class="uk-heading-divider">国语注音</h4>
-                        <input tabindex="7" class="uk-input" asp-for="BoPoMoFo" />
+                        <div id="PivotRowSpecificFields">
+                            <h4 class="uk-heading-divider">偏旁</h4>
+                            <input tabindex="6" class="uk-input" asp-for="Radical" />
+                            <h4 class="uk-heading-divider">国语注音</h4>
+                            <input tabindex="7" class="uk-input" asp-for="BoPoMoFo" />
                         </div>
                         <hr class="uk-divider-icon">
                     </div>
@@ -136,27 +138,24 @@
                         <hr class="uk-divider-icon">
                     </div>
                     <input type="hidden" asp-for="GroupId" />
-                    </form>
+                </form>
+            </div>
+
+
+
+            <div class="uk-margin-small" id="rightPanel_buttons">
+                <div class="uk-button-group uk-flex uk-flex-around">
+                    <a class="uk-button uk-button-danger mybtn" href="#" id="btnReport">图片不清楚</a>
+                    <a id="btnSubmit" class="uk-button uk-button-primary mybtn" title="Ctrl+S" uk-tooltip>提交 & 下一个</a>
+                    <a tabindex="-1" id="btnSkip" class="uk-button uk-button mybtn" href="#" title="F2" uk-tooltip>换一条</a>
                 </div>
+            </div>
 
-
-
-                <div class="uk-margin-small" id="rightPanel_buttons">
-                    <div class="uk-button-group uk-flex uk-flex-around">
-                        <a class="uk-button uk-button-danger mybtn"
-                           href="#"
-                           id="btnReport">图片不清楚</a>
-                        <a id="btnSubmit" class="uk-button uk-button-primary mybtn" title="Ctrl+S" uk-tooltip>提交 & 下一个</a>
-                        <a tabindex="-1" id="btnSkip" class="uk-button uk-button mybtn"
-                                href="#" title="F2" uk-tooltip>换一条</a>
-                    </div>
-                </div>
-  
         </div>
         <!--rightPanel-->
     </div>
 </div>
- <form id="reportForm" asp-controller="CrowdSource" asp-action="ReportError" method="post" role="form" autocomplete="off">
-   <input type="hidden" asp-for="GroupId" />
- </form>
+<form id="reportForm" asp-controller="CrowdSource" asp-action="ReportError" method="post" role="form" autocomplete="off">
+    <input type="hidden" asp-for="GroupId" />
+</form>
 @await Html.PartialAsync("_HelpPartial")
