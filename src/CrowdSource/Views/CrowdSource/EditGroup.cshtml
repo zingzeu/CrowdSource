@@ -30,8 +30,9 @@
         <div class="uk-navbar-left">
 
             <ul class="uk-navbar-nav">
-                <a class="uk-navbar-item uk-logo" href="#"><span class="uk-margin-small-right" uk-icon="icon: check"></span> 返回闽英众包 首页</a>
-                <li class="uk-active "><a class="uk-text-large">帮助</a></li>
+                <a class="uk-navbar-item uk-logo" asp-area="" asp-controller="Home" asp-action="Index"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i>
+返回首页</a>
+                <li class="uk-active "><a href="~/help/index.html" target="_blank" class="uk-text-large">帮助</a></li>
             </ul>
 
         </div>
@@ -114,10 +115,10 @@
                         <h3 class="uk-heading-divider">标志<a class="uk-text-primary uk-text-small" href="#modal-help-marks" tabindex="-1" uk-toggle>这是什么?</a></h3>
                         <div class="uk-margin uk-grid-small uk-child-width-auto" uk-grid>
                             <label><input tabindex="3" class="uk-checkbox" asp-for="IsOral"> 
-                            <img src="~/images/oral.png" height="20" />
+                            <img src="~/images/oral.png" style="max-height:20px;" />
                             </label>
                             <label><input tabindex="4" class="uk-checkbox" asp-for="IsLiterary"> 
-                            <img src="~/images/literary.png" height="20" />
+                            <img src="~/images/literary.png" style="max-height:20px;" />
                             </label>
                         </div>
                         <h3 class="uk-heading-divider">单字条目<a class="uk-text-primary uk-text-small" href="#modal-help-pivot" tabindex="-1" uk-toggle>这是什么?</a>
@@ -146,8 +147,8 @@
             <div class="uk-margin-small" id="rightPanel_buttons">
                 <div class="uk-button-group uk-flex uk-flex-around">
                     <a class="uk-button uk-button-danger mybtn" href="#" id="btnReport">图片不清楚</a>
-                    <a id="btnSubmit" class="uk-button uk-button-primary mybtn" title="Ctrl+S" uk-tooltip>提交 & 下一个</a>
-                    <a tabindex="-1" id="btnSkip" class="uk-button uk-button mybtn" href="#" title="F2" uk-tooltip>换一条</a>
+                    <a id="btnSubmit" class="uk-button uk-button-primary mybtn" title="Ctrl+S" uk-tooltip>提交 & 下一个 <br /> Ctrl + S</a>
+                    <a tabindex="-1" id="btnSkip" class="uk-button uk-button mybtn" href="#" title="F2" uk-tooltip>换一条 <br /> F2</a>
                 </div>
             </div>
 
@@ -159,3 +160,4 @@
     <input type="hidden" asp-for="GroupId" />
 </form>
 @await Html.PartialAsync("_HelpPartial")
+@await Html.PartialAsync("_TourPartial")
