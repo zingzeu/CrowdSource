@@ -245,16 +245,18 @@ $(document).ready(function () {
     $('#BoPoMoFo').keyboard(optionsBoPoMoFo);
 
     function updatePreview() {
-        $("#previewBUC").text($("#TextBUC").val());
+        $("#previewBUC").text(
+            $("#TextBUC").val().trim()=="{empty}" ?
+            ""
+            :
+            $("#TextBUC").val()
+        );
         $("#previewEnglish").text($("#TextEnglish").val());
-        $("#previewChineseWithRadicals").text(
-            (
+        $("#previewChinese").text($("#TextChinese").val());
+        $("#previewRadical").text(
                 $("#IsPivotRow").is(':checked')?
                 $("#Radical").val():""
-            )
-            +
-            $("#TextChinese").val()
-        );
+            );
         $("#previewBoPoMoFo").text(
             $("#IsPivotRow").is(':checked') ?
             $("#BoPoMoFo").val() : ""
@@ -306,5 +308,10 @@ $(document).ready(function () {
     $('#IsPivotRow').change(fieldChanged);
     $('#IsOral').change(fieldChanged);
     $('#IsLiterary').change(fieldChanged);
+
+    // set empty
+    $("#BUCSetEmptyBtn").click(function () {
+        $("#TextBUC").val("{empty}");
+    });
 });
 

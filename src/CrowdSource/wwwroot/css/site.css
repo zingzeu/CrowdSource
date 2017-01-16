@@ -78,12 +78,16 @@ textarea {
     font-family: "Times New Roman",serif;
 }
 
-#previewChineseWithRadicals {
+#previewChinese, #previewRadical {
     font-size: 2.3vw;
 }
 
+#previewRadical {
+    color: gray;
+}
+
 @media screen and (min-width: 1200px){
-     #previewChineseWithRadicals {
+     #previewChinese, #previewRadical {
         font-size:35px;
     }
     #previewBUC, #previewEnglish {
