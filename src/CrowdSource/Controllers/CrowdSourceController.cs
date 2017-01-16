@@ -157,7 +157,7 @@ namespace CrowdSource.Controllers
             var reviewedCount = group?.Versions.FirstOrDefault()?.UserReviews.Count() ?? 0;
 
             // load config for minimal review
-            int minimumReview = 2; //Ĭ��ֵ2
+            int minimumReview = 2; //Ĭ��ֵ2
             string minimumReviewFromConfig = _config.Get("ReviewThreshold");
 
             if (minimumReviewFromConfig != null)
@@ -180,12 +180,13 @@ namespace CrowdSource.Controllers
             return RedirectToAction("ReviewGroup");
         }
 
-        [HttpGet] 
-        public IActionResult ReportError(int groupId)
+        [HttpPost]
+        [ValidateAntiForgeryTokenAttribute] 
+        public IActionResult ReportError([FromForm]int GroupId)
         {
-            _logger.LogCritical($"Error Reported. GroupId = {groupId}");
+            _logger.LogCritical($"Error Reported. GroupId = {GroupId}");
 
-            var group = _context.Groups.SingleOrDefault(g => g.GroupId == groupId);
+            var group = _context.Groups.SingleOrDefault(g => g.GroupId == GroupId);
 
             group.FlagType = FlagEnum.SegmentationError;
             _context.SaveChanges();
