@@ -51,7 +51,7 @@
         <div class="uk-flex-1 uk-flex uk-flex-column" id="leftPanel">
             <div class="uk-padding-small uk-flex uk-flex-column uk-flex-1">
                 <div>
-                    <h3 class="uk-heading-divider">原始图片 #@Model.GroupId</h3>
+                    <h3 class="uk-heading-divider">原始图片 #@Model.GroupId <span class="uk-text-large uk-text-muted">鼠标移上去放大。</span></h3>
                 </div>
                 <div class="uk-flex-1 uk-flex-column uk-flex-left">
                     <div class="uk-alert-warning" uk-alert id="narrowScreenWarning">
@@ -62,7 +62,7 @@
                         @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.GroupId }) @await Html.PartialAsync("_ModeIndicatorPartial")
                     </div>
                     <div class="uk-background uk-padding-small">
-                        <span class="uk-text-large uk-text-muted">鼠标移上去放大。</span>
+                        
                     </div>
                 </div>
             </div>
@@ -88,7 +88,7 @@
                 </div>
 
                 <select tabindex="-1" id="editorMode" class="uk-select uk-text-large uk-flex-1">
-                         <option value="all">全部都打 （罗马字+汉字+英文）</option>
+                         <option value="all">全部同时打 （罗马字+汉字+英文）</option>
                           <option value="buc">只打 罗马字</option>
                           <option value="chi">只打 汉字</option>
                           <option value="eng">只打 英文</option>
