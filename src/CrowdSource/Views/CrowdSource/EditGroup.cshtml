@@ -45,6 +45,10 @@
                 <li><a href="#">登录</a></li>
             </ul>
 *@
+
+            <ul class="uk-navbar-nav">
+                <li id="RestartTour"> <a href="#">帮助向导</a> </li>
+            </ul>
         </div>
     </nav>
     <div uk-grid class="uk-flex uk-flex-stretch uk-flex-1 uk-flex-row" id="mainPanel">
@@ -58,7 +62,7 @@
                         <a class="uk-alert-close" uk-close></a>
                         <p>屏幕窗口太小了。请最大化窗口。或按 Ctrl+减号 缩小比例尺。</p>
                     </div>
-                    <div class="uk-background-muted uk-padding-small">
+                    <div id="OriginalImage" class="uk-background-muted uk-padding-small">
                         @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.GroupId }) @await Html.PartialAsync("_ModeIndicatorPartial")
                     </div>
                     <div class="uk-background uk-padding-small">
@@ -66,7 +70,7 @@
                     </div>
                 </div>
             </div>
-            <div class="uk-padding-small uk-flex-1 uk-flex uk-flex-column">
+            <div id="PreviewPanel" class="uk-padding-small uk-flex-1 uk-flex uk-flex-column">
                 <div>
                     <h3 class="uk-heading-divider">预览</h3>
                 </div>
