@@ -78,6 +78,8 @@ namespace CrowdSource.Controllers
             var fields = _logic.GetLastestVersionFields(gid);
             var types = _logic.GetAllFieldTypesByGroup(gid);
             
+            //legacy view
+            if (id != null) return View("LegacyEditGroup", await FieldsToGroupViewModel(gid,fields,types));
             return View(await FieldsToGroupViewModel(gid,fields,types));
         }
 
@@ -137,7 +139,7 @@ namespace CrowdSource.Controllers
             var fields = _logic.GetLastestVersionFields(gid);
             var types = _logic.GetAllFieldTypesByGroup(gid);
 
-            return View("EditGroup",await FieldsToGroupViewModel(gid, fields, types));
+            return View("LegacyEditGroup",await FieldsToGroupViewModel(gid, fields, types));
         }
 
         [HttpGet]
@@ -157,7 +159,7 @@ namespace CrowdSource.Controllers
             var reviewedCount = group?.Versions.FirstOrDefault()?.UserReviews.Count() ?? 0;
 
             // load config for minimal review
-            int minimumReview = 2; //Ĭ��ֵ2
+            int minimumReview = 2; //Ĭ��ֵ2
             string minimumReviewFromConfig = _config.Get("ReviewThreshold");
 
             if (minimumReviewFromConfig != null)
@@ -180,12 +182,13 @@ namespace CrowdSource.Controllers
             return RedirectToAction("ReviewGroup");
         }
 
-        [HttpGet] 
-        public IActionResult ReportError(int groupId)
+        [HttpPost]
+        [ValidateAntiForgeryTokenAttribute] 
+        public IActionResult ReportError([FromForm]int GroupId)
         {
-            _logger.LogCritical($"Error Reported. GroupId = {groupId}");
+            _logger.LogCritical($"Error Reported. GroupId = {GroupId}");
 
-            var group = _context.Groups.SingleOrDefault(g => g.GroupId == groupId);
+            var group = _context.Groups.SingleOrDefault(g => g.GroupId == GroupId);
 
             group.FlagType = FlagEnum.SegmentationError;
             _context.SaveChanges();
@@ -225,6 +228,15 @@ namespace CrowdSource.Controllers
                 Radical = fields[types.Single(t => t.Name == "Radical")],
                 FlagType = _context.Groups.Single(g => g.GroupId == gid).FlagType
             };
+        }
+
+
+        // use this to redirect the user back to EditGroup (Skip Group)
+        // avoid using location.reload on client side (causes cache to reload)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult RedirectToEditGroup() {
+            return RedirectToAction("EditGroup");
         }
     }
 }

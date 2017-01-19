@@ -1,4 +1,8 @@
 @model string
 
-<img class="img-responsive" src="@Model"/>
+@{
+    var timeString = DateTime.Now.ToString().GetHashCode();
+    var url = Model + '?' + timeString;
+}
+<img class="groupImg img-responsive" src="@url"/>
 @*<a>@ViewData["FileName"]</a>*@

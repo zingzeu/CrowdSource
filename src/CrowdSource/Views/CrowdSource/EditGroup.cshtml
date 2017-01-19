@@ -1,195 +1,170 @@
-﻿@*
-  录入View
-    同时录入  罗马字、汉字、英文
-  
-    这个View 同时也用作管理和校对。
-*@
-@model GroupViewModel
+﻿@* 录入View 同时录入 罗马字、汉字、英文 这个View 同时也用作管理和校对。 *@ 
+@{ Layout = "_EditorLayout"; } 
+@model GroupViewModel 
 @{ 
     Object tmp = null;
     ViewData.TryGetValue("Review", out tmp);
-    bool isReview = false;
-
-    if (tmp !=null && (bool)tmp)
+    
+    bool isReview = false; 
+    
+    if (tmp !=null && (bool)tmp) 
     {
-        isReview = true;
+         isReview = true; 
     }
+    
+    bool isAdmin = (bool)ViewData["Admin"]; 
 
-    bool isAdmin = (bool)ViewData["Admin"];
-}
-@{
-    string SubmitButtonText;
-    if (!isReview)
+    if (!isReview) 
     {
-        SubmitButtonText = "提交 & 下一条(ENTER)";
-        ViewData["Title"] = "编辑 / 录入";
+         ViewData["Title"] = "编辑 / 录入"; 
     }
     else
     {
-        SubmitButtonText = "保存修改";
-        ViewData["Title"] = "校对";
+         ViewData["Title"] = "校对"; 
     }
+
 }
-@if (isReview)
-{
-    <h1>校对</h1>
-}
-else
-{
-    <h1>录入 / 编辑</h1>
-}
+<div class="uk-flex uk-flex-column" id="container">
+    <nav id="nav" class="uk-navbar-container uk-margin" uk-navbar>
+        <!-- left -->
+        <div class="uk-navbar-left">
+
+            <ul class="uk-navbar-nav">
+                <a class="uk-navbar-item uk-logo" asp-area="" asp-controller="Home" asp-action="Index"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i>
+返回首页</a>
+                <li class="uk-active "><a href="~/help/index.html" target="_blank" class="uk-text-large">帮助</a></li>
+            </ul>
+
+        </div>
+
+        <!-- right -->
+        <div class="uk-navbar-right">
+@*
+            <ul class="uk-navbar-nav">
+                <li> <a href="#">注册</a> </li>
+                <li><a href="#">登录</a></li>
+            </ul>
+*@
+        </div>
+    </nav>
+    <div uk-grid class="uk-flex uk-flex-stretch uk-flex-1 uk-flex-row" id="mainPanel">
+        <div class="uk-flex-1 uk-flex uk-flex-column" id="leftPanel">
+            <div class="uk-padding-small uk-flex uk-flex-column uk-flex-1">
+                <div>
+                    <h3 class="uk-heading-divider">原始图片 #@Model.GroupId <span class="uk-text-large uk-text-muted">鼠标移上去放大。</span></h3>
+                </div>
+                <div class="uk-flex-1 uk-flex-column uk-flex-left">
+                    <div class="uk-alert-warning" uk-alert id="narrowScreenWarning">
+                        <a class="uk-alert-close" uk-close></a>
+                        <p>屏幕窗口太小了。请最大化窗口。或按 Ctrl+减号 缩小比例尺。</p>
+                    </div>
+                    <div class="uk-background-muted uk-padding-small">
+                        @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.GroupId }) @await Html.PartialAsync("_ModeIndicatorPartial")
+                    </div>
+                    <div class="uk-background uk-padding-small">
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="uk-padding-small uk-flex-1 uk-flex uk-flex-column">
+                <div>
+                    <h3 class="uk-heading-divider">预览</h3>
+                </div>
+                <div class="uk-flex-1 uk-background">
+                    @await Html.PartialAsync("_PreviewerPartial")
+                </div>
+            </div>
+        </div>
+
+        <div id="rightPanel" class="uk-flex uk-flex-column uk-background uk-background-muted">
+
+            <div id="rightPanel__title">
+                <h2 class="uk-text-bold">录入模式</h2>
+            </div>
+            <div id="selector" class="uk-background-muted uk-flex uk-flex-row">
+
+                <div class="uk-form-label uk-text" id="selector__label">
+                    我要录入:
+                </div>
+
+                <select tabindex="-1" id="editorMode" class="uk-select uk-text-large uk-flex-1">
+                         <option value="all">全部同时打 （罗马字+汉字+英文）</option>
+                          <option value="buc">只打 罗马字</option>
+                          <option value="chi">只打 汉字</option>
+                          <option value="eng">只打 英文</option>
+                    </select>
+            </div>
+
+            <div id="editor" class="uk-padding-small uk-background uk-flex-1">
+                <form id="editorForm" asp-controller="CrowdSource" asp-action="SubmitGroup" method="post" role="form" autocomplete="off">
+
+                    <div id="editorBUC">
+                        <h2 class="uk-heading-divider">罗马字</h2>
+                        <input autofocus tabindex="1" class="uk-input" asp-for="TextBUC" placeholder="在这里打左边图片中的罗马字...">
+                        <button tabindex="-1" type="button" id="BUCSetEmptyBtn" class="uk-button uk-button-default uk-button-small">这栏是空白</button>
+                        <hr class="uk-divider-icon">
+                    </div>
+
+                    <div id="editorChinese">
+                        <h2 class="uk-heading-divider">汉字 | 漢字                        <a class="uk-text-primary uk-text-small" href="#modal-help-yinan" tabindex="-1" uk-toggle>疑难字?</a></h2>
+                        <div class="uk-alert-warning" uk-alert>
+                            <a class="uk-alert-close" uk-close></a>
+                            <p>繁体字也要如实打哦。<a class="uk-text-primary uk-text-small" href="#modal-help-traditional" tabindex="-1" uk-toggle>怎么打?</a></p>
+                        </div>
+                        <input tabindex="2" class="uk-input" asp-for="TextChinese" placeholder="在這裏打左邊圖中的漢字...">
+                        <h3 class="uk-heading-divider">标志<a class="uk-text-primary uk-text-small" href="#modal-help-marks" tabindex="-1" uk-toggle>这是什么?</a></h3>
+                        <div class="uk-margin uk-grid-small uk-child-width-auto" uk-grid>
+                            <label><input tabindex="3" class="uk-checkbox" asp-for="IsOral"> 
+                            <img src="~/images/oral.png" style="max-height:20px;" />
+                            </label>
+                            <label><input tabindex="4" class="uk-checkbox" asp-for="IsLiterary"> 
+                            <img src="~/images/literary.png" style="max-height:20px;" />
+                            </label>
+                        </div>
+                        <h3 class="uk-heading-divider">单字条目<a class="uk-text-primary uk-text-small" href="#modal-help-pivot" tabindex="-1" uk-toggle>这是什么?</a>
+                        </h3>
+                        <label><input tabindex="5" class="uk-checkbox" asp-for="IsPivotRow" >这行是【单字条目】</label>
+                        <div id="PivotRowSpecificFields" class="uk-flex uk-grid-small">
+                            <div>
+                                <h4 class="uk-heading-divider">偏旁</h4>
+                                <input tabindex="6" class="uk-input" asp-for="Radical" />
+                            </div>
+                            <div>
+                                <h4 class="uk-heading-divider">国语注音</h4>
+                                <input tabindex="7" class="uk-input" asp-for="BoPoMoFo" />
+                            </div>
+                        </div>
+                        <hr class="uk-divider-icon">
+                    </div>
+
+                    <div id="editorEnglish">
+                        <h2 class="uk-heading-divider">英文</h2>
+                        <input tabindex="8" class="uk-input" asp-for="TextEnglish" placeholder="在这里打左边图片中的英文...">
+                        <hr class="uk-divider-icon">
+                    </div>
+                    <input type="hidden" asp-for="GroupId" />
+                </form>
+            </div>
 
 
-<form asp-controller="CrowdSource" asp-action="SubmitGroup" method="post" role="form" autocomplete="off">
-    <div class="panel panel-warning">
-        <div class="panel-heading">编号 #@Model.GroupId</div>
-        <div class="panel-body" style="height: 90px; overflow: scroll;">
-            @await Component.InvokeAsync("DisplayGroup", new { GroupId = Model.GroupId })
+
+            <div class="uk-margin-small" id="rightPanel_buttons">
+                <div class="uk-button-group uk-flex uk-flex-around">
+                    <a class="uk-button uk-button-danger mybtn" href="#" id="btnReport">图片不清楚</a>
+                    <a id="btnSubmit" class="uk-button uk-button-primary mybtn" title="Ctrl+S" uk-tooltip>提交 & 下一个 <br /> Ctrl + S</a>
+                    <a tabindex="-1" id="btnSkip" class="uk-button uk-button mybtn" href="#" title="F2" uk-tooltip>换一条 <br /> F2</a>
+                </div>
+            </div>
+
         </div>
+        <!--rightPanel-->
     </div>
-    <div class="panel panel-success">
-        <div class="panel-heading">预览 (<a id="previewerToggle">显示/隐藏</a>)</div>
-        <div class="panel-body"  id="previewPanel">
-            @await Html.PartialAsync("_PreviewerPartial")
-        </div>
-    </div>
+</div>
+<form id="reportForm" asp-controller="CrowdSource" asp-action="ReportError" method="post" role="form" autocomplete="off">
     <input type="hidden" asp-for="GroupId" />
-    <div class="row">
-        
-        
-    </div>
-    @*
-        提示行    
-    *@
-    <div class="row">
-        <div class="col-md-3"></div>
-        <div class="col-md-3"></div>
-        <div class="col-md-6"></div>
-    </div>
-    <div class="row">
-        <div class="col-md-3">
-            <h3>罗马字</h3>
-            <input class="form-control" asp-for="TextBUC" />
-        </div>
-        <div class="col-md-3">
-            <h3>汉字<a target="_blank" class="text text-info" href="~/help/index.html#chinese" style="font-size:80%">繁体字/疑难字帮助</a></h3>
-
-            <input class="form-control" asp-for="TextChinese" />
-            <div class="row">
-                <h4>标志</h4>
-                <div class="col-sm-6"><img src="~/images/oral.png" height="20" />：<input class="checkbox-inline" asp-for="IsOral" /></div>
-                <div class="col-sm-6">
-                    <img src="~/images/literary.png" height="20" />：<input class="checkbox-inline" asp-for="IsLiterary" />
-                </div>
-            </div>
-            <div class="row">
-                <h4>单字条目 <a target="_blank" class="text text-info" href="~/help/index.html#pivot" style="font-size:80%">什么是【单字条目】?</a></h4>
-                <div class="col-sm-12">
-                    <input class="checkbox-inline" asp-for="IsPivotRow" /> 这行是【单字条目】
-                </div>
-                
-                <div id="PivotRowSpecificFields" >
-                    <div class="col-sm-12">
-                        偏旁： <input class="form-control" asp-for="Radical" />
-                    </div>
-                    <div class="col-sm-12">
-                        国语注音： <input class="form-control" asp-for="BoPoMoFo" />
-                    </div>
-                </div>
-
-            </div>
-            
-        </div>
-        <div class="col-md-6">
-            <h3>英文</h3>
-             
-            <input class="form-control" asp-for="TextEnglish" />
-        </div>
-    </div>
-
-    @if ((bool)ViewData["Admin"])
-    {
-        <div class="row">
-            Flag: @(Model.FlagType?.ToString() ?? "NULL")
-        </div>
-        <a class="btn btn-warning" asp-controller="Admin" asp-action="UnsetGroupError" asp-route-id="@Model.GroupId">消除标记</a>
-        <a class="btn btn-danger" asp-controller="Admin" asp-action="GroupDelete" asp-route-id="@Model.GroupId">删除</a>
-    }
-    @if (!isAdmin && isReview)
-    {
-        // 众包校对
-        // 如果校对的时候又修改了
-        // 显示提示
-        <div class="row">
-            <a id="promptModified"></a>
-        </div>
-    }
-
-    <div class="row">
-        <div class="col-md-8">
-            @if (!isReview)
-            {
-                <a asp-controller="CrowdSource"
-                   asp-action="ReportError"
-                   asp-route-GroupId="@Model.GroupId"
-                   class="btn btn-danger">图片切割错误 / 空白</a>
-            }
-        </div>
-        <div class="col-md-4">
-            @if (isReview)
-            {
-                <input type="hidden" name="Review" id="Review" value="true" />
-            }
-            @if (isAdmin) {
-                <input type="hidden" name="Admin" id="Admin" value="true" />
-            }
-
-            @if (!isAdmin && !isReview)
-            {
-                // 众包录入
-                <a asp-controller="CrowdSource"
-                   asp-action="EditGroup"
-                   class="btn btn-warning"
-                   asp-route-id="">换一条</a>
-            }
-            else if (!isAdmin && isReview)
-            {
-                // 众包校对
-                <a asp-controller="CrowdSource"
-                   asp-action="ReviewGroup"
-                   class="btn btn-warning"
-                   asp-route-id="">换一条</a>
-            }
-
-            @if (!isAdmin && !isReview)
-            {
-                // 众包录入
-                <button type="submit" class="btn btn-primary btn-lg">提交 & 下一条(ENTER)</button>
-            }
-            else if (!isAdmin && isReview)
-            {
-                // 众包校对
-                <a id="btnReview" asp-controller="CrowdSource"
-                   asp-action="ReviewGroupSubmit"
-                   class="btn btn-success btn-lg"
-                   asp-route-groupId="@Model.GroupId">这条没错</a>
-              
-                <button id="btnSubmit" type="submit" class="btn btn-primary btn-lg" style="display:none;">保存修改</button>
-            }
-            else
-            {
-                // 编辑状态
-                <button type="submit" class="btn btn-success">保存修改</button>
-            }
-        </div>
-    </div>
 </form>
 
-@if (isReview)
-{
-    <style>
-        body {
-            background: #c8e6c9;
-        }
-    </style>
-} 
+<form id="skipForm" asp-controller="CrowdSource" asp-action="RedirectToEditGroup" method="post" role="form" autocomplete="off">
+</form>
+@await Html.PartialAsync("_HelpPartial")
+@await Html.PartialAsync("_TourPartial")
