@@ -1,0 +1,29 @@
+version: '2'
+services:
+  postgres:
+    image: postgres:9.6
+    environment: 
+      POSTGRES_USER: cs
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: crowdsource
+    volumes:
+    - ./dev/db:/var/lib/postgresql
+#    - ./backups:/root/backups
+  web:
+#    dns: 8.8.8.8
+    build:
+      dockerfile: Dockerfile.dev 
+      context: ./src/CrowdSource
+    depends_on:
+    - postgres
+    volumes:
+    - ./src/CrowdSource:/app
+    - ./dev/segments:/app/wwwroot/segments:ro 
+    ports:
+     - "5000:5000"
+    links:
+    - postgres:pg
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://0.0.0.0:5000
+      ConnectionStrings:DefaultConnection: "Server=pg;Port=5432;Database=crowdsource;User Id=cs;Password=password;"

@@ -1,0 +1,11 @@
+# Dockerfile for development
+
+FROM microsoft/aspnetcore-build:1.1-msbuild
+
+WORKDIR /app
+
+VOLUME /app
+
+VOLUME /app/wwwroot/segments
+
+ENTRYPOINT bash
