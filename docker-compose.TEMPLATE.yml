@@ -23,5 +23,5 @@ services:
     - postgres:pg
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-      ASPNETCORE_SERVER.URLS: http://0.0.0.0:5000
+      ASPNETCORE_URLS: http://0.0.0.0:5000
       ConnectionStrings:DefaultConnection: "Server=pg;Port=5432;Database=crowdsource;User Id=cs;Password=<your password>;"
