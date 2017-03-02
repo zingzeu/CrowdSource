@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: <your password>
       POSTGRES_DB: crowdsource
     volumes:
-    - ./db:/var/lib/postgresql
+    - ./db:/var/lib/postgresql/data
     - ./backups:/root/backups
   web:
     build: 

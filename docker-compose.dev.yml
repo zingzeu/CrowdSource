@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: crowdsource
     volumes:
-    - ./dev/db:/var/lib/postgresql
+    - ./dev/db:/var/lib/postgresql/data
     - ./dev/backups:/root/backups
   web:
 #    dns: 8.8.8.8
