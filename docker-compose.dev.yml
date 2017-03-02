@@ -11,6 +11,8 @@ services:
 #    - ./backups:/root/backups
   web:
 #    dns: 8.8.8.8
+    extra_hosts: 
+      - "api.nuget.org:117.18.232.200"
     build:
       dockerfile: Dockerfile.dev 
       context: ./src/CrowdSource
