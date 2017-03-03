@@ -14,7 +14,11 @@ namespace CrowdSource.Models.AccountViewModels
         public string Email { get; set; }
 
         [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [Display(Name = "昵称 (显示在贡献者列表)")]
+        public string NickName { get; set; }
+
+        [Required]
+        [StringLength(100, ErrorMessage = "{0}必须至少{2}个字符，最多{1}个字符。", MinimumLength = 6)]
         [DataType(DataType.Password)]
         [Display(Name = "密码")]
         public string Password { get; set; }

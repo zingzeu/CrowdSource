@@ -13,5 +13,7 @@ namespace CrowdSource.Models
     {
         public List<ApplicationUserEndorsesGroupVersion> MyReviews;
         public List<Suggestion> SuggestionsAuthored;
+
+        public string NickName { get; set; }
     }
 }

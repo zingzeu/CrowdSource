@@ -63,8 +63,12 @@ namespace CrowdSource.Controllers
                 TwoFactor = await _userManager.GetTwoFactorEnabledAsync(user),
                 Logins = await _userManager.GetLoginsAsync(user),
                 BrowserRemembered = await _signInManager.IsTwoFactorClientRememberedAsync(user),
-                Roles = roles
+                Roles = roles,
+                NickName = user.NickName
             };
+            Console.WriteLine("******************");
+            Console.WriteLine($" NickName {user.NickName}");
+            Console.WriteLine("******************");
             return View(model);
         }
 

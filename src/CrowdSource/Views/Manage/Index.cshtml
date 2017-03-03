@@ -3,13 +3,15 @@
     ViewData["Title"] = "管理账户";
 }
 
-<h2>@ViewData["Title"].</h2>
+<h2>@ViewData["Title"]</h2>
 <p class="text-success">@ViewData["StatusMessage"]</p>
 
 <div>
     <h4>修改你的帐号设定</h4>
     <hr />
     <dl class="dl-horizontal">
+        <dt>昵称 (显示在贡献者列表):</dt>
+        <dd>@Model.NickName</dd>
         <dt>密码:</dt>
         <dd>
             @if (Model.HasPassword)

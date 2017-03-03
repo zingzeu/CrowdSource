@@ -22,5 +22,9 @@ namespace CrowdSource.Models.ManageViewModels
 
         [Display(Name = "身份")]
         public IList<string> Roles {get; set;}
+
+
+        [Display(Name = "昵称")]
+        public string NickName {get; set;}
     }
 }
