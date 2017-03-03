@@ -210,7 +210,7 @@ namespace CrowdSource.Services
                     "   INNER JOIN \"GroupVersions\" ON \"Reviews\".\"GroupVersionId\" = \"GroupVersions\".\"GroupVersionId\"" +
                     "   WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"" +
                     "   AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL" +
-                    ") < {0}" +  // Review 少于二次
+                    ") < {0}" +  // Review 少于minimumReview次
                     " AND \"gg\".\"FlagType\" IS NULL",
                     minimumReview
                     )
