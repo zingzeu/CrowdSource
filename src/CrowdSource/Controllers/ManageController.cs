@@ -42,10 +42,11 @@ namespace CrowdSource.Controllers
         public async Task<IActionResult> Index(ManageMessageId? message = null)
         {
             ViewData["StatusMessage"] =
-                message == ManageMessageId.ChangePasswordSuccess ? "Your password has been changed."
+                message == ManageMessageId.ChangePasswordSuccess ? "密码修改成功。"
+                : message == ManageMessageId.ChangeNickNameSuccess ? "您的昵称修改成功。"
                 : message == ManageMessageId.SetPasswordSuccess ? "Your password has been set."
                 : message == ManageMessageId.SetTwoFactorSuccess ? "Your two-factor authentication provider has been set."
-                : message == ManageMessageId.Error ? "An error has occurred."
+                : message == ManageMessageId.Error ? "发生了一些错误。"
                 : message == ManageMessageId.AddPhoneSuccess ? "Your phone number was added."
                 : message == ManageMessageId.RemovePhoneSuccess ? "Your phone number was removed."
                 : "";
@@ -279,6 +280,41 @@ namespace CrowdSource.Controllers
             return RedirectToAction(nameof(Index), new { Message = ManageMessageId.Error });
         }
 
+        //
+        // GET: /Manage/ChangeNickName
+        [HttpGet]
+        public IActionResult ChangeNickName()
+        {
+            return View();
+        }
+
+        //
+        // POST: /Manage/ChangeNickName
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangeNickName(ChangeNickNameViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            var user = await GetCurrentUserAsync();
+            if (user != null)
+            {
+                user.NickName = model.NewNickName;
+                var result = await _userManager.UpdateAsync(user);
+                if (result.Succeeded)
+                {
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    _logger.LogInformation(3, "修改昵称成功。");
+                    return RedirectToAction(nameof(Index), new { Message = ManageMessageId.ChangeNickNameSuccess });
+                }
+                AddErrors(result);
+                return View(model);
+            }
+            return RedirectToAction(nameof(Index), new { Message = ManageMessageId.Error });
+        }
+
         //GET: /Manage/ManageLogins
         [HttpGet]
         public async Task<IActionResult> ManageLogins(ManageMessageId? message = null)
@@ -350,6 +386,7 @@ namespace CrowdSource.Controllers
             AddPhoneSuccess,
             AddLoginSuccess,
             ChangePasswordSuccess,
+            ChangeNickNameSuccess,
             SetTwoFactorSuccess,
             SetPasswordSuccess,
             RemoveLoginSuccess,
