@@ -65,3 +65,29 @@
         </div>
     }
 </div>
+
+
+<div class="jumbotron">
+@{
+   var topContributors = (IEnumerable<Tuple<string,int>>) ViewData["TopContributors"]; 
+}
+    <h3>贡献排行榜</h3>
+    <div class="row">
+        <table class="table">
+            <tr>
+                <th>#</th>
+                <th>贡献者</th>
+                <th>贡献量 (录入笔数)</th>
+            </tr>
+            @{var i = 0; }
+            @foreach (var contributor in topContributors) {
+                <tr>
+                    <td>@(++i)</td>
+                    <td>@contributor.Item1</td>
+                    <td>@contributor.Item2</td>
+                </tr>
+            }
+        </table>
+    </div>
+
+</div>

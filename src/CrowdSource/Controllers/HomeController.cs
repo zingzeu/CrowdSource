@@ -42,6 +42,9 @@ namespace CrowdSource.Controllers
             ViewData["DonePercentChinese"] = percentDoneChinese;
             
             ViewData["ReviewPercent"] = percentReviewd;
+
+            ViewData["TopContributors"] = _analytics.TopContributors;
+            
             return View();
         }
 

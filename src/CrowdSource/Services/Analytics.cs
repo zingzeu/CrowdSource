@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace CrowdSource.Services
 {
@@ -26,10 +27,13 @@ namespace CrowdSource.Services
 
         public int Reviewed { get; private set; }
 
+        public IEnumerable<Tuple<string, int>> TopContributors  {get; private set; }
+
         public Analytics(ITaskDispatcher taskDispatcher, ApplicationDbContext context)
         {
             _taskDispacher = taskDispatcher;
             _context = context;
+            TopContributors = new List<Tuple<string,int>>();
 
             UpdateStatistics().Wait();
 
@@ -110,6 +114,49 @@ namespace CrowdSource.Services
             DoneEnglish = doneEnglish;
             ReviewTotal = done;
             Reviewed = reviewed;
+
+
+
+            // Top Contributors
+            ((List<Tuple<string,int>>)TopContributors).Clear();
+            var reader = await RDFacadeExtensions.ExecuteSqlCommandAsync(_context.Database,
+            "SELECT  \"AspNetUsers\".\"Email\", \"AspNetUsers\".\"NickName\",\"cc\".\"Count\" FROM\n" +
+            "(SELECT COUNT(DISTINCT \"SuggestionId\") AS \"Count\", \"AuthorId\" \n" +
+            "FROM \"Suggestions\"\n" +
+            "GROUP BY \"AuthorId\"\n" +
+            ") AS \"cc\" \n" +
+            "LEFT OUTER JOIN \"AspNetUsers\" ON \"cc\".\"AuthorId\" = \"AspNetUsers\".\"Id\" \n" +
+            "ORDER BY \"Count\" DESC \n" +
+            "LIMIT 10 \n" 
+            );
+
+            while (reader.DbDataReader.Read()) {
+                var email = reader.DbDataReader[0].ToString();
+                var nickname = reader.DbDataReader[1].ToString();
+                var contrib =  reader.DbDataReader[2].ToString(); 
+                int contribInt = 0;
+                Int32.TryParse(contrib, out contribInt);
+                if (email=="" && nickname=="") {
+                    ((List<Tuple<string,int>>)TopContributors).Add(new Tuple<string, int>("匿名者 (众人)",contribInt));
+                } else {
+                    email = CensorEmail(email);
+                    ((List<Tuple<string,int>>)TopContributors).Add(new Tuple<string, int>($"{nickname} ({email})",contribInt));
+                }
+
+            }
+
+            reader.Dispose();
+        }
+
+        private string CensorEmail(string email) {
+            var atPos = email.IndexOf('@');
+            if (atPos != -1) {
+                var username =  email.Substring(0,atPos);
+                string masked = Regex.Replace(username, @"(?<=[\w]{3})[\w-\._\+%]*(?=[\w]{2})", m => new string('*', m.Length));
+                return masked + "@" + "***.com";
+            } else {
+                return email;
+            }
         }
     }
 
@@ -122,5 +169,8 @@ namespace CrowdSource.Services
         int DoneChinese { get; }
         int ReviewTotal { get; }
         int Reviewed { get;  }
+
+        IEnumerable<Tuple<string, int> > TopContributors {get; }
     }
+
 }
