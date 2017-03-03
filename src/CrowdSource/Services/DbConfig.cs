@@ -38,11 +38,24 @@ namespace CrowdSource.Services
             }
             _context.SaveChanges();
         }
+
+        public int GetMinimumReview(){
+            int minimumReview = 2; //默认值2
+            string minimumReviewFromConfig = Get("ReviewThreshold");
+                
+            if (minimumReviewFromConfig != null)
+            {
+                int.TryParse(minimumReviewFromConfig, out minimumReview); 
+            }
+            return minimumReview;
+        }
     }
 
     public interface IDbConfig
     {
         string Get(string key);
         void Set(string key, string value);
+
+        int GetMinimumReview();
     }
 }

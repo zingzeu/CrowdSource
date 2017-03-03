@@ -185,13 +185,9 @@ namespace CrowdSource.Services
                     )
                     .OrderBy(g => g.GroupId).ToList();
 
-                int minimumReview = 2; //默认值2
-                string minimumReviewFromConfig = _config.Get("ReviewThreshold");
+                int minimumReview = _config.GetMinimumReview();
                 
-                if (minimumReviewFromConfig != null)
-                {
-                    int.TryParse(minimumReviewFromConfig, out minimumReview); 
-                }
+
                 List<Group> toreview = _context
                     .Groups
                     .FromSql("SELECT * FROM \"Groups\" AS \"gg\"" +
