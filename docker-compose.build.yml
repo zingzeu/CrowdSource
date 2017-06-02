@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+  ci-build:
+    image: microsoft/aspnetcore-build:1.1-msbuild
+    extra_hosts: 
+      - "api.nuget.org:117.18.232.200"
+    volumes:
+      - .:/src
+    working_dir: /src
+    command: /bin/bash -c "dotnet restore ./WebApplication1.sln && dotnet publish ./WebApplication1.sln -c Release -o ./obj/Docker/publish"
