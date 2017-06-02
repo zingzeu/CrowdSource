@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.FileProviders;
 using CrowdSource.Data;
 using CrowdSource.Models;
 using CrowdSource.Services;
@@ -88,6 +89,11 @@ namespace CrowdSource
 
             app.UseStatusCodePages();
             app.UseStaticFiles();
+
+            app.UseStaticFiles(new StaticFileOptions() {
+                FileProvider = new PhysicalFileProvider("/segments"),
+                RequestPath = new PathString("/images/segments")
+            });
 
             app.UseIdentity();
 
