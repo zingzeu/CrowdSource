@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using CrowdSource.Tools;
 
@@ -12,13 +13,7 @@ namespace CrowdSource
     {
         public static void Main(string[] args)
         {
-            var host = new WebHostBuilder()
-                .UseKestrel()
-                .UseContentRoot(Directory.GetCurrentDirectory())
-                .UseIISIntegration()
-                .UseStartup<Startup>()
-                .Build();
-
+            var host = BuildWebHost(args);
             if (args.Length > 0)
             {
                 CommandLineToolsLauncher.MainAsync(host, args).Wait();
@@ -27,8 +22,12 @@ namespace CrowdSource
             {
                 host.Run();
             }
-
-
         }
+
+        public static IWebHost BuildWebHost(string[] args) =>
+            WebHost.CreateDefaultBuilder(args)
+                .UseStartup<Startup>()
+                .UseApplicationInsights()
+                .Build();
     }
 }

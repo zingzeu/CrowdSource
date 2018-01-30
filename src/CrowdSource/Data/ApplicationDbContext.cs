@@ -24,9 +24,12 @@ namespace CrowdSource.Data
             // Add your customizations after calling base.OnModelCreating(builder);
 
             // Use JSONB data type in PostgreSQL
-            builder.Entity<Group>()
-            .Property(b => b.GroupMetadata)
-            .ForNpgsqlHasColumnType("jsonb");
+            if (Database.IsNpgsql())
+            {
+                builder.Entity<Group>()
+                    .Property(b => b.GroupMetadata)
+                    .HasColumnType("jsonb");
+            }
 
             builder.Entity<GroupVersionRefersSuggestion>()
                 .HasKey(g => new { g.GroupVersionForeignKey, g.FieldTypeForeignKey });
