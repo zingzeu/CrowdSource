@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace CrowdSource.Services
 {
+    /// <summary>
+    /// 用於隨機化列表
+    /// </summary>
     public class Shuffle
     {
         /**

@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System;
 
-namespace CrowdSource.Services
+namespace CrowdSource.Helpers.AutoCorrectors 
 {
-    public class TextSanitizer : ITextSanitizer
-    {
-        
-        public string BanJiao(string input)
+    public class BanJiaoAutoCorrector : IAutoCorrector {
+
+        public string Apply(string input) {
+            return GetBanJiao(input);
+        }
+        private string GetBanJiao(string input)
         {
             //http://www.cnblogs.com/songtzu/archive/2012/08/07/2627239.html
             if (input == null)
@@ -32,10 +31,5 @@ namespace CrowdSource.Services
             }
             return new string(cc);
         }
-    }
-
-    public interface ITextSanitizer
-    {
-        string BanJiao(string input);
     }
 }

@@ -1,0 +1,11 @@
+version: '2'
+services:
+  web:
+    build:
+      dockerfile: Dockerfile.dev.live
+    volumes:
+      - ./src/CrowdSource:/app
+      - ./dev/segments:/segments:ro
+      - ~/.nuget/packages:/root/.nuget/packages:ro
+      - ~/clrdbg:/clrdbg:ro
+    entrypoint: tail -f /dev/null # keep the container running

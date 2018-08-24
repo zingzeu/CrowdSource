@@ -47,6 +47,8 @@ namespace CrowdSource.Models.CoreViewModels
         public bool Flagged { get; set; }
 
         public CoreModels.FlagEnum? FlagType { get; set; }
+
+        public string ImageUrl;
     }
 
 

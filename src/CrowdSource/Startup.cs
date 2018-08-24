@@ -14,6 +14,8 @@ using CrowdSource.Data;
 using CrowdSource.Models;
 using CrowdSource.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.IdentityModel.Tokens;
+using CrowdSource.Auth;
 
 namespace CrowdSource
 {
@@ -92,12 +94,34 @@ namespace CrowdSource
 
             app.UseStaticFiles(new StaticFileOptions() {
                 FileProvider = new PhysicalFileProvider("/segments"),
-                RequestPath = new PathString("/images/segments")
+                RequestPath = new PathString("/segments")
             });
 
             app.UseIdentity();
 
             // Add external authentication middleware below. To configure them please see http://go.microsoft.com/fwlink/?LinkID=532715
+            
+            
+            #region UseJwtBearerAuthentication 
+            app.UseJwtBearerAuthentication(new JwtBearerOptions() 
+            { 
+                TokenValidationParameters = new TokenValidationParameters() 
+                { 
+                    IssuerSigningKey = TokenAuthOption.Key, 
+                    ValidAudience = TokenAuthOption.Audience, 
+                    ValidIssuer = TokenAuthOption.Issuer, 
+                    // When receiving a token, check that we've signed it. 
+                    ValidateIssuerSigningKey = true, 
+                    // When receiving a token, check that it is still valid. 
+                    ValidateLifetime = true, 
+                    // This defines the maximum allowable clock skew - i.e. provides a tolerance on the token expiry time  
+                    // when validating the lifetime. As we're creating the tokens locally and validating them on the same  
+                    // machines which should have synchronised time, this can be set to zero. Where external tokens are 
+                    // used, some leeway here could be useful. 
+                    ClockSkew = TimeSpan.FromMinutes(0) 
+                } 
+            }); 
+            #endregion 
 
             app.UseMvc(routes =>
             {

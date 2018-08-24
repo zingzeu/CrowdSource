@@ -15,6 +15,11 @@ dotnet run -- SetUserRole <email> Administrator
 
 ## Backup
 
+```bash
+pg_dump --dbname=crowdsource --format=t --username= --password -f <file location>
 ```
-pg_dump --dbname=crowdsource --username= --password -f <file location>
+
+## Restore
+```bash
+pg_restore -U <username> --password -d postgres --clean --create <file location>
 ```
