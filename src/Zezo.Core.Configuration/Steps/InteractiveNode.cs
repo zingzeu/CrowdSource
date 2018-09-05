@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Xml;
+
 using Zezo.Core.Configuration.Middleware;
 
 namespace Zezo.Core.Configuration.Steps {
@@ -12,7 +14,10 @@ namespace Zezo.Core.Configuration.Steps {
         public IReadOnlyList<MiddlewareNode> BeforePublish { get; private set; }
         public IReadOnlyList<MiddlewareNode> BeforeSubmit { get; private set; }
         public IReadOnlyList<MiddlewareNode> AfterSubmit { get; private set; }
+     
+        public InteractiveNode(XmlElement xmlElem, IParser parser) : base(xmlElem, parser) {
 
+        }
     }
 
 }

@@ -30,7 +30,7 @@ namespace Zezo.Core.Configuration {
             return ParseXmlElement(doc.FirstChild as XmlElement);  
         }
 
-        protected ConfigurationNode ParseXmlElement(XmlElement elem) {
+        public ConfigurationNode ParseXmlElement(XmlElement elem) {
             var nodeTypeName = elem.LocalName;
             Type nodeType;
             if (!concreteNodeTypes.TryGetValue(nodeTypeName, out nodeType)) {
@@ -70,6 +70,26 @@ namespace Zezo.Core.Configuration {
             } else {
                 var node = subNodes.Item(0) as XmlElement;
                 return node?.InnerText ?? "";
+            }
+        }
+
+        public IReadOnlyList<XmlElement> GetComplexAttribute(XmlElement elem, string qualifiedKey)
+        {
+            // find a subnode
+            var attrNodes = elem.SelectNodes($"./{qualifiedKey}");
+            if (attrNodes.Count > 1) {
+                throw new Exception($"Attribute {qualifiedKey} occurs more than once.");
+            } else if (attrNodes.Count == 0) {
+                return new List<XmlElement>();
+            } else {
+                var node = attrNodes.Item(0) as XmlElement;
+                var subNodes = new List<XmlElement>();
+                foreach (XmlNode subNode in node.ChildNodes) {
+                    if (subNode as XmlElement != null) {
+                        subNodes.Add(subNode as XmlElement);
+                    }
+                }
+                return subNodes;
             }
         }
     }
