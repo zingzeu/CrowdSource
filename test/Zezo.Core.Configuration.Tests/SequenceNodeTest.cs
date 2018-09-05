@@ -43,8 +43,6 @@ namespace Zezo.Core.Configuration.Tests
                 Assert.IsType<SequenceNode>(childstep);
                 Assert.Equal($"subsequence{i}", childstep.Id);
             }
-
         }
-   
     }
 }

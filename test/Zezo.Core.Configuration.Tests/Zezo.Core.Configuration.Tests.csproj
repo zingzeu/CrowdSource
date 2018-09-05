@@ -16,4 +16,9 @@
     <ProjectReference Include="..\..\src\Zezo.Core.Configuration\Zezo.Core.Configuration.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="data\adfd.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

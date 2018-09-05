@@ -3,12 +3,13 @@ using Xunit;
 
 namespace Zezo.Core.Configuration.Tests
 {
-    public class UnitTest1
+    public class ExampleConfigurationTest : ConfigurationNodeTest
     {
         [Fact]
-        public void Test1()
+        public void ADFDConfigurationTest()
         {
-
+            var doc = ReadDataFile("adfd.xml");
+            ConfigurationNode configRoot = parser.ParseXmlString(doc);
         }
     }
 }

@@ -164,7 +164,7 @@
         <Queue Id="eng" Name="Transcribe English Queue" />
         <Queue Id="review" Name="Reviewing queue">
             <Queue.Permissions>
-                <HasRole Role="Administrator">
+                <HasRole Role="Administrator" />
             </Queue.Permissions>
         </Queue>
     </Project.Queues>
