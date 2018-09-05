@@ -1,7 +1,7 @@
 language: csharp
 dist: trusty
 mono: none
-dotnet: 2.1.3
+dotnet: 2.1.401
 
 install:
 - dotnet restore
