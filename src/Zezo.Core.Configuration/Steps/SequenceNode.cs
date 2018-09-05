@@ -5,7 +5,6 @@ namespace Zezo.Core.Configuration.Steps {
     
     public sealed class SequenceNode : StepNode {
         public new static string TagName { get { return "Sequence"; } }
-
         private readonly List<StepNode> _children = new List<StepNode>();
         public IReadOnlyList<StepNode> Children { get { return _children; } }
         public SequenceNode(XmlElement xmlElem, IParser parser) : base(xmlElem, parser)
