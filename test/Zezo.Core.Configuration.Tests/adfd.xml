@@ -1,0 +1,171 @@
+<Project Id="adfd">
+    <Project.Name>Digitalisation of ADFD</Project.Name>
+    <Project.Pipeline>
+        <Sequence Id="normal_flow">
+            <Sequence.Children>
+                <Xor Id="transcribe">
+                    <Xor.Children>
+                        <If Id="transcribe_all_wrapper">
+                            <If.Child>
+                                <Interactive 
+                                    Id="transcribe_all"
+                                    Queue="all" >
+                                    <Interactive.Variables>
+                                        <Variable Name="timeLimit" Value="5min" />
+                                        <Variable Name="displayTemplate" Value="all.template" />
+                                    </Interactive.Variables>
+                                    <Interactive.BeforePublish>
+                                        <ScriptProcessor Source="PrepareData.csscript"/>
+                                    </Interactive.BeforePublish>
+                                    <Interactive.BeforeSubmit>
+                                        <ScriptProcessor Class="CleanWhiteSpaces" />
+                                        <ScriptGuard Source="CheckAllFields.csscript" />
+                                    </Interactive.BeforeSubmit>
+                                    <Interactive.AfterSubmit>
+                                        <SaveRevisionProcessor />
+                                    </Interactive.AfterSubmit>
+                                </Interactive>
+                            </If.Child>
+                            <If.Condition>
+                                <ScriptCondition>
+                                    <![CDATA[
+                                        not (all fields are valid)
+                                    ]]>
+                                </ScriptCondition>
+                            </If.Condition>
+                        </If>
+                        <Parallel Id="transcribe_separate">
+                            <Parallel.Children>
+                                <If Id="buc_wrapper">
+                                    <If.Child>
+                                        <Interactive Id="transcribe_buc" Queue="buc">
+                                            <Interactive.Variables>
+                                                <Variable Name="timeLimit" Value="5min" />
+                                            </Interactive.Variables>
+                                            <Interactive.BeforePublish>
+                                                <ScriptProcessor Source="PrepareDataBUC.csscript" />
+                                            </Interactive.BeforePublish>
+                                            <Interactive.BeforeSubmit>
+                                                <ScriptProcessor Class="CleanWhiteSpaces" />
+                                                <ScriptGuard Source="CheckBUC.csscript" />
+                                            </Interactive.BeforeSubmit>
+                                            <Interactive.AfterSubmit>
+                                                <SaveRevisionProcessor />
+                                            </Interactive.AfterSubmit>
+                                        </Interactive>
+                                    </If.Child>
+                                    <If.Condition>
+                                        <ScriptCondition>
+                                            <![CDATA[
+                                                not (buc field already filled)
+                                            ]]>
+                                        </ScriptCondition>
+                                    </If.Condition>
+                                </If>
+
+                                <If Id="chi_wrapper">
+                                    <If.Child>
+                                        <Interactive Id="transcribe_chi" Queue="chi">
+                                            <Interactive.Variables>
+                                                <Variable Name="timeLimit" Value="5min" />
+                                            </Interactive.Variables>
+                                            <Interactive.BeforePublish>
+                                                <ScriptProcessor Source="PrepareDataCHI.csscript" />
+                                            </Interactive.BeforePublish>
+                                            <Interactive.BeforeSubmit>
+                                                <ScriptProcessor Class="CleanWhiteSpaces" />
+                                                <ScriptGuard Source="CheckCHI.csscript" />
+                                            </Interactive.BeforeSubmit>
+                                            <Interactive.AfterSubmit>
+                                                <SaveRevisionProcessor />
+                                            </Interactive.AfterSubmit>
+                                        </Interactive>
+                                    </If.Child>
+                                    <If.Condition>
+                                        <ScriptCondition>
+                                            <![CDATA[
+                                                not (chi field already filled)
+                                            ]]>
+                                        </ScriptCondition>
+                                    </If.Condition>
+                                </If>
+
+                                <If Id="eng_wrapper">
+                                    <If.Child>
+                                        <Interactive Id="transcribe_eng" Queue="eng">
+                                            <Interactive.Variables>
+                                                <Variable Name="timeLimit" Value="5min" />
+                                            </Interactive.Variables>
+                                            <Interactive.BeforePublish>
+                                                <ScriptProcessor Source="PrepareDataENG.csscript" />
+                                            </Interactive.BeforePublish>
+                                            <Interactive.BeforeSubmit>
+                                                <ScriptProcessor Class="CleanWhiteSpaces" />
+                                                <ScriptGuard Source="CheckENG.csscript" />
+                                            </Interactive.BeforeSubmit>
+                                            <Interactive.AfterSubmit>
+                                                <SaveRevisionProcessor />
+                                            </Interactive.AfterSubmit>
+                                        </Interactive>
+                                    </If.Child>
+                                    <If.Condition>
+                                        <ScriptCondition>
+                                            <![CDATA[
+                                                not (eng field already checked by human)
+                                            ]]>
+                                        </ScriptCondition>
+                                    </If.Condition>
+                                </If>
+
+                            </Parallel.Children>
+                        </Parallel>
+                    </Xor.Children>
+                </Xor>
+                <DoWhile Id="review">
+                    <DoWhile.ChildTemplate>
+                        <Interactive Id="review_all" Queue="review">
+                            <Interactive.BeforePublish>
+                                <ScriptProcessor Class="SummarizeFields" />
+                                <ScriptProcessor Class="ConcatRevisions" />
+                            </Interactive.BeforePublish>
+                            <Interactive.AfterSubmit>
+                                <!--<ScriptProcessor Class="AssignCredit" />-->
+                                <ScriptProcessor Class="Save" />
+                                <!-- Should probably assign credit after review -->
+                            </Interactive.AfterSubmit>
+                        </Interactive>
+                    </DoWhile.ChildTemplate>
+                    <DoWhile.Condition>
+                        <ScriptCondition>
+                            <![CDATA[
+                                // repeat until there are two consecative approvals.
+                                var = this.PreviousOutput;
+                                if (this.PreviousOutput == "ApprovedNoChanges") {
+                                    this.Variables["approvals"] += 1;
+                                    if (this.Variables["approvals"] >= 2) {
+                                        return true;
+                                    }
+                                } else {
+                                    this.Variables["approvals"] += 0;
+                                }
+                                return false;
+                            ]]>
+                        </ScriptCondition>
+                    </DoWhile.Condition>
+                </DoWhile>
+            </Sequence.Children>
+        </Sequence>
+    </Project.Pipeline>
+
+    <Project.Queues>
+        <Queue Id="all" Name="Transcribe All Queue" />
+        <Queue Id="buc" Name="Transcribe BUC Queue" />
+        <Queue Id="chi" Name="Transcribe Chinese Queue" />
+        <Queue Id="eng" Name="Transcribe English Queue" />
+        <Queue Id="review" Name="Reviewing queue">
+            <Queue.Permissions>
+                <HasRole Role="Administrator">
+            </Queue.Permissions>
+        </Queue>
+    </Project.Queues>
+</Project>
