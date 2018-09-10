@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Xml;
+using Zezo.Core.Configuration.Extensions;
 
 namespace Zezo.Core.Configuration.Steps {
     
@@ -9,7 +10,7 @@ namespace Zezo.Core.Configuration.Steps {
         public IReadOnlyList<StepNode> Children { get { return _children; } }
         public SequenceNode(XmlElement xmlElem, IParser parser) : base(xmlElem, parser)
         {
-            var children = parser.GetComplexAttribute(xmlElem, this.GetTagName()+"."+"Children");
+            var children = xmlElem.GetComplexAttribute("Children");
             foreach (XmlNode xmlChild in children) {
                 var xmlChildNode = xmlChild as XmlElement;
                 if (xmlChildNode != null) {

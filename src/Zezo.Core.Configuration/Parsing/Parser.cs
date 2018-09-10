@@ -55,42 +55,5 @@ namespace Zezo.Core.Configuration {
                 throw new Exception($"Error when calling constructor of {nodeTypeName}: {e.ToString()}");
             }
         }
-
-        public string GetStringAttribute(XmlElement elem, string key, string qualifiedKey)
-        {
-            if (elem.GetAttributeNode(key) != null) {
-                return elem.GetAttribute(key);
-            }
-            // find a subnode
-            var subNodes = elem.SelectNodes($"./{qualifiedKey}");
-            if (subNodes.Count > 1) {
-                throw new Exception($"Attribute {qualifiedKey} occurs more than once.");
-            } else if (subNodes.Count == 0) {
-                return "";
-            } else {
-                var node = subNodes.Item(0) as XmlElement;
-                return node?.InnerText ?? "";
-            }
-        }
-
-        public IReadOnlyList<XmlElement> GetComplexAttribute(XmlElement elem, string qualifiedKey)
-        {
-            // find a subnode
-            var attrNodes = elem.SelectNodes($"./{qualifiedKey}");
-            if (attrNodes.Count > 1) {
-                throw new Exception($"Attribute {qualifiedKey} occurs more than once.");
-            } else if (attrNodes.Count == 0) {
-                return new List<XmlElement>();
-            } else {
-                var node = attrNodes.Item(0) as XmlElement;
-                var subNodes = new List<XmlElement>();
-                foreach (XmlNode subNode in node.ChildNodes) {
-                    if (subNode as XmlElement != null) {
-                        subNodes.Add(subNode as XmlElement);
-                    }
-                }
-                return subNodes;
-            }
-        }
     }
 }
