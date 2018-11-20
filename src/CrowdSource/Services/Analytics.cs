@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.DependencyInjection;
+using Hangfire;
 
 namespace CrowdSource.Services
 {
@@ -35,14 +36,16 @@ namespace CrowdSource.Services
             _taskDispacher = taskDispatcher;
             TopContributors = new List<Tuple<string,int>>();
 
+            // fire and forget
+            // TODO: better?
             UpdateStatistics().Wait();
 
             aTimer = new Timer(async a => {
                await UpdateStatistics();
-            },null,0,1*60*1000); //1 min
+            }, null, 0, 5 * 60 * 1000); // 10 min
         }
 
-        private async Task UpdateStatistics()
+        public async Task UpdateStatistics()
         {
             await RunWithDbContextAsync(async _context => {
                 int total = _context.Groups.Where(g => g.Collection.CollectionId == 1).Count();

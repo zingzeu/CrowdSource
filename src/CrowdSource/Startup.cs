@@ -14,6 +14,10 @@ using CrowdSource.Data;
 using CrowdSource.Models;
 using CrowdSource.Services;
 using Microsoft.AspNetCore.Http;
+using Hangfire;
+using Hangfire.MemoryStorage;
+using Hangfire.PostgreSql;
+
 
 namespace CrowdSource
 {
@@ -56,11 +60,15 @@ namespace CrowdSource
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();
             services.AddTransient<ITextSanitizer, TextSanitizer>();
+
+            services.AddHangfire(config =>
+		        config.UsePostgreSqlStorage(Configuration.GetConnectionString("DefaultConnection")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
+            UpdateDatabase(app);
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
@@ -94,6 +102,26 @@ namespace CrowdSource
                     template: "{controller=Home}/{action=Index}/{id?}");
 
             });
+
+            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            {
+                Authorization = new [] { new HangfireAuthorizationFilter() }
+            });
+
+            app.UseHangfireServer();
+        }
+
+        private static void UpdateDatabase(IApplicationBuilder app)
+        {
+            using (var serviceScope = app.ApplicationServices
+                .GetRequiredService<IServiceScopeFactory>()
+                .CreateScope())
+            {
+                using (var context = serviceScope.ServiceProvider.GetService<ApplicationDbContext>())
+                {
+                    context.Database.Migrate();
+                }
+            }
         }
     }
 }

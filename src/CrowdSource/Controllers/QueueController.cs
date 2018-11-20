@@ -49,9 +49,9 @@ namespace CrowdSource.Controllers
         }
 
         [Route("Admin/Queue/Reload")]
-        public IActionResult Reload()
+        public async Task<IActionResult> Reload()
         {
-            _taskDispatcher.Reload();
+            await _taskDispatcher.ReloadAsync();
             return RedirectToAction("List");
         }
 

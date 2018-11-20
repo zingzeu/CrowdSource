@@ -4,6 +4,8 @@ services:
     environment: 
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
     volumes:
       - ./local/db:/var/lib/postgresql/data
       - ./local/backups:/root/backups
