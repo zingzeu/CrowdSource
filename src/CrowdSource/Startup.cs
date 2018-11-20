@@ -62,7 +62,7 @@ namespace CrowdSource
             services.AddTransient<ITextSanitizer, TextSanitizer>();
 
             services.AddHangfire(config =>
-		        config.UsePostgreSqlStorage(Configuration.GetConnectionString("DefaultConnection")));
+		        config.UseMemoryStorage());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

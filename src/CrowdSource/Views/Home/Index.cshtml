@@ -4,28 +4,28 @@
 }
 
 @inject IDbConfig Config
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 
 <div class="jumbotron">
     <h1>闽英大辞典 众包数位化</h1>
     <p>一人一笔，为母语做贡献。</p>
 
-    <p>建议使用电脑进行操作。推荐使用最新版本的Chrome / Firefox 浏览器。</p>
+    <p>建议使用电脑进行操作。推荐使用最新版本的 <a href="https://www.google.cn/chrome/" target="_blank">Chrome</a> 
+    / <a href="https://www.firefox.com.cn/download/" target="_blank">Firefox</a> 浏览器。</p>
     <p>
         <a class="btn btn-success btn-lg" asp-controller="CrowdSource" asp-action="EditGroup" role="button">我来录入</a>
-@if (Config.Get("ReviewEnabled") == "true")
-{
-    <a class="btn btn-info btn-lg" asp-controller="CrowdSource" asp-action="ReviewGroup" role="button">我来校对</a>
-
-}
-
+        @if (Config.Get("ReviewEnabled") == "true" && (
+            SignInManager.IsSignedIn(User) && (User.IsInRole("Administrator") || User.IsInRole("Reviewer")))) 
+        {
+            <a class="btn btn-info btn-lg" asp-controller="CrowdSource" asp-action="ReviewGroup" role="button">我来校对</a>
+        }
         <a class="text text-info" target="_blank" href="~/help/index.html">请先阅读帮助</a>
     </p>
 </div>
 
 <div class="jumbotron">
-    <h3>整体录入进度 @ViewData["Done"] / @ViewData["ToDoTotal"]
-        <a class="text text-info"  asp-area="" asp-controller="Present" asp-route-id="1" asp-action="PresentGroupsInOneCollection">查看校对完成的条目</a>
-    </h3>
+    <h3>整体录入进度 @ViewData["Done"] / @ViewData["ToDoTotal"]</h3>
     <div class="progress">
         <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:@ViewData["DonePercent"]%;">
             @ViewData["DonePercent"]%
@@ -59,14 +59,16 @@
     </div>
     @if (Config.Get("ReviewEnabled") == "true")
     {
-        <h3>整体校对进度 @ViewData["Reviewed"] / @ViewData["ReviewTotal"]
-            <a class="text text-info"  asp-area="" asp-controller="Present" asp-route-id="1" asp-action="PresentGroupsInOneCollection">查看校对完成的条目</a></h3> 
+        <h3>整体校对进度 @ViewData["Reviewed"] / @ViewData["ReviewTotal"]</h3>
         <div class="progress">
                 <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width:@ViewData["ReviewPercent"]%">
                     @ViewData["ReviewPercent"]%
                 </div>
         </div>
     }
+    <h3>
+        <a class="text text-info" asp-area="" asp-controller="Present" asp-route-id="1" asp-action="PresentGroupsInOneCollection">查看校对完成的条目</a>
+    </h3>
 </div>
 
 

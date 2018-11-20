@@ -60,7 +60,7 @@ namespace CrowdSource.Services
                            .Where(v => v.Group.GroupId == groupId)
                            .OrderBy(v => v.GroupVersionId)
                            .ToList();
-            } catch(Exception e)
+            } catch(Exception)
             {
                 Console.WriteLine("ERROR in GetALLVERSIONs");
             }

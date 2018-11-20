@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using CrowdSource.Models.CoreModels;
 using Microsoft.Extensions.Logging;
 using System.Threading;

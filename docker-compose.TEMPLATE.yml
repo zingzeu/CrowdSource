@@ -10,9 +10,7 @@ services:
       - ./db:/var/lib/postgresql/data
       - ./backups:/root/backups
   web:
-    build: 
-      dockerfile: ./docker/Dockerfile
-      context: ./src/CrowdSource/publish
+    image: ztl8702/adfd-cs:latest
     depends_on:
       - postgres
     volumes:

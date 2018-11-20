@@ -2,17 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+using CrowdSource.Services;
+using CrowdSource.Data;
+using CrowdSource.Models;
+using CrowdSource.Models.CoreModels;
 using CrowdSource.Models.CoreViewModels;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using CrowdSource.Services;
-using Microsoft.EntityFrameworkCore;
-using CrowdSource.Data;
-using CrowdSource.Models.CoreModels;
-using Microsoft.AspNetCore.Identity;
-using CrowdSource.Models;
-using Microsoft.AspNetCore.Http;
 
 namespace CrowdSource.Controllers
 {
@@ -93,7 +94,7 @@ namespace CrowdSource.Controllers
             _logger.LogInformation(JsonConvert.SerializeObject(data));
 
             var types = _logic.GetAllFieldTypesByGroup(data.GroupId);
-            var fields = await GroupViewModelToFields(data, types);
+            var fields = GroupViewModelToFields(data, types);
             _logic.GroupNewSuggestion(data.GroupId, fields, currentUser);
 
             if (Admin ?? false) {
@@ -119,6 +120,7 @@ namespace CrowdSource.Controllers
             return RedirectToAction("EditGroup");
         }
 
+        [Authorize(Roles="Reviewer, Administrator")]
         [Route("CrowdSource/ReviewGroup")]
         public async Task<IActionResult> ReviewGroup()
         {
@@ -142,6 +144,7 @@ namespace CrowdSource.Controllers
             return View("LegacyEditGroup",await FieldsToGroupViewModel(gid, fields, types));
         }
 
+        [Authorize(Roles="Reviewer, Administrator")]
         [HttpGet]
         public async Task<IActionResult> ReviewGroupSubmit(int groupId)
         {
@@ -196,7 +199,7 @@ namespace CrowdSource.Controllers
             return RedirectToAction("EditGroup");
         }
 
-        private async Task<Dictionary<FieldType,string>> GroupViewModelToFields(GroupViewModel data, IEnumerable<FieldType> types)
+        private Dictionary<FieldType,string> GroupViewModelToFields(GroupViewModel data, IEnumerable<FieldType> types)
         {
             var id = data.GroupId;
             var fields = new Dictionary<FieldType, string>();
