@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
+using CrowdSource.Data;
 
 namespace CrowdSource.Migrations
 {
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20181119180000_Functions")]
     public class Functions : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
