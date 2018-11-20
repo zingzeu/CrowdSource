@@ -17,16 +17,15 @@ namespace CrowdSource.ViewComponents
             _logic = logic;
         }
 
-        public async Task<IViewComponentResult> InvokeAsync (int GroupId)
+        public Task<IViewComponentResult> InvokeAsync (int GroupId)
         {
-            return View("GroupFileName",GetGroupImgUrl(GroupId));
+            return Task.FromResult<IViewComponentResult>(View("GroupFileName",GetGroupImgUrl(GroupId)));
         }
 
         private string GetGroupImgUrl(int GroupId)
         {
             Dictionary<string,string> meta = _logic.GetGroupMetadata(GroupId);
             return meta["ImgFileName"];
-
         }
     }
 }

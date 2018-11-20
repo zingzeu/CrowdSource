@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using System.Threading;
 using CrowdSource.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CrowdSource.Services
 {
@@ -14,7 +15,7 @@ namespace CrowdSource.Services
     /// Used to control concurrency in dispatching tasks.
     /// Should be a singleton
     /// </summary>
-    public class TaskDispatcher : ITaskDispatcher
+    public class TaskDispatcher : SingletonWithDbAndConfig, ITaskDispatcher
     {
         // ToDo -> Doing -> ToReview -> Reviewing -> Done
         //                      ^           |         |
@@ -33,14 +34,10 @@ namespace CrowdSource.Services
         readonly object _locker = new object();
 
         private readonly ILogger<TaskDispatcher> _logger;
-        private readonly ApplicationDbContext _context;
-        private readonly IDbConfig _config;
-
-        public TaskDispatcher(ILoggerFactory loggerFactory, ApplicationDbContext context, IDbConfig config)
+        public TaskDispatcher(ILoggerFactory loggerFactory, IServiceScopeFactory scopeFactory)
+            :base(scopeFactory)
         {
             _logger = loggerFactory.CreateLogger<TaskDispatcher>();
-            _context = context;
-            _config = config;
 
             _logger.LogInformation("Loading From DB...");
 
@@ -120,7 +117,9 @@ namespace CrowdSource.Services
                     FlagEnum? flagtype = null;
                     try
                     {
-                       flagtype = _context.Groups.SingleOrDefault(g => g.GroupId == group.GroupId).FlagType;
+                        RunWithDbContext(_context => {
+                            flagtype = _context.Groups.SingleOrDefault(g => g.GroupId == group.GroupId).FlagType;
+                        });
                     }
                     catch (Exception e)
                     {
@@ -169,50 +168,61 @@ namespace CrowdSource.Services
                 _queueToReview.Clear();
                 _setDoing.Clear();
                 _setReviewing.Clear();
-                List<Group> todo = _context
-                    .Groups
-                    .FromSql("SELECT * FROM \"Groups\" AS \"gg\" \n" +
-                    "WHERE\n" +
-                    "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM\n" +
-                    "  \"GVSuggestions\"\n" +
-                    "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"\n" +
-                    "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"\n" +
-                    " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"\n" +
-                    " AND \"FieldTypes\".\"Name\" IN('TextBUC', 'TextEnglish', 'TextChinese')\n" +
-                    " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL\n" +
-                    ") < 3\n" + //罗 英 中 还不全
-                    " AND \"gg\".\"FlagType\" IS NULL\n" 
-                    )
-                    .OrderBy(g => g.GroupId).ToList();
+                // Load config from DB
+                int minimumReview = 1;
+                bool randomize = false;
+                RunWithConfigContext(_config => {
+                    minimumReview = _config.GetMinimumReview();
+                    randomize = _config.Get("Randomize") == "true";
+                });
 
-                int minimumReview = _config.GetMinimumReview();
+                List<Group> todo = null;
+                List<Group> toreview = null;
                 
+                RunWithDbContext(_context => {
+                    todo = _context
+                        .Groups
+                        .FromSql("SELECT * FROM \"Groups\" AS \"gg\" \n" +
+                        "WHERE\n" +
+                        "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM\n" +
+                        "  \"GVSuggestions\"\n" +
+                        "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"\n" +
+                        "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"\n" +
+                        " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"\n" +
+                        " AND \"FieldTypes\".\"Name\" IN('TextBUC', 'TextEnglish', 'TextChinese')\n" +
+                        " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL\n" +
+                        ") < 3\n" + //罗 英 中 还不全
+                        " AND \"gg\".\"FlagType\" IS NULL\n" 
+                        )
+                        .OrderBy(g => g.GroupId).ToList();
 
-                List<Group> toreview = _context
-                    .Groups
-                    .FromSql("SELECT * FROM \"Groups\" AS \"gg\"" +
-                    "WHERE" +
-                    "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM" +
-                    "  \"GVSuggestions\"" +
-                    "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"" +
-                    "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"" +
-                    " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"" +
-                    " AND \"FieldTypes\".\"Name\" IN('TextBUC', 'TextEnglish', 'TextChinese')" +
-                    " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL" +
-                    ") >= 3" + //罗 英 中 都有内容
-                    "AND" +
-                    "(" +
-                    " SELECT COUNT(DISTINCT \"Reviews\".\"Id\") FROM \"Reviews\"" +
-                    "   INNER JOIN \"GroupVersions\" ON \"Reviews\".\"GroupVersionId\" = \"GroupVersions\".\"GroupVersionId\"" +
-                    "   WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"" +
-                    "   AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL" +
-                    ") < {0}" +  // Review 少于minimumReview次
-                    " AND \"gg\".\"FlagType\" IS NULL",
-                    minimumReview
-                    )
-                    .OrderBy(g => g.GroupId).ToList();
 
-                if (_config.Get("Randomize") == "true")
+                    toreview = _context
+                        .Groups
+                        .FromSql("SELECT * FROM \"Groups\" AS \"gg\"" +
+                        "WHERE" +
+                        "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM" +
+                        "  \"GVSuggestions\"" +
+                        "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"" +
+                        "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"" +
+                        " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"" +
+                        " AND \"FieldTypes\".\"Name\" IN('TextBUC', 'TextEnglish', 'TextChinese')" +
+                        " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL" +
+                        ") >= 3" + //罗 英 中 都有内容
+                        "AND" +
+                        "(" +
+                        " SELECT COUNT(DISTINCT \"Reviews\".\"Id\") FROM \"Reviews\"" +
+                        "   INNER JOIN \"GroupVersions\" ON \"Reviews\".\"GroupVersionId\" = \"GroupVersions\".\"GroupVersionId\"" +
+                        "   WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"" +
+                        "   AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL" +
+                        ") < {0}" +  // Review 少于minimumReview次
+                        " AND \"gg\".\"FlagType\" IS NULL",
+                        minimumReview
+                        )
+                        .OrderBy(g => g.GroupId).ToList();
+                });
+
+                if (randomize)
                 {
                     // shuffle
                     _logger.LogInformation("Randomizing");
@@ -308,7 +318,9 @@ namespace CrowdSource.Services
                     FlagEnum? flagtype = null;
                     try
                     {
-                        flagtype = _context.Groups.SingleOrDefault(g => g.GroupId == group.GroupId).FlagType;
+                        RunWithDbContext(_context => {
+                            flagtype = _context.Groups.SingleOrDefault(g => g.GroupId == group.GroupId).FlagType;
+                        });
                     }
                     catch (Exception e)
                     {
@@ -331,6 +343,7 @@ namespace CrowdSource.Services
                 LoadToDoFromDB();
             }
         }
+
     }
 
 

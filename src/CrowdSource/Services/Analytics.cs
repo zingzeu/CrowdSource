@@ -6,13 +6,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CrowdSource.Services
 {
-    public class Analytics : IAnalytics
+    public class Analytics : SingletonWithDbAndConfig, IAnalytics
     {
         private readonly ITaskDispatcher _taskDispacher;
-        private readonly ApplicationDbContext _context;
         private readonly Timer aTimer;
 
         public int ToDoTotal { get; private set; }
@@ -29,10 +29,10 @@ namespace CrowdSource.Services
 
         public IEnumerable<Tuple<string, int>> TopContributors  {get; private set; }
 
-        public Analytics(ITaskDispatcher taskDispatcher, ApplicationDbContext context)
+        public Analytics(ITaskDispatcher taskDispatcher, IServiceScopeFactory scopeFactory)
+            :base(scopeFactory)
         {
             _taskDispacher = taskDispatcher;
-            _context = context;
             TopContributors = new List<Tuple<string,int>>();
 
             UpdateStatistics().Wait();
@@ -44,108 +44,111 @@ namespace CrowdSource.Services
 
         private async Task UpdateStatistics()
         {
-            int total = _context.Groups.Where(g => g.Collection.CollectionId == 1).Count();
-            int todo = _taskDispacher.CountToDo();
-            int toreview = _taskDispacher.CountToReview();
-            int done = await _context
-                    .Groups
-                    .FromSql("SELECT * FROM \"Groups\" AS \"gg\" \n" +
-                    "WHERE\n" +
-                    "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM\n" +
-                    "  \"GVSuggestions\"\n" +
-                    "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"\n" +
-                    "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"\n" +
-                    " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"\n" +
-                    " AND \"FieldTypes\".\"Name\" IN('TextBUC', 'TextEnglish', 'TextChinese')\n" +
-                    " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL\n" +
-                    ") >= 3\n" //罗 英 中 全
-                    )
-                    .CountAsync();
-            int doneBUC = await _context
-                    .Groups
-                    .FromSql("SELECT * FROM \"Groups\" AS \"gg\" \n" +
-                    "WHERE\n" +
-                    "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM\n" +
-                    "  \"GVSuggestions\"\n" +
-                    "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"\n" +
-                    "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"\n" +
-                    " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"\n" +
-                    " AND \"FieldTypes\".\"Name\" IN('TextBUC')\n" +
-                    " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL\n" +
-                    ") >= 1\n" //罗
-                    )
-                    .CountAsync();
-            int doneChinese = await _context
-                    .Groups
-                    .FromSql("SELECT * FROM \"Groups\" AS \"gg\" \n" +
-                    "WHERE\n" +
-                    "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM\n" +
-                    "  \"GVSuggestions\"\n" +
-                    "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"\n" +
-                    "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"\n" +
-                    " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"\n" +
-                    " AND \"FieldTypes\".\"Name\" IN('TextChinese')\n" +
-                    " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL\n" +
-                    ") >= 1\n" //中
-                    )
-                    .CountAsync();
-            int doneEnglish = await _context
-                    .Groups
-                    .FromSql("SELECT * FROM \"Groups\" AS \"gg\" \n" +
-                    "WHERE\n" +
-                    "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM\n" +
-                    "  \"GVSuggestions\"\n" +
-                    "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"\n" +
-                    "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"\n" +
-                    " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"\n" +
-                    " AND \"FieldTypes\".\"Name\" IN('TextEnglish')\n" +
-                    " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL\n" +
-                    ") >= 1\n" //英
-                    )
-                    .CountAsync();
-            int reviewed = done - toreview;
+            await RunWithDbContextAsync(async _context => {
+                int total = _context.Groups.Where(g => g.Collection.CollectionId == 1).Count();
+                int todo = _taskDispacher.CountToDo();
+                int toreview = _taskDispacher.CountToReview();
+                int done = await _context
+                        .Groups
+                        .FromSql("SELECT * FROM \"Groups\" AS \"gg\" \n" +
+                        "WHERE\n" +
+                        "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM\n" +
+                        "  \"GVSuggestions\"\n" +
+                        "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"\n" +
+                        "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"\n" +
+                        " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"\n" +
+                        " AND \"FieldTypes\".\"Name\" IN('TextBUC', 'TextEnglish', 'TextChinese')\n" +
+                        " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL\n" +
+                        ") >= 3\n" //罗 英 中 全
+                        )
+                        .CountAsync();
+                int doneBUC = await _context
+                        .Groups
+                        .FromSql("SELECT * FROM \"Groups\" AS \"gg\" \n" +
+                        "WHERE\n" +
+                        "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM\n" +
+                        "  \"GVSuggestions\"\n" +
+                        "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"\n" +
+                        "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"\n" +
+                        " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"\n" +
+                        " AND \"FieldTypes\".\"Name\" IN('TextBUC')\n" +
+                        " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL\n" +
+                        ") >= 1\n" //罗
+                        )
+                        .CountAsync();
+                int doneChinese = await _context
+                        .Groups
+                        .FromSql("SELECT * FROM \"Groups\" AS \"gg\" \n" +
+                        "WHERE\n" +
+                        "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM\n" +
+                        "  \"GVSuggestions\"\n" +
+                        "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"\n" +
+                        "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"\n" +
+                        " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"\n" +
+                        " AND \"FieldTypes\".\"Name\" IN('TextChinese')\n" +
+                        " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL\n" +
+                        ") >= 1\n" //中
+                        )
+                        .CountAsync();
+                int doneEnglish = await _context
+                        .Groups
+                        .FromSql("SELECT * FROM \"Groups\" AS \"gg\" \n" +
+                        "WHERE\n" +
+                        "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM\n" +
+                        "  \"GVSuggestions\"\n" +
+                        "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"\n" +
+                        "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"\n" +
+                        " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"\n" +
+                        " AND \"FieldTypes\".\"Name\" IN('TextEnglish')\n" +
+                        " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL\n" +
+                        ") >= 1\n" //英
+                        )
+                        .CountAsync();
+                int reviewed = done - toreview;
 
-            done = done > 0 ? done : 0;
-            reviewed = reviewed > 0 ? reviewed : 0;
-            ToDoTotal = total;
-            Done = done;
-            DoneBUC = doneBUC;
-            DoneChinese = doneChinese;
-            DoneEnglish = doneEnglish;
-            ReviewTotal = done;
-            Reviewed = reviewed;
+                done = done > 0 ? done : 0;
+                reviewed = reviewed > 0 ? reviewed : 0;
+                ToDoTotal = total;
+                Done = done;
+                DoneBUC = doneBUC;
+                DoneChinese = doneChinese;
+                DoneEnglish = doneEnglish;
+                ReviewTotal = done;
+                Reviewed = reviewed;
 
 
 
-            // Top Contributors
-            ((List<Tuple<string,int>>)TopContributors).Clear();
-            var reader = await RDFacadeExtensions.ExecuteSqlCommandAsync(_context.Database,
-            "SELECT  \"AspNetUsers\".\"Email\", \"AspNetUsers\".\"NickName\",\"cc\".\"Count\" FROM\n" +
-            "(SELECT COUNT(DISTINCT \"SuggestionId\") AS \"Count\", \"AuthorId\" \n" +
-            "FROM \"Suggestions\"\n" +
-            "GROUP BY \"AuthorId\"\n" +
-            ") AS \"cc\" \n" +
-            "LEFT OUTER JOIN \"AspNetUsers\" ON \"cc\".\"AuthorId\" = \"AspNetUsers\".\"Id\" \n" +
-            "ORDER BY \"Count\" DESC \n" +
-            "LIMIT 10 \n" 
-            );
+                // Top Contributors
+                ((List<Tuple<string,int>>)TopContributors).Clear();
 
-            while (reader.DbDataReader.Read()) {
-                var email = reader.DbDataReader[0].ToString();
-                var nickname = reader.DbDataReader[1].ToString();
-                var contrib =  reader.DbDataReader[2].ToString(); 
-                int contribInt = 0;
-                Int32.TryParse(contrib, out contribInt);
-                if (email=="" && nickname=="") {
-                    ((List<Tuple<string,int>>)TopContributors).Add(new Tuple<string, int>("匿名者 (众人)",contribInt));
-                } else {
-                    email = CensorEmail(email);
-                    ((List<Tuple<string,int>>)TopContributors).Add(new Tuple<string, int>($"{nickname} ({email})",contribInt));
+                var reader = await RDFacadeExtensions.ExecuteSqlCommandAsync(_context.Database,
+                "SELECT  \"AspNetUsers\".\"Email\", \"AspNetUsers\".\"NickName\",\"cc\".\"Count\" FROM\n" +
+                "(SELECT COUNT(DISTINCT \"SuggestionId\") AS \"Count\", \"AuthorId\" \n" +
+                "FROM \"Suggestions\"\n" +
+                "GROUP BY \"AuthorId\"\n" +
+                ") AS \"cc\" \n" +
+                "LEFT OUTER JOIN \"AspNetUsers\" ON \"cc\".\"AuthorId\" = \"AspNetUsers\".\"Id\" \n" +
+                "ORDER BY \"Count\" DESC \n" +
+                "LIMIT 10 \n" 
+                );
+
+                while (reader.DbDataReader.Read()) {
+                    var email = reader.DbDataReader[0].ToString();
+                    var nickname = reader.DbDataReader[1].ToString();
+                    var contrib =  reader.DbDataReader[2].ToString(); 
+                    int contribInt = 0;
+                    Int32.TryParse(contrib, out contribInt);
+                    if (email=="" && nickname=="") {
+                        ((List<Tuple<string,int>>)TopContributors).Add(new Tuple<string, int>("匿名者 (众人)",contribInt));
+                    } else {
+                        email = CensorEmail(email);
+                        ((List<Tuple<string,int>>)TopContributors).Add(new Tuple<string, int>($"{nickname} ({email})",contribInt));
+                    }
+
                 }
 
-            }
-
-            reader.Dispose();
+                reader.Dispose();
+            });
         }
 
         private string CensorEmail(string email) {
