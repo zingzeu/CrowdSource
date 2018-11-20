@@ -93,7 +93,7 @@ namespace CrowdSource.Controllers
             _logger.LogInformation(JsonConvert.SerializeObject(data));
 
             var types = _logic.GetAllFieldTypesByGroup(data.GroupId);
-            var fields = await GroupViewModelToFields(data, types);
+            var fields = GroupViewModelToFields(data, types);
             _logic.GroupNewSuggestion(data.GroupId, fields, currentUser);
 
             if (Admin ?? false) {
@@ -196,7 +196,7 @@ namespace CrowdSource.Controllers
             return RedirectToAction("EditGroup");
         }
 
-        private async Task<Dictionary<FieldType,string>> GroupViewModelToFields(GroupViewModel data, IEnumerable<FieldType> types)
+        private Dictionary<FieldType,string> GroupViewModelToFields(GroupViewModel data, IEnumerable<FieldType> types)
         {
             var id = data.GroupId;
             var fields = new Dictionary<FieldType, string>();

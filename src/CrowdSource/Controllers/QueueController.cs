@@ -22,7 +22,7 @@ namespace CrowdSource.Controllers
         }
 
         [Route("Admin/Queue/List")]
-        public async Task<IActionResult> List([FromQuery]int? page)
+        public IActionResult List([FromQuery]int? page)
         {
             Pager @pager;
             var todos = _taskDispatcher.ListToDo();
@@ -36,7 +36,7 @@ namespace CrowdSource.Controllers
 
 
         [Route("Admin/Queue/ListReview")]
-        public async Task<IActionResult> ListReview([FromQuery]int? page)
+        public IActionResult ListReview([FromQuery]int? page)
         {
             Pager @pager;
             var todos = _taskDispatcher.ListToReview();

@@ -17,7 +17,7 @@ namespace CrowdSource.Controllers
             _analytics = analytics;
         }
 
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             ViewData["ToDoTotal"] = _analytics.ToDoTotal;
             ViewData["Done"] = _analytics.Done;

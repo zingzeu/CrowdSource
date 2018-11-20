@@ -120,7 +120,8 @@ namespace CrowdSource.Services
                     }
                     catch (Exception e)
                     {
-
+                        _logger.LogError(e.Message);
+                        _logger.LogError(e.StackTrace);
                     }
                     if (flagtype==null)
                     {
@@ -345,7 +346,8 @@ namespace CrowdSource.Services
                     }
                     catch (Exception e)
                     {
-                        
+                        _logger.LogError(e.Message);
+                        _logger.LogError(e.StackTrace);
                     }
                     if (flagtype == null)
                     {
