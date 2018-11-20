@@ -7,20 +7,20 @@ services:
       POSTGRES_PASSWORD: <your password>
       POSTGRES_DB: crowdsource
     volumes:
-    - ./db:/var/lib/postgresql/data
-    - ./backups:/root/backups
+      - ./db:/var/lib/postgresql/data
+      - ./backups:/root/backups
   web:
     build: 
       dockerfile: ./docker/Dockerfile
       context: ./src/CrowdSource/publish
     depends_on:
-    - postgres
+      - postgres
     volumes:
-    - ./segments:/app/wwwroot/segments:ro 
+      - ./segments:/app/wwwroot/segments:ro 
     ports:
-    - 8081:5000
+      - 8081:5000
     links:
-    - postgres:pg
+      - postgres:pg
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://0.0.0.0:5000

@@ -9,10 +9,10 @@ services:
       - /root/backups
   web:
     image: crowdsource_web
-    build:
-      dockerfile: Dockerfile
-      context: ./src/CrowdSource
+#    build:
+#      dockerfile: Dockerfile
+#      context: ./src/CrowdSource
     depends_on:
       - postgres
     links:
-    - postgres:pg
+      - postgres:pg

@@ -5,14 +5,18 @@ services:
       POSTGRES_USER: cs
       POSTGRES_PASSWORD: password
     volumes:
-    - ./dev/db:/var/lib/postgresql/data
-    - ./dev/backups:/root/backups
+      - ./local/db:/var/lib/postgresql/data
+      - ./local/backups:/root/backups
   web:
 #    dns: 8.8.8.8
+    image: microsoft/dotnet:2.1-sdk
     volumes:
-      - ./dev/segments:/segments:ro
+      - ./src:/src
+      - ./local/segments:/segments:ro
     ports:
-     - "5000"
+      - "5000:5000"
+    working_dir: /src/CrowdSource
+    command: bash -c "dotnet restore && dotnet watch run" 
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://0.0.0.0:5000
