@@ -153,8 +153,10 @@
     }
 
     function submitReportForm(){
-        console.log('Reporting!');
-        $("#reportForm").submit();
+        if (confirm("确定要标记此条为【图片不清楚】吗？若是不会输入请选择【换一条】。")) {
+            console.log('Reporting!');
+            $("#reportForm").submit();
+        }
     }
 
     Mousetrap.bind('f2', function (e) {
