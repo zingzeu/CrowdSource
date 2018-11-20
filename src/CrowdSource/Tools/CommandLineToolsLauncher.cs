@@ -26,6 +26,11 @@ namespace CrowdSource.Tools
                 var runner = new AddUserToRoleCommand();
                 await runner.RunAsync(host, args.Skip(1).ToArray());
             }
+            else if (command == "RemoveUserRole")
+            {
+                var runner = new RemoveUserFromRoleCommand();
+                await runner.RunAsync(host, args.Skip(1).ToArray());
+            }
             else if (command == "SeedDb")
             {
                 var runner = new SeedDbCommand();
