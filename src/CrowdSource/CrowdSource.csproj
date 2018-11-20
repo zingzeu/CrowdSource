@@ -22,9 +22,6 @@
     <AssetTargetFallback>$(AssetTargetFallback);portable-net45+win8+wp8+wpa81;</AssetTargetFallback>
     <UserSecretsId>9d79f19a-4428-4a17-aa2d-50605d9e795a</UserSecretsId>
   </PropertyGroup>
-  <ItemGroup>
-    <None Include="Dockerfile" CopyToPublishDirectory="Always" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Hangfire" Version="1.6.21" />

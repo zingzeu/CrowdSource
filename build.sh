@@ -1,3 +1,3 @@
 #!/bin/bash
-echo "Start Building......"
-docker-compose -f docker-compose.build.yml run ci-build
+docker build -t ztl8702/adfd-cs:latest .
+docker push ztl8702/adfd-cs:latest
