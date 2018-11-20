@@ -171,30 +171,48 @@ namespace CrowdSource.Services
                 // Load config from DB
                 int minimumReview = 1;
                 bool randomize = false;
+                bool bucFirst = true;
                 RunWithConfigContext(_config => {
                     minimumReview = _config.GetMinimumReview();
-                    randomize = _config.Get("Randomize") == "true";
+                    randomize = (_config.Get("Randomize") == "true") && !bucFirst;
                 });
 
                 List<Group> todo = null;
                 List<Group> toreview = null;
                 
                 RunWithDbContext(_context => {
-                    todo = _context
+                    var query = _context
                         .Groups
-                        .FromSql("SELECT * FROM \"Groups\" AS \"gg\" \n" +
-                        "WHERE\n" +
-                        "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM\n" +
-                        "  \"GVSuggestions\"\n" +
-                        "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"\n" +
-                        "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"\n" +
-                        " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"\n" +
-                        " AND \"FieldTypes\".\"Name\" IN('TextBUC', 'TextEnglish', 'TextChinese')\n" +
-                        " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL\n" +
-                        ") < 3\n" + //罗 英 中 还不全
-                        " AND \"gg\".\"FlagType\" IS NULL\n" 
-                        )
-                        .OrderBy(g => g.GroupId).ToList();
+                        .FromSql(
+                            @"
+                            SELECT 
+                            	distinct ""GroupId"",
+                            	""CollectionId"",
+                            	""FlagType"",
+                            	""GroupMetadata""
+                            FROM
+                            (
+                                SELECT 
+                                    ""Groups"".* ,
+                                    score_group(""buc"".""GroupId"" IS NOT NULL, 
+                                    ""eng"".""GroupId"" is not null,
+                                    ""chi"".""GroupId"" is not null) as ""score""
+                                FROM ""Groups""
+                                LEFT JOIN count_suggestions('TextBUC') AS ""buc""
+                                    ON ""buc"".""GroupId"" = ""Groups"".""GroupId""
+                                LEFT JOIN count_suggestions('TextEnglish') AS ""eng""
+                                    ON ""eng"".""GroupId"" = ""Groups"".""GroupId""
+                                LEFT JOIN count_suggestions('TextChinese') AS ""chi""
+                                    ON ""chi"".""GroupId"" = ""Groups"".""GroupId""
+                                where ""Groups"".""FlagType"" is null
+                                ORDER BY ""score"" DESC
+                            ) as foo
+                            where foo.""score"" > 0"
+                        );
+
+                    todo = bucFirst ? 
+                        query.ToList()
+                        : query.OrderBy(g => g.GroupId).ToList();
 
 
                     toreview = _context
@@ -215,7 +233,7 @@ namespace CrowdSource.Services
                         "   INNER JOIN \"GroupVersions\" ON \"Reviews\".\"GroupVersionId\" = \"GroupVersions\".\"GroupVersionId\"" +
                         "   WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"" +
                         "   AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL" +
-                        ") < {0}" +  // Review 少于minimumReview次
+                        ") < {0}" +  // Review 少于 minimumReview 次
                         " AND \"gg\".\"FlagType\" IS NULL",
                         minimumReview
                         )
@@ -228,6 +246,14 @@ namespace CrowdSource.Services
                     _logger.LogInformation("Randomizing");
                     Shuffle.DoShuffle(todo);
                     Shuffle.DoShuffle(toreview);
+                }
+
+                
+
+                if (bucFirst) {
+                    // Sort ToDo
+                    // 罗马字空白优先
+                    
                 }
 
                 for (int i = 0; i < todo.Count; ++i)
