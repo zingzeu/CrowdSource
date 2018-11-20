@@ -4,6 +4,8 @@
 }
 
 @inject IDbConfig Config
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 
 <div class="jumbotron">
     <h1>闽英大辞典 众包数位化</h1>
@@ -12,7 +14,8 @@
     <p>建议使用电脑进行操作。推荐使用最新版本的Chrome / Firefox 浏览器。</p>
     <p>
         <a class="btn btn-success btn-lg" asp-controller="CrowdSource" asp-action="EditGroup" role="button">我来录入</a>
-@if (Config.Get("ReviewEnabled") == "true")
+@if (Config.Get("ReviewEnabled") == "true" && (
+    SignInManager.IsSignedIn(User) && (User.IsInRole("Administrator") || User.IsInRole("Reviewer")))) 
 {
     <a class="btn btn-info btn-lg" asp-controller="CrowdSource" asp-action="ReviewGroup" role="button">我来校对</a>
 
