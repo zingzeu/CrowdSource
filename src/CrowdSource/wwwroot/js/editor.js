@@ -117,7 +117,7 @@
    $(document).ready(function () {
     $('#btnSubmit').click(submitEditorForm);
     $('#btnReport').click(submitReportForm);
-     $('#btnSkip').click(skipCurrent);
+    $('#btnSkip').click(skipCurrent);
 
     function submitEditorForm(){
         console.log('Submitting!');
