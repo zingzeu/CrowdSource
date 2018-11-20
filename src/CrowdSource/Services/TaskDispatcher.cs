@@ -8,6 +8,7 @@ using System.Threading;
 using CrowdSource.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Hangfire;
 
 namespace CrowdSource.Services
 {
@@ -26,25 +27,21 @@ namespace CrowdSource.Services
         private HashSet<QueueMember> _setDoing = new HashSet<QueueMember>();
         private Queue<QueueMember> _queueToReview = new Queue<QueueMember>();
         private HashSet<QueueMember> _setReviewing = new HashSet<QueueMember>();
-        private readonly TimeSpan DoingTimeOut = new TimeSpan(0,10,0); // 10min
-        private readonly TimeSpan ReviewTimeout = new TimeSpan(0, 3, 0); //3min
+        private readonly TimeSpan DoingTimeOut = new TimeSpan(0, 10, 0); // 10 min
+        private readonly TimeSpan ReviewTimeout = new TimeSpan(0, 3, 0); // 3 min
 
         // Lock for thread safety
         // Because ASP.NET MVC will handle requests in multiple threads
         readonly object _locker = new object();
-
         private readonly ILogger<TaskDispatcher> _logger;
         public TaskDispatcher(ILoggerFactory loggerFactory, IServiceScopeFactory scopeFactory)
             :base(scopeFactory)
         {
             _logger = loggerFactory.CreateLogger<TaskDispatcher>();
 
-            _logger.LogInformation("Loading From DB...");
-
-
-            LoadToDoFromDB();
-
-            _logger.LogInformation($"Queue length: {_queueToDo.Count}");
+            // fire and forget
+            // TODO: better?
+            LoadToDoFromDB().Wait();
 
             ScheduleTimers();
         }
@@ -160,102 +157,98 @@ namespace CrowdSource.Services
             }
         }
 
-        private void LoadToDoFromDB()
+        public async Task LoadToDoFromDB()
         {
+            _logger.LogInformation("Loading From DB...");
+            // Load config from DB
+            int minimumReview = 1;
+            bool randomize = false;
+            bool bucFirst = true;
+            RunWithConfigContext(_config => {
+                minimumReview = _config.GetMinimumReview();
+                randomize = (_config.Get("Randomize") == "true") && !bucFirst;
+            });
+            
+            _logger.LogInformation($"Config: minimumReview={minimumReview} randomize={randomize} bucFirst={bucFirst}");
+            List<Group> todo = null;
+            List<Group> toreview = null;
+            
+            await RunWithDbContextAsync(async _context => {
+                var query = _context
+                    .Groups
+                    .FromSql(
+                        @"
+                        SELECT 
+                            distinct ""GroupId"",
+                            ""CollectionId"",
+                            ""FlagType"",
+                            ""GroupMetadata"",
+                            ""score""
+                        FROM
+                        (
+                            SELECT 
+                                ""Groups"".* ,
+                                score_group(""buc"".""GroupId"" IS NOT NULL, 
+                                ""eng"".""GroupId"" is not null,
+                                ""chi"".""GroupId"" is not null) as ""score""
+                            FROM ""Groups""
+                            LEFT JOIN count_suggestions('TextBUC') AS ""buc""
+                                ON ""buc"".""GroupId"" = ""Groups"".""GroupId""
+                            LEFT JOIN count_suggestions('TextEnglish') AS ""eng""
+                                ON ""eng"".""GroupId"" = ""Groups"".""GroupId""
+                            LEFT JOIN count_suggestions('TextChinese') AS ""chi""
+                                ON ""chi"".""GroupId"" = ""Groups"".""GroupId""
+                            where ""Groups"".""FlagType"" is null
+                            ORDER BY ""score"" DESC
+                        ) as foo
+                        where foo.""score"" > 0
+                        ORDER BY ""score"" DESC"
+                    );
+
+                todo = bucFirst ? 
+                    await query.ToListAsync()
+                    : await query.OrderBy(g => g.GroupId).ToListAsync();
+
+                toreview = await _context
+                    .Groups
+                    .FromSql("SELECT * FROM \"Groups\" AS \"gg\"" +
+                    " WHERE" +
+                    "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM" +
+                    "  \"GVSuggestions\"" +
+                    "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"" +
+                    "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"" +
+                    " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"" +
+                    " AND \"FieldTypes\".\"Name\" IN('TextBUC', 'TextEnglish', 'TextChinese')" +
+                    " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL" +
+                    ") >= 3 " + //罗 英 中 都有内容
+                    "AND  " +
+                    "(" +
+                    " SELECT COUNT(DISTINCT \"Reviews\".\"Id\") FROM \"Reviews\"" +
+                    "   INNER JOIN \"GroupVersions\" ON \"Reviews\".\"GroupVersionId\" = \"GroupVersions\".\"GroupVersionId\"" +
+                    "   WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"" +
+                    "   AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL" +
+                    ") < {0}" +  // Review 少于 minimumReview 次
+                    " AND \"gg\".\"FlagType\" IS NULL",
+                    minimumReview
+                    )
+                    .OrderBy(g => g.GroupId).ToListAsync();
+            });
+
+            if (randomize)
+            {
+                // shuffle
+                _logger.LogInformation("Randomizing");
+                Shuffle.DoShuffle(todo);
+                Shuffle.DoShuffle(toreview);
+            }
+
             lock (_locker)
             {
+                _logger.LogInformation("Populating memory collections...");
                 _queueToDo.Clear();
                 _queueToReview.Clear();
                 _setDoing.Clear();
                 _setReviewing.Clear();
-                // Load config from DB
-                int minimumReview = 1;
-                bool randomize = false;
-                bool bucFirst = true;
-                RunWithConfigContext(_config => {
-                    minimumReview = _config.GetMinimumReview();
-                    randomize = (_config.Get("Randomize") == "true") && !bucFirst;
-                });
-
-                List<Group> todo = null;
-                List<Group> toreview = null;
-                
-                RunWithDbContext(_context => {
-                    var query = _context
-                        .Groups
-                        .FromSql(
-                            @"
-                            SELECT 
-                            	distinct ""GroupId"",
-                            	""CollectionId"",
-                            	""FlagType"",
-                            	""GroupMetadata""
-                            FROM
-                            (
-                                SELECT 
-                                    ""Groups"".* ,
-                                    score_group(""buc"".""GroupId"" IS NOT NULL, 
-                                    ""eng"".""GroupId"" is not null,
-                                    ""chi"".""GroupId"" is not null) as ""score""
-                                FROM ""Groups""
-                                LEFT JOIN count_suggestions('TextBUC') AS ""buc""
-                                    ON ""buc"".""GroupId"" = ""Groups"".""GroupId""
-                                LEFT JOIN count_suggestions('TextEnglish') AS ""eng""
-                                    ON ""eng"".""GroupId"" = ""Groups"".""GroupId""
-                                LEFT JOIN count_suggestions('TextChinese') AS ""chi""
-                                    ON ""chi"".""GroupId"" = ""Groups"".""GroupId""
-                                where ""Groups"".""FlagType"" is null
-                                ORDER BY ""score"" DESC
-                            ) as foo
-                            where foo.""score"" > 0"
-                        );
-
-                    todo = bucFirst ? 
-                        query.ToList()
-                        : query.OrderBy(g => g.GroupId).ToList();
-
-
-                    toreview = _context
-                        .Groups
-                        .FromSql("SELECT * FROM \"Groups\" AS \"gg\"" +
-                        "WHERE" +
-                        "(SELECT COUNT(DISTINCT \"FieldTypes\".\"Name\") FROM" +
-                        "  \"GVSuggestions\"" +
-                        "   INNER JOIN \"GroupVersions\" ON \"GVSuggestions\".\"GroupVersionForeignKey\" = \"GroupVersions\".\"GroupVersionId\"" +
-                        "   INNER JOIN \"FieldTypes\" ON \"GVSuggestions\".\"FieldTypeForeignKey\" = \"FieldTypes\".\"FieldTypeId\"" +
-                        " WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"" +
-                        " AND \"FieldTypes\".\"Name\" IN('TextBUC', 'TextEnglish', 'TextChinese')" +
-                        " AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL" +
-                        ") >= 3" + //罗 英 中 都有内容
-                        "AND" +
-                        "(" +
-                        " SELECT COUNT(DISTINCT \"Reviews\".\"Id\") FROM \"Reviews\"" +
-                        "   INNER JOIN \"GroupVersions\" ON \"Reviews\".\"GroupVersionId\" = \"GroupVersions\".\"GroupVersionId\"" +
-                        "   WHERE \"GroupVersions\".\"GroupId\" = \"gg\".\"GroupId\"" +
-                        "   AND \"GroupVersions\".\"NextVersionGroupVersionId\" IS NULL" +
-                        ") < {0}" +  // Review 少于 minimumReview 次
-                        " AND \"gg\".\"FlagType\" IS NULL",
-                        minimumReview
-                        )
-                        .OrderBy(g => g.GroupId).ToList();
-                });
-
-                if (randomize)
-                {
-                    // shuffle
-                    _logger.LogInformation("Randomizing");
-                    Shuffle.DoShuffle(todo);
-                    Shuffle.DoShuffle(toreview);
-                }
-
-                
-
-                if (bucFirst) {
-                    // Sort ToDo
-                    // 罗马字空白优先
-                    
-                }
-
                 for (int i = 0; i < todo.Count; ++i)
                 {
                     _queueToDo.Enqueue(new QueueMember(todo[i]));
@@ -266,6 +259,8 @@ namespace CrowdSource.Services
                     _queueToReview.Enqueue(new QueueMember(toreview[i]));
                 }
             }
+            _logger.LogInformation($"ToDo Queue length: {_queueToDo.Count}");
+            _logger.LogInformation($"Review Queue length: {_queueToReview.Count}");
         }
 
         public void Done(Group group)
@@ -338,7 +333,7 @@ namespace CrowdSource.Services
             lock (_locker)
             {
                 var member = _setReviewing.SingleOrDefault(t => t.group.GroupId == group.GroupId);
-                if (member !=null)
+                if (member != null)
                 {
                     _setReviewing.Remove(member);
                     FlagEnum? flagtype = null;
@@ -350,7 +345,7 @@ namespace CrowdSource.Services
                     }
                     catch (Exception e)
                     {
-
+                        
                     }
                     if (flagtype == null)
                     {
@@ -361,13 +356,10 @@ namespace CrowdSource.Services
             }
         }
 
-        public void Reload()
+        public async Task ReloadAsync()
         {
-            lock (_locker)
-            {
-                _logger.LogInformation("Reloading from DB....");
-                LoadToDoFromDB();
-            }
+            _logger.LogInformation("Triggering reloading from DB....");
+            await LoadToDoFromDB();
         }
 
     }
@@ -399,7 +391,7 @@ namespace CrowdSource.Services
         /// <param name="group"></param>
         void RequeueToReview(Group group);
 
-        void Reload();
+        Task ReloadAsync();
 
         IEnumerable<QueueMember> ListToDo();
         IEnumerable<QueueMember> ListToReview();
