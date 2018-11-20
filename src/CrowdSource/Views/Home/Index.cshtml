@@ -11,16 +11,14 @@
     <h1>闽英大辞典 众包数位化</h1>
     <p>一人一笔，为母语做贡献。</p>
 
-    <p>建议使用电脑进行操作。推荐使用最新版本的Chrome / Firefox 浏览器。</p>
+    <p>建议使用电脑进行操作。推荐使用最新版本的 Chrome / Firefox 浏览器。</p>
     <p>
         <a class="btn btn-success btn-lg" asp-controller="CrowdSource" asp-action="EditGroup" role="button">我来录入</a>
-@if (Config.Get("ReviewEnabled") == "true" && (
-    SignInManager.IsSignedIn(User) && (User.IsInRole("Administrator") || User.IsInRole("Reviewer")))) 
-{
-    <a class="btn btn-info btn-lg" asp-controller="CrowdSource" asp-action="ReviewGroup" role="button">我来校对</a>
-
-}
-
+        @if (Config.Get("ReviewEnabled") == "true" && (
+            SignInManager.IsSignedIn(User) && (User.IsInRole("Administrator") || User.IsInRole("Reviewer")))) 
+        {
+            <a class="btn btn-info btn-lg" asp-controller="CrowdSource" asp-action="ReviewGroup" role="button">我来校对</a>
+        }
         <a class="text text-info" target="_blank" href="~/help/index.html">请先阅读帮助</a>
     </p>
 </div>
