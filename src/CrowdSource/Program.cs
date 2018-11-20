@@ -13,10 +13,10 @@ namespace CrowdSource
     {
         public static void Main(string[] args)
         {
-            var host = WebHost.CreateDefaultBuilder(args)
+            
+            var host = WebHost.CreateDefaultBuilder(null)
                 .UseStartup<Startup>()
                 .Build();
-
             if (args.Length > 0)
             {
                 CommandLineToolsLauncher.MainAsync(host, args).Wait();
