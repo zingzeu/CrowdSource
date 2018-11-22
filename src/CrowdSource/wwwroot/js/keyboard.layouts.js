@@ -40,7 +40,8 @@ $(function() {
     jQuery.keyboard.layouts['cdo'] = {
         'name': 'Eastern Min',
         'normal': [
-            "〇 𠆧 価 𡅏 仱 𣍐 爿"
+            "〇 𠆧 価 𡅏 仱 𣍐 爿",
+            "𠋡 {⿰亻鞋}"
         ]
     };
  

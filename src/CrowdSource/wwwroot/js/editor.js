@@ -180,7 +180,5 @@
         skipCurrent();
     });
    });
-
-
    
 }(jQuery));
