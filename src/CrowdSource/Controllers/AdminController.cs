@@ -117,7 +117,6 @@ namespace CrowdSource.Controllers
         [Route("Admin/Group/UnsetError/{id}")]
         public async Task<IActionResult> UnsetGroupError(int id)
         {
-            //TODO: auth admin
             var @group = await _context.Groups
                 .SingleOrDefaultAsync(g => g.GroupId == id);
             @group.FlagType = null;
@@ -125,6 +124,16 @@ namespace CrowdSource.Controllers
             return RedirectToAction("EditGroup", "CrowdSource", new { id = id });
         }
 
+        [HttpPost]
+        [Route("Admin/Group/UnsetError2/{id}")]
+        public async Task<IActionResult> UnsetGroupErrorJson(int id)
+        {
+            var @group = await _context.Groups
+                .SingleOrDefaultAsync(g => g.GroupId == id);
+            @group.FlagType = null;
+            await _context.SaveChangesAsync();
+            return Json("OK");
+        }
 
         [Route("Admin/Options")]
         public IActionResult Options()

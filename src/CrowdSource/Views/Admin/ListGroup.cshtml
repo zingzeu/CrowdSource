@@ -21,6 +21,7 @@
     </tr>
     @foreach (var item in Model)
     {
+        var link = $"javascript:unsetFlag({item.GroupId})";
         <tr>
             <td>@item.GroupId</td>
             <td>@await Component.InvokeAsync("DisplayGroup", new { GroupId = item.GroupId })
@@ -29,6 +30,7 @@
                 <a>EditMetadata</a> |
                 <a asp-controller="CrowdSource" asp-action="EditGroup" asp-route-id="@item.GroupId">编辑</a> | 
                 <a asp-controller="Admin" asp-action="GroupDetails" asp-route-id="@item.GroupId">编辑历史</a> | 
+                <a href="@link">消除标记</a> |
                 <a asp-controller="Admin" asp-action="GroupDelete" asp-route-id="@item.GroupId">Delete</a> 
             </td>
             <td>
@@ -60,3 +62,14 @@
 </a>
 
 Page @pager.PageIndex / @pager.TotalPages
+
+<script>
+    function unsetFlag(groupId) {
+        var url = "/Admin/Group/UnsetError2/"+ groupId;
+        console.log(url);
+        $.post(url, function (data) {
+            console.log(data);
+            location.reload();
+        });
+    }
+</script>

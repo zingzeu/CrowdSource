@@ -173,12 +173,11 @@ else
             else if (!isAdmin && isReview)
             {
                 // 众包校对
+                <button id="btnSubmit" type="submit" class="btn btn-primary btn-lg" style="display:none;">保存修改</button>
                 <a id="btnReview" asp-controller="CrowdSource"
                    asp-action="ReviewGroupSubmit"
                    class="btn btn-success btn-lg"
                    asp-route-groupId="@Model.GroupId">这条没错</a>
-              
-                <button id="btnSubmit" type="submit" class="btn btn-primary btn-lg" style="display:none;">保存修改</button>
             }
             else
             {
