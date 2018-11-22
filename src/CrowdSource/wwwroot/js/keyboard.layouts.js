@@ -42,11 +42,7 @@ $(function() {
         'normal': [
             "〇 𠆧 価 𡅏 仱 𣍐 爿",
             "𠋡 ⿰亻鞋 {empty:5}"
-        ],
-        beforeInsert: function(e, keyboard, el, txt) {
-          // add brackets to ⿰亻鞋; all other keys are returned
-          return txt === "⿰亻鞋" ? "{⿰亻鞋}" : txt;
-        }
+        ]
     };
- 
+    
 });

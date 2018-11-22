@@ -216,6 +216,10 @@
         optionsRadicals['position']['my'] = 'left top';
         optionsRadicals['position']['at2'] = 'right top';
         optionsCDO['layout'] = 'cdo';
+        optionsCDO.beforeInsert = function(e, keyboard, el, textToAdd) {
+            // add brackets to ⿰亻鞋; all other keys are returned
+            return textToAdd === "⿰亻鞋" ? "{⿰亻鞋}" : textToAdd;
+        }
 
         $('#TextBUC').keyboard(optionsBUC);
 
