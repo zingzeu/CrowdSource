@@ -2,8 +2,8 @@
 $(function() {
 
     jQuery.keyboard.layouts['buc'] = {
-      'name' : 'BUC',
-      'normal' : [
+      'name': 'BUC',
+      'normal': [
         "a ă à ā á â",
         "a̤ ă̤ à̤ ā̤ á̤ â̤",
         "e ĕ è ē é ê",
@@ -17,7 +17,7 @@ $(function() {
     };
 
     jQuery.keyboard.layouts['bopomofo'] = {
-      'name' : 'BoPoMoFo',
+      'name': 'BoPoMoFo',
       'normal': [ 
         "ㄅ ㄉ ˇ ˋ ㄓ ˊ ˙ ㄚ ㄞ ㄢ",
         "ㄆ ㄊ ㄍ ㄐ ㄔ ㄗ ㄧ ㄛ ㄟ ㄣ",
@@ -27,22 +27,26 @@ $(function() {
     };
 
     jQuery.keyboard.layouts['radicals'] = {
-      'name' : 'Chinese Radicals',
+      'name': 'Chinese Radicals',
       'normal': [ 
         "⺄ 乛 冖 宀 ⺮ 亠 ⺌ 艹",
         "冂 凵 勹 匚 彐 疒 辶 廴",
         "亻 氵 冫 刂 卩 阝 ⺪ 饣",
         "彳 忄 扌 丬 犭 衤 礻 糹",
         "夂 攵 攴 尢 屮 巛 廾 彑",
-      "日 曰 彡 殳 爿 糸 艸 豸"]
+        "日 曰 彡 殳 爿 糸 艸 豸"]
     };
 
     jQuery.keyboard.layouts['cdo'] = {
         'name': 'Eastern Min',
         'normal': [
             "〇 𠆧 価 𡅏 仱 𣍐 爿",
-            "𠋡 {⿰亻鞋}"
-        ]
+            "𠋡 ⿰亻鞋 {empty:5}"
+        ],
+        beforeInsert: function(e, keyboard, el, txt) {
+          // add brackets to ⿰亻鞋; all other keys are returned
+          return txt === "⿰亻鞋" ? "{⿰亻鞋}" : txt;
+        }
     };
  
 });
