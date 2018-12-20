@@ -7,5 +7,5 @@ install:
 - dotnet restore
 
 script:
-- dotnet build
+- dotnet build Zezo.sln
 - dotnet test test/Zezo.Core.Configuration.Tests/Zezo.Core.Configuration.Tests.csproj
