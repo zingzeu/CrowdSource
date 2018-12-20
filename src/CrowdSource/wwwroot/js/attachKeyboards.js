@@ -41,7 +41,8 @@
 
             // if true, keyboard will not close if you press escape.
             ignoreEsc: false,
-
+            
+            useCombos: false,
 
             // Message added to the key title while hovering,
             // if the mousewheel plugin exists
