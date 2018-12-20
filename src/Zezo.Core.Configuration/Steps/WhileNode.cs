@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Xml;
 
 namespace Zezo.Core.Configuration.Steps {
     
@@ -8,6 +9,11 @@ namespace Zezo.Core.Configuration.Steps {
         public StepNode ChildTemplate { get; private set; }
 
         public ConfigurationNode Condition { get; private set; }
+
+        public WhileNode(XmlElement xmlElem, IParser parser) : base(xmlElem, parser) {
+
+        }
+
     }
 
 }
