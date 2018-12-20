@@ -2,7 +2,8 @@
 
 namespace Zezo.Core.GrainInterfaces
 {
-    public class Class1
+    public interface IHello
     {
+        
     }
 }
