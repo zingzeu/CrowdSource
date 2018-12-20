@@ -15,19 +15,16 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-- task: NuGetToolInstaller@0
-
-- task: NuGetCommand@2
+- task: DotNetCoreInstaller@0
   inputs:
-    restoreSolution: '$(solution)'
+    version: '2.1.401' 
 
-- task: VSBuild@1
-  inputs:
-    solution: '$(solution)'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+- script: dotnet restore Zezo.sln
 
-- task: VSTest@2
+- script: dotnet build Zezo.sln
+
+- task: DotNetCoreCLI@2
   inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    command: test
+    projects: 'test/Zezo**Tests/*.csproj'
+    arguments: '--configuration $(buildConfiguration)'
