@@ -163,19 +163,17 @@
             </FlagsStore.Types>
         </FlagsStore>
     </Project.DataStores>
-        <Project.LifeCycle>
-        <LifeCycleHandler On="DataStoreUpdated">
-            <ScriptHandler>
-                <![CDATA[
-                    var segmentErrorCount = DataStore["flags"].Flags["SegmentationError"].GetCount();
-                    if (segmentErrorCount >= 1) {
-                        this.normal_flow.Pause();
-                    } else if (this.normal_flow.GetState()=="Paused") {
-                        this.normal_flow.Resume();
-                    }
-                ]]>
-            </ScriptHandler>
-        </LifeCycleHandler>
+    <Project.LifeCycle>
+        <ScriptLifeCycleHandler On="DataStoreUpdated">
+            <![CDATA[
+                var segmentErrorCount = DataStore["flags"].Flags["SegmentationError"].GetCount();
+                if (segmentErrorCount >= 1) {
+                    this.normal_flow.Pause();
+                } else if (this.normal_flow.GetState()=="Paused") {
+                    this.normal_flow.Resume();
+                }
+            ]]>
+        </ScriptLifeCycleHandler>
     </Project.LifeCycle>
     <Project.Queues>
         <Queue Id="all" Name="Transcribe All Queue" />

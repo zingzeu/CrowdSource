@@ -29,6 +29,17 @@ namespace Zezo.Core.Configuration.Extensions
             }
         }
 
+        public static bool GetBooleanAttribute(this XmlElement elem, string key) {
+            string s = GetStringAttribute(elem, key);
+            if (s.Equals("true", StringComparison.CurrentCultureIgnoreCase)) {
+                return true;
+            } else if (s.Equals("false", StringComparison.CurrentCultureIgnoreCase)) {
+                return false;
+            } else {
+                throw new Exception($"{elem}.{key} does not have a Boolean value: \"{s}\"");
+            }
+        }
+
         public static IReadOnlyList<XmlElement> GetComplexAttribute(this XmlElement elem, string key)
         {
             var qualifiedKey = $"{elem.LocalName}.{key}";
@@ -49,5 +60,22 @@ namespace Zezo.Core.Configuration.Extensions
                 return subNodes;
             }
         }
+    
+        public static IReadOnlyList<T> GetCollectionAttribute<T>(this XmlElement elem, string key, IParser parser) where T : ConfigurationNode {
+            var typeName = typeof(T).Name;
+            
+            var tNodes = elem.GetComplexAttribute(key);
+            var result = new List<T>();
+            if (tNodes.Count > 0) {
+                foreach (var tNode in tNodes) {
+                    var tmp = parser.ParseXmlElement(tNode) as T;
+                    if (tmp == null) {
+                        throw new Exception($"{tNode.LocalName} is not a valid {typeName}");
+                    }
+                    result.Add(tmp);
+                }
+            }
+            return result;
+        } 
     }
 }
