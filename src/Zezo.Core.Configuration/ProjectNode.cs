@@ -16,15 +16,7 @@ namespace Zezo.Core.Configuration {
             this.Name = xmlElem.GetStringAttribute("Name").Trim();
 
             // parse Pipeline
-            var pipelineNodes = xmlElem.GetComplexAttribute("Pipeline");
-            if (pipelineNodes.Count > 1) {
-                throw new Exception("Project.Pipeline can only have one value");   
-            } else if (pipelineNodes.Count == 1) {
-                this.Pipeline = parser.ParseXmlElement(pipelineNodes[0]) as StepNode;
-                if (this.Pipeline == null) {
-                    throw new Exception($"{pipelineNodes[0].LocalName} is not a valid Step");
-                }
-            }
+            this.Pipeline = xmlElem.GetComplexSingleAttribute<StepNode>("Pipeline", parser);
 
             // parse Lifecycle
             this._lifecycleHandlers.AddRange(xmlElem.GetCollectionAttribute<LifecycleHandlerNode>("Lifecycle", parser));

@@ -8,7 +8,6 @@ namespace Zezo.Core.Configuration.Tests
 {
     public class QueueNodeTest : ConfigurationNodeTest
     {
-
         [Fact]
         public void Can_Parse_QueueNode_Basic()
         {

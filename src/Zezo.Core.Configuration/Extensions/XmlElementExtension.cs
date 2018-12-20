@@ -77,5 +77,23 @@ namespace Zezo.Core.Configuration.Extensions
             }
             return result;
         } 
+    
+        public static T GetComplexSingleAttribute<T>(this XmlElement elem, string key, IParser parser) where T : ConfigurationNode {
+            var typeName = typeof(T).Name;
+            var tNodes = elem.GetComplexAttribute(key);
+            if (tNodes.Count == 0) {
+                return null;
+            }
+            else if (tNodes.Count > 1) {
+                throw new Exception($"{elem.LocalName}.{key} can only have one value, {tNodes.Count} found.");   
+            } else {
+                var tNode = tNodes[0]; 
+                var tmp = parser.ParseXmlElement(tNode) as T;
+                if (tmp == null) {
+                    throw new Exception($"{tNode.LocalName} is not a valid {typeName}");
+                }
+                return tmp;
+            }
+        }
     }
 }
