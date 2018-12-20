@@ -9,11 +9,8 @@
                             <If.Child>
                                 <Interactive 
                                     Id="transcribe_all"
-                                    Queue="all" >
-                                    <Interactive.Variables>
-                                        <Variable Name="timeLimit" Value="5min" />
-                                        <Variable Name="displayTemplate" Value="all.template" />
-                                    </Interactive.Variables>
+                                    Queue="all"
+                                    TimeLimit="5min" >
                                     <Interactive.BeforePublish>
                                         <ScriptProcessor Source="PrepareData.csscript"/>
                                     </Interactive.BeforePublish>
@@ -38,10 +35,7 @@
                             <Parallel.Children>
                                 <If Id="buc_wrapper">
                                     <If.Child>
-                                        <Interactive Id="transcribe_buc" Queue="buc">
-                                            <Interactive.Variables>
-                                                <Variable Name="timeLimit" Value="5min" />
-                                            </Interactive.Variables>
+                                        <Interactive Id="transcribe_buc" Queue="buc" TimeLimit="5min">
                                             <Interactive.BeforePublish>
                                                 <ScriptProcessor Source="PrepareDataBUC.csscript" />
                                             </Interactive.BeforePublish>
@@ -65,10 +59,7 @@
 
                                 <If Id="chi_wrapper">
                                     <If.Child>
-                                        <Interactive Id="transcribe_chi" Queue="chi">
-                                            <Interactive.Variables>
-                                                <Variable Name="timeLimit" Value="5min" />
-                                            </Interactive.Variables>
+                                        <Interactive Id="transcribe_chi" Queue="chi" TimeLimit="5min">
                                             <Interactive.BeforePublish>
                                                 <ScriptProcessor Source="PrepareDataCHI.csscript" />
                                             </Interactive.BeforePublish>
@@ -92,10 +83,7 @@
 
                                 <If Id="eng_wrapper">
                                     <If.Child>
-                                        <Interactive Id="transcribe_eng" Queue="eng">
-                                            <Interactive.Variables>
-                                                <Variable Name="timeLimit" Value="5min" />
-                                            </Interactive.Variables>
+                                        <Interactive Id="transcribe_eng" Queue="eng" TimeLimit="5min">
                                             <Interactive.BeforePublish>
                                                 <ScriptProcessor Source="PrepareDataENG.csscript" />
                                             </Interactive.BeforePublish>
@@ -116,7 +104,6 @@
                                         </ScriptCondition>
                                     </If.Condition>
                                 </If>
-
                             </Parallel.Children>
                         </Parallel>
                     </Xor.Children>
@@ -141,12 +128,12 @@
                                 // repeat until there are two consecative approvals.
                                 var = this.PreviousOutput;
                                 if (this.PreviousOutput == "ApprovedNoChanges") {
-                                    this.Variables["approvals"] += 1;
-                                    if (this.Variables["approvals"] >= 2) {
+                                    this.DataStore["approvals"].Flags["Approvals"].Up();
+                                    if (this.DataStore["approvals"].Flags["Approvals"].GetCount() >=2) {
                                         return true;
                                     }
                                 } else {
-                                    this.Variables["approvals"] += 0;
+                                    this.DataStore["approvals"].Flags["Approvals"].Cleared();
                                 }
                                 return false;
                             ]]>
@@ -156,7 +143,40 @@
             </Sequence.Children>
         </Sequence>
     </Project.Pipeline>
-
+    <Project.DataStores>
+        <JournalStore Id="fields">
+            <JournalStore.Fields>
+                <FieldDef Name="TextBUC" Type="String" Nullable="True"/>
+                <FieldDef Name="TextEng" Type="String" Nullable="True"/>
+                <FieldDef Name="TextChi" Type="String" Nullable="True"/>
+                <FieldDef Name="IsOral" Type="Boolean" Nullable="False"/>
+            </JournalStore.Fields>
+        </JournalStore>
+        <FlagsStore Id="flags">
+            <FlagsStore.Types>
+                <Flag Name="SegmentationError">
+                    <!--圖片切割錯誤-->
+                </Flag>
+                <Flag Name="Question">
+                    <!--問題-->
+                </Flag>
+            </FlagsStore.Types>
+        </FlagsStore>
+    </Project.DataStores>
+        <Project.LifeCycle>
+        <LifeCycleHandler On="DataStoreUpdated">
+            <ScriptHandler>
+                <![CDATA[
+                    var segmentErrorCount = DataStore["flags"].Flags["SegmentationError"].GetCount();
+                    if (segmentErrorCount >= 1) {
+                        this.normal_flow.Pause();
+                    } else if (this.normal_flow.GetState()=="Paused") {
+                        this.normal_flow.Resume();
+                    }
+                ]]>
+            </ScriptHandler>
+        </LifeCycleHandler>
+    </Project.LifeCycle>
     <Project.Queues>
         <Queue Id="all" Name="Transcribe All Queue" />
         <Queue Id="buc" Name="Transcribe BUC Queue" />

@@ -3,6 +3,9 @@ using System.Xml;
 
 namespace Zezo.Core.Configuration.Steps {
     
+    /// <summary>
+    /// Represents a Step's configuration.
+    /// </summary>
     public abstract class StepNode : ConfigurationNode {
         public string Id { get; protected set; }
 
