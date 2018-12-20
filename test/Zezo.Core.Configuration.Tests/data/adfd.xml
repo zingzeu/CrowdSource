@@ -143,13 +143,13 @@
             </Sequence.Children>
         </Sequence>
     </Project.Pipeline>
-    <Project.DataStores>
+    <Project.Datastores>
         <JournalStore Id="fields">
             <JournalStore.Fields>
-                <FieldDef Name="TextBUC" Type="String" Nullable="True"/>
-                <FieldDef Name="TextEng" Type="String" Nullable="True"/>
-                <FieldDef Name="TextChi" Type="String" Nullable="True"/>
-                <FieldDef Name="IsOral" Type="Boolean" Nullable="False"/>
+                <FieldDef Id="TextBUC" Type="String" Nullable="True"/>
+                <FieldDef Id="TextEng" Type="String" Nullable="True"/>
+                <FieldDef Id="TextChi" Type="String" Nullable="True"/>
+                <FieldDef Id="IsOral" Type="Boolean" Nullable="False"/>
             </JournalStore.Fields>
         </JournalStore>
         <FlagsStore Id="flags">
@@ -162,7 +162,7 @@
                 </Flag>
             </FlagsStore.Types>
         </FlagsStore>
-    </Project.DataStores>
+    </Project.Datastores>
     <Project.LifeCycle>
         <ScriptLifeCycleHandler On="DataStoreUpdated">
             <![CDATA[

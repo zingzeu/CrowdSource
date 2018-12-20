@@ -4,6 +4,7 @@ using System.Xml;
 using Zezo.Core.Configuration.Extensions;
 using Zezo.Core.Configuration.Steps;
 using Zezo.Core.Configuration.Lifecycle;
+using Zezo.Core.Configuration.Datastore;
 
 namespace Zezo.Core.Configuration {
 
@@ -30,6 +31,8 @@ namespace Zezo.Core.Configuration {
 
             // parse Queues
             this._queues.AddRange(xmlElem.GetCollectionAttribute<QueueNode>("Queues", parser));
+        
+            this._datastores.AddRange(xmlElem.GetCollectionAttribute<DatastoreNode>("Datastores", parser));
         }
         public new static string TagName { get { return "Project"; } }
         public string Id { get; private set; }
@@ -44,5 +47,10 @@ namespace Zezo.Core.Configuration {
         private readonly List<LifecycleHandlerNode> _lifecycleHandlers = new List<LifecycleHandlerNode>();
 
         public IReadOnlyList<LifecycleHandlerNode> Lifecycle { get { return this._lifecycleHandlers;}}
+    
+        private readonly List<DatastoreNode> _datastores = new List<DatastoreNode>();
+
+        public IReadOnlyList<DatastoreNode> Datastores { get { return this._datastores;}}
+
     }
 }

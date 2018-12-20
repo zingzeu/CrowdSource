@@ -4,7 +4,7 @@ using Xunit;
 using Zezo.Core.Configuration;
 using Zezo.Core.Configuration.Steps;
 
-namespace Zezo.Core.Configuration.Tests
+namespace Zezo.Core.Configuration.Tests.Steps
 {
     public class SequenceNodeTest : ConfigurationNodeTest
     {

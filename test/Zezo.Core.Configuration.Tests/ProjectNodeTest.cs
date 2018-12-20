@@ -2,6 +2,7 @@ using System;
 using Xunit;
 
 using Zezo.Core.Configuration;
+using Zezo.Core.Configuration.Datastore;
 using Zezo.Core.Configuration.Lifecycle;
 using Zezo.Core.Configuration.Steps;
 
@@ -9,7 +10,6 @@ namespace Zezo.Core.Configuration.Tests
 {
     public class ProjectNodeTest : ConfigurationNodeTest
     {
-
         [Fact]
         public void CanParseProjectNode()
         {
@@ -50,7 +50,7 @@ namespace Zezo.Core.Configuration.Tests
         }
 
         [Fact]
-        public void CanParseProjectNodePipeline() {
+        public void Can_Parse_ProjectNode_Pipeline() {
             var doc = @"<Project Id=""testid"">
                     <Project.Pipeline>
                         <Sequence Id=""firststep"" />
@@ -94,6 +94,24 @@ namespace Zezo.Core.Configuration.Tests
             Assert.IsType<QueueNode>(projNode.Queues[0]);
             Assert.Equal("review", projNode.Queues[0].Id);
             Assert.Equal("Reviewing queue", projNode.Queues[0].Name);
+        }
+
+        [Fact]
+        public void Can_Parse_ProjectNode_Datastores() {
+            var doc = @"
+            <Project Id=""testid"">
+                 <Project.Datastores>
+                    <JournalStore Id=""fields"">
+                        <JournalStore.Fields>
+                            <FieldDef Name=""TextBUC"" Type=""String"" Nullable=""True"" />
+                        </JournalStore.Fields>
+                    </JournalStore>
+                </Project.Datastores>
+            </Project>
+            ";
+            ProjectNode projNode = parser.ParseXmlString(doc) as ProjectNode;
+            Assert.Equal(1, projNode.Datastores.Count);
+            Assert.IsType<JournalStoreNode>(projNode.Datastores[0]);
         }
     }
 }
