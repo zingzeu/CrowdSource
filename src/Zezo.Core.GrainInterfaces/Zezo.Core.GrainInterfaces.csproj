@@ -12,4 +12,9 @@
     <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="2.2.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Zezo.Core.Configuration\Zezo.Core.Configuration.csproj" />
+    <ProjectReference Include="..\Zezo.Core\Zezo.Core.csproj" />
+  </ItemGroup>
+
 </Project>
