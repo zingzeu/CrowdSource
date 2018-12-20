@@ -41,7 +41,8 @@ namespace Zezo.Silo
                     parts.AddApplicationPart(typeof(HelloGrain).Assembly)
                     .WithReferences())
                 .ConfigureLogging(logging => 
-                    logging.AddConsole());
+                    logging.AddConsole())
+                .UseDashboard(options => {});
 
             var host = builder.Build();
             await host.StartAsync();
