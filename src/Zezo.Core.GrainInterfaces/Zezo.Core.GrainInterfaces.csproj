@@ -17,4 +17,7 @@
     <ProjectReference Include="..\Zezo.Core\Zezo.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="StepLogic\" />
+  </ItemGroup>
 </Project>
