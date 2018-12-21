@@ -12,6 +12,8 @@ namespace Zezo.Core.GrainInterfaces
         Task HandleResuming();
         Task HandleStopping();
 
+        Task HandleForceStart();
+
         // Called by child
         Task HandleChildStarted(Guid caller);
         Task HandleChildStopped(Guid caller);

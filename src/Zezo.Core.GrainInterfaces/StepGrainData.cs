@@ -4,7 +4,7 @@ using Zezo.Core.Configuration.Steps;
 
 namespace Zezo.Core.GrainInterfaces
 {
-    public class StepGrainState
+    public class StepGrainData
     {
         public StepStatus Status { get; set; } = StepStatus.Uninitialized;
         public string Type { get; set; }

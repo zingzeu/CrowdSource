@@ -1,30 +1,29 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Zezo.Core.Configuration.Steps;
 using Zezo.Core.GrainInterfaces;
 
 namespace Zezo.Core.Grains.StepLogic {
     public abstract class BaseStepLogic : IStepLogic {
-        protected StepGrainState state;
-        protected readonly Orleans.IGrainFactory grainFactory;
-        protected readonly StepNode config;
-        protected readonly Guid selfKey;
-
-        public BaseStepLogic(Guid selfKey, StepGrainState state, Orleans.IGrainFactory grainFactory, StepNode config)
+        protected readonly IContainer container;
+        protected ILogger Logger => container.Logger;
+        public BaseStepLogic(IContainer container)
         {
-            this.selfKey = selfKey;
-            this.state = state;
-            this.grainFactory = grainFactory;
-            this.config = config;
+            this.container = container;
         }
 
         public abstract Task HandleInit();
         public abstract Task HandleReady();
         public abstract Task HandlePausing();
         public abstract Task HandleResuming();
+        public abstract Task HandleForceStart();
         public abstract Task HandleStopping();
+
+        
         public abstract Task HandleChildStarted(Guid caller);
         public abstract Task HandleChildStopped(Guid caller);
         public abstract Task HandleChildPaused(Guid caller);
+
     }
 }

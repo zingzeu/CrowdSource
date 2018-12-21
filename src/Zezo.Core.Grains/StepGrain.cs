@@ -9,11 +9,17 @@ using Zezo.Core.Grains.StepLogic;
 
 namespace Zezo.Core.Grains
 {
-    public class StepGrain : Orleans.Grain<StepGrainState>, IStepGrain
+    public class StepGrain : Orleans.Grain<StepGrainData>, IStepGrain, IContainer
     {
         private readonly ILogger logger;
 
         private IStepLogic logic;
+
+        public ILogger Logger => logger;
+
+        public StepStatus Status => State?.Status ?? StepStatus.Uninitialized;
+
+        StepGrainData IContainer.State => this.State;
 
         public override Task OnActivateAsync() {
             if (this.State.Status != StepStatus.Uninitialized && this.State.Status != StepStatus.Stopped) {
@@ -88,10 +94,20 @@ namespace Zezo.Core.Grains
             throw new NotImplementedException();
         }
 
+        public Task ForceStart()
+        {
+            if (this.Status == StepStatus.Ready) {
+                return logic.HandleForceStart();
+            } else {
+                Logger.LogWarning("Did not start because Step is not ready.");
+                return Task.CompletedTask;
+            }
+        }
+
         private IStepLogic GetStepLogic(StepNode config) {
             switch (config.StepType) {
                 case "Sequence":
-                return new SequenceStepLogic(this.GetPrimaryKey(), State, GrainFactory, State.Config);
+                return new SequenceStepLogic(this);
                 
                 default:
                 return null;
@@ -99,6 +115,60 @@ namespace Zezo.Core.Grains
             }
         }
 
- 
+        public IStepGrain GetStepGrain(Guid key)
+        {
+            return GrainFactory.GetGrain<IStepGrain>(key);
+        }
+
+        public void CompleteSelf(bool success)
+        {
+            if (State.Status == StepStatus.Ready ||
+                State.Status  == StepStatus.Working) {
+                State.Status = StepStatus.Stopped;
+                if (this.State.ParentNode == null) {
+                    // root
+                    // TODO: inform Entity
+                } else {
+                    // fire and forget
+                    GetParentGrain().OnChildStopped(this.GetPrimaryKey());
+                }
+            }
+            else 
+            {
+                throw new InvalidOperationException($"Cannot change from status {State.Status} to Stopped.");
+            }
+        }
+
+        public IStepGrain GetParentGrain()
+        {
+            if (State.ParentNode != null) {
+                return GetStepGrain(State.ParentNode);
+            } else {
+                return null;
+            }
+        }
+
+        public void MarkSelfStarted()
+        {
+            if (State.Status == StepStatus.Ready) {
+                State.Status = StepStatus.Working;
+                if (this.State.ParentNode == null) {
+                    // inform Entity
+                } else {
+                    GetParentGrain().OnChildStarted(this.GetPrimaryKey());
+                }
+            }
+            else 
+            {
+                throw new InvalidOperationException($"Cannot change from status {State.Status} to Stopped.");
+            }
+        }
+
+        public void SpawnChild(StepNode childConfig)
+        {
+            throw new NotImplementedException();
+        }
+
+
     }
 }

@@ -8,6 +8,12 @@ namespace Zezo.Core.GrainInterfaces
     public interface IStepGrain : Orleans.IGrainWithGuidKey
     {
         Task<StepStatus> GetStatus();
+
+        Task<StepStopReason> GetStopReason();
+
+        /// <summary>
+        /// Whether this Step is the root Step of an Entity's pipeline.
+        /// </summary>
         Task<bool> IsRoot();
 
         // Called by parent/executor
@@ -35,14 +41,17 @@ namespace Zezo.Core.GrainInterfaces
         /// <summary>
         /// Called when the Step is requested to Resume.
         /// </summary>
-        /// <returns>The resuming.</returns>
         Task OnResuming();
 
         /// <summary>
         /// Ons the stopping.
         /// </summary>
-        /// <returns>The stopping.</returns>
         Task OnStopping();
+
+        /// <summary>
+        /// Called by parent to force start a task (From Ready -> Working).
+        /// </summary>
+        Task ForceStart();
 
         // Called by children
         Task OnChildStarted(Guid caller);
