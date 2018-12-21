@@ -46,7 +46,7 @@ namespace Zezo.Core.Grains.StepLogic
                         else
                         {
                             // activate next child
-                            container.GetStepGrain(container.State.ChildNodes[i+1]).OnReady();
+                            _ = container.GetStepGrain(container.State.ChildNodes[i+1]).OnReady();
                         }
                         return;
                     }
@@ -67,7 +67,7 @@ namespace Zezo.Core.Grains.StepLogic
             foreach (var childKey in container.State.ChildNodes) {
                 var child = container.GetStepGrain(childKey);
                 if (await child.GetStatus() == StepStatus.Ready) {
-                    child.ForceStart();
+                    _ = child.ForceStart();
                     return;
                 }
             }

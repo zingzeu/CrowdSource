@@ -5,11 +5,11 @@ using Zezo.Core.Configuration;
 
 namespace Zezo.Core.GrainInterfaces
 {
-    public interface IProject : Orleans.IGrainWithGuidKey
+    public interface IProjectGrain : Orleans.IGrainWithGuidKey
     {
         Task LoadConfig(ProjectNode config);
         Task<Guid> GetGuid();
-        Task<IReadOnlyList<IEntity>> GetEntities();
+        Task<IReadOnlyList<IEntityGrain>> GetEntities();
         Task<IQueue> GetQueue(string id);
     }
 }

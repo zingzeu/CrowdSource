@@ -21,6 +21,8 @@ namespace Zezo.Core.Grains
 
         StepGrainData IContainer.State => this.State;
 
+        public Guid SelfKey => throw new NotImplementedException();
+
         public override Task OnActivateAsync() {
             if (this.State.Status != StepStatus.Uninitialized && this.State.Status != StepStatus.Stopped) {
                 this.logic = GetStepLogic(State.Config);
@@ -169,6 +171,14 @@ namespace Zezo.Core.Grains
             throw new NotImplementedException();
         }
 
+        public Task<StepStopReason> GetStopReason()
+        {
+            return Task.FromResult(StepStopReason.Completed);
+        }
 
+        public IEntityGrain GetEntityGrain()
+        {
+            return GrainFactory.GetGrain<IEntityGrain>(State.Entity);
+        }
     }
 }

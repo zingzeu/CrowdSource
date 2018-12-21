@@ -6,7 +6,7 @@ namespace Zezo.Core.GrainInterfaces
 {
     public interface IQueue : Orleans.IGrainWithGuidKey
     {
-        Task<IProject> GetProject();
+        Task<Guid> GetProject();
         Task<IAssignment> RequestNextItem();
         Task<bool> PublishItem(IAssignment a);
         Task<bool> UnpublishItem(IAssignment a);

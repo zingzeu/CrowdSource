@@ -6,7 +6,7 @@ namespace Zezo.Core.GrainInterfaces
 {
     public interface IEntityGrain : Orleans.IGrainWithGuidKey
     {
-        Task<IProject> GetProject();
+        Task<IProjectGrain> GetProject();
 
         // Pause
         // Resume
