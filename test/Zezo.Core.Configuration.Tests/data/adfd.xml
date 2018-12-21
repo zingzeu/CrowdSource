@@ -111,6 +111,14 @@
                 <DoWhile Id="review">
                     <DoWhile.ChildTemplate>
                         <Interactive Id="review_all" Queue="review">
+                            <Interactive.Inputs>
+                                <FieldDef Id="AllFields" Type="Json" Nullable="True" Description="所有字段" />
+                            </Interactive.Inputs>
+                            <Interactive.Outputs>
+                                <FieldDef Id="Action" Type="String" Nullable="False" />
+                                <!-- One of: ApprovedNoChanges, ApprovedWithChanges -->
+                                <FieldDef Id="Changes" Type="Json" Nullable="True" />
+                            </Interactive.Outputs>
                             <Interactive.BeforePublish>
                                 <ScriptProcessor Class="SummarizeFields" />
                                 <ScriptProcessor Class="ConcatRevisions" />
@@ -144,6 +152,9 @@
         </Sequence>
     </Project.Pipeline>
     <Project.Datastores>
+        <SimpleStore Id="default">
+            <FieldDef Id="ImageFile" Type="String" Nullable="False" />
+        </SimpleStore>
         <JournalStore Id="fields">
             <JournalStore.Fields>
                 <FieldDef Id="TextBUC" Type="String" Nullable="True"/>

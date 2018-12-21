@@ -23,7 +23,7 @@ namespace Zezo.Core.Configuration.Tests
             var normal_flow = node.Pipeline as SequenceNode;
             Parse_normal_flow(normal_flow);
 
-            Assert.Equal(2, node.Datastores.Count);
+            Assert.Equal(3, node.Datastores.Count);
             Assert.Equal(5, node.Queues.Count);
         }
 
