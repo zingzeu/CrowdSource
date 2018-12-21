@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using Orleans;
 using Zezo.Core.Configuration.Steps;
 using Zezo.Core.GrainInterfaces;
-using Zezo.Core.GrainInterfaces.StepLogic;
+using Zezo.Core.Grains.StepLogic;
 
 namespace Zezo.Core.Grains
 {

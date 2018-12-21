@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Zezo.Core.Configuration.Steps;
 using Zezo.Core.GrainInterfaces;
 
-namespace Zezo.Core.GrainInterfaces.StepLogic {
+namespace Zezo.Core.Grains.StepLogic {
     public abstract class BaseStepLogic : IStepLogic {
         protected StepGrainState state;
         protected readonly Orleans.IGrainFactory grainFactory;

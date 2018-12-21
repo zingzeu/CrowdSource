@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Zezo.Core.Configuration.Steps;
 
-namespace Zezo.Core.GrainInterfaces.StepLogic
+namespace Zezo.Core.GrainInterfaces
 {
     public interface IStepLogic
     {

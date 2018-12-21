@@ -1,8 +1,9 @@
 using System;
 using System.Threading.Tasks;
 using Zezo.Core.Configuration.Steps;
+using Zezo.Core.GrainInterfaces;
 
-namespace Zezo.Core.GrainInterfaces.StepLogic
+namespace Zezo.Core.Grains.StepLogic
 {
     public sealed class SequenceStepLogic : BaseStepLogic
     {
