@@ -2,6 +2,7 @@ using Xunit;
 using Zezo.Core.GrainInterfaces;
 using System.Threading.Tasks;
 using System;
+using Xunit.Abstractions;
 using Zezo.Core.Configuration;
 using static Zezo.Core.GrainInterfaces.EntityGrainData;
 
@@ -11,6 +12,10 @@ namespace Zezo.Core.Grains.Tests
     public class HelloGrainTest : BaseGrainTest
     {
         
+        public HelloGrainTest(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+        {
+        }
+        
         [Fact]
         public async Task HelloGrain_Test()
         {
@@ -19,6 +24,7 @@ namespace Zezo.Core.Grains.Tests
             Assert.Equal("Hello, foo! from grain #1.", greeting);
         }
 
+        
     }
 
 }
