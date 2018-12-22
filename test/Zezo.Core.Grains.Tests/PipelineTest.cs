@@ -20,6 +20,7 @@ namespace Zezo.Core.Grains.Tests
         [Fact]
         public async Task Project_Test()
         {
+            Console.WriteLine("=================\n\n\n Test1 \n================\n\n\n\n\n");
             var configStr = @"<Project Id=""test"">
                 <Project.Pipeline>
                     <Sequence Id=""seq"">
@@ -32,6 +33,8 @@ namespace Zezo.Core.Grains.Tests
             </Project>";
             var parser = new Parser();
             var config = parser.ParseXmlString(configStr) as ProjectNode;
+            Console.WriteLine("=================\n\n\n parsed \n================\n\n\n\n\n");
+            
             Console.WriteLine("Creating project...");
             var project = GrainFactory.GetGrain<IProjectGrain>(Guid.NewGuid());
             Console.WriteLine("Loading config...");
