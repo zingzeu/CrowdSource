@@ -17,7 +17,7 @@ namespace Zezo.Core.Grains.Tests
     public class PipelineTest : BaseGrainTest
     {
         
-        [Fact]
+        //[Fact]
         public async Task Project_Test()
         {
             var configStr = @"<Project Id=""test"">
@@ -47,8 +47,8 @@ namespace Zezo.Core.Grains.Tests
             Console.WriteLine("Started entity");
         }
 
-        [Fact]
-        public async Task Project_Test2()
+        //[Fact]
+        public void Project_Test2()
         {
             var configStr = @"
                 <Project Id=""test"">

@@ -2,6 +2,7 @@ using System;
 using Orleans;
 using Orleans.TestingHost;
 using Orleans.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Zezo.Core.Grains.Tests
 {
@@ -30,7 +31,14 @@ namespace Zezo.Core.Grains.Tests
     {
         public void Configure(ISiloHostBuilder hostBuilder)
         {
-            hostBuilder.AddMemoryGrainStorage("DevStore");
+            hostBuilder
+                .AddMemoryGrainStorage("DevStore")
+#if SiloLogging
+                .ConfigureLogging(logging => 
+                    logging.AddConsole());
+#else
+                ;
+#endif
         }
     }
 }
