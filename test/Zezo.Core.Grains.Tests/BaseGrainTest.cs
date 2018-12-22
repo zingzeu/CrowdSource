@@ -19,11 +19,13 @@ namespace Zezo.Core.Grains.Tests
             builder.AddSiloBuilderConfigurator<TestSiloConfigurator>();
             cluster = builder.Build();
             cluster.Deploy();
+            Console.WriteLine("\n\n ******* Silo Up \n\n");
         }
         
         public void Dispose()
         {
             cluster.StopAllSilos();
+            Console.WriteLine("\n\n ******* Silo Down \n\n");
         }
     }
 
