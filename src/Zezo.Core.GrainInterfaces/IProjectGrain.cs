@@ -8,8 +8,9 @@ namespace Zezo.Core.GrainInterfaces
     public interface IProjectGrain : Orleans.IGrainWithGuidKey
     {
         Task LoadConfig(ProjectNode config);
-        Task<Guid> GetGuid();
-        Task<IReadOnlyList<IEntityGrain>> GetEntities();
+        Task<IReadOnlyList<Guid>> GetEntities();
         Task<IQueue> GetQueue(string id);
+
+        Task<Guid> CreateEntity(object initialData);
     }
 }

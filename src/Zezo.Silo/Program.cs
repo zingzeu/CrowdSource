@@ -33,6 +33,7 @@ namespace Zezo.Silo
         private static async Task<ISiloHost> StartSilo() {
             var builder = new SiloHostBuilder()
                 .UseLocalhostClustering()
+                .AddMemoryGrainStorage("DevStore")
                 .Configure<ClusterOptions>(options => {
                     options.ClusterId = "dev";
                     options.ServiceId = "Zezo";

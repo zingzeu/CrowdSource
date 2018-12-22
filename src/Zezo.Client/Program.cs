@@ -3,12 +3,26 @@ using Orleans;
 using Orleans.Configuration;
 using System;
 using System.Threading.Tasks;
+using Zezo.Core.Configuration;
 using Zezo.Core.GrainInterfaces;
 
 namespace Zezo.Client
 {
     public class Program
     {
+
+        private static readonly string SimpleProject = @"
+            <Project Id=""test"">
+                <Project.Pipeline>
+                    <Sequence Id=""seq"">
+                        <Sequence.Children>
+                            <DummyStep Id=""dummy1"" />
+                            <DummyStep Id=""dummy2"" />
+                        </Sequence.Children>
+                    </Sequence>
+                </Project.Pipeline>
+            </Project>
+        ";
         static int Main(string[] args)
         {
             return RunMainAsync().Result;
@@ -60,6 +74,21 @@ namespace Zezo.Client
             var friend = client.GetGrain<IHello>(0);
             var response = await friend.SayHello("Good morning, HelloGrain!");
             Console.WriteLine("\n\n{0}\n\n", response);
+
+
+            var parser = new Parser();
+            var config = parser.ParseXmlString(SimpleProject) as ProjectNode;
+            var project = client.GetGrain<IProjectGrain>(Guid.NewGuid());
+            Console.WriteLine("Loading config...");
+
+            await project.LoadConfig(config);
+            Console.WriteLine("Creating entity");
+            var e1K = await project.CreateEntity(1);
+            Console.WriteLine($"Entity {e1K} created.");
+            var e1 = client.GetGrain<IEntityGrain>(e1K);
+            Console.WriteLine("Starting entity");
+            await e1.Start();
+            Console.WriteLine("Started entity");
         }
     }
 }

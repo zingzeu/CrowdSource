@@ -3,14 +3,21 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Orleans;
+using Orleans.Providers;
 using Zezo.Core.Configuration.Steps;
 using Zezo.Core.GrainInterfaces;
 using Zezo.Core.Grains.StepLogic;
 
 namespace Zezo.Core.Grains
 {
+    
+    [StorageProvider(ProviderName="DevStore")]
     public class StepGrain : Orleans.Grain<StepGrainData>, IStepGrain, IContainer
     {
+        public override Task OnDeactivateAsync() {
+            logger.LogInformation("deactivating...");
+            return Task.CompletedTask;
+        }
         private readonly ILogger logger;
 
         private IStepLogic logic;
@@ -21,10 +28,12 @@ namespace Zezo.Core.Grains
 
         StepGrainData IContainer.State => this.State;
 
-        public Guid SelfKey => throw new NotImplementedException();
+        public Guid SelfKey => this.GetPrimaryKey();
 
         public override Task OnActivateAsync() {
+            logger.LogInformation("activating...");
             if (this.State.Status != StepStatus.Uninitialized && this.State.Status != StepStatus.Stopped) {
+                logger.LogInformation("restore previous logic...");
                 this.logic = GetStepLogic(State.Config);
             }
             return Task.CompletedTask;
@@ -59,16 +68,16 @@ namespace Zezo.Core.Grains
             return logic.HandleChildStopped(caller);
         }
 
-        public async Task OnInit(Guid parentNode, Guid entity, StepNode config)
+        public async Task OnInit(Guid? parentNode, Guid entity, StepNode config)
         {
             if (this.State.Status != StepStatus.Uninitialized) {
                 throw new Exception("Cannot initialize a StepGrain twice!");
             } else {
                 logger.LogInformation($"StepGrain initialising with {config.StepType}...");
-                logic = GetStepLogic(config);
                 State.Config = config;
                 State.ParentNode = parentNode;
                 State.Entity = entity;
+                logic = GetStepLogic(config);
                 await logic.HandleInit();
                 this.State.Status = StepStatus.Initialized;
                 logger.LogInformation($"initialized...");
@@ -83,7 +92,9 @@ namespace Zezo.Core.Grains
 
         public Task OnReady()
         {
-            throw new NotImplementedException();
+            DelayDeactivation(TimeSpan.FromMinutes(10));
+            State.Status = StepStatus.Ready;
+            return logic.HandleReady();
         }
 
         public Task OnResuming()
@@ -110,9 +121,12 @@ namespace Zezo.Core.Grains
             switch (config.StepType) {
                 case "Sequence":
                 return new SequenceStepLogic(this);
-                
+
+                case "DummyStep":
+                return new DummyStepLogic(this);
+
                 default:
-                return null;
+                throw new Exception($"Unknown StepType {config.StepType}");
 
             }
         }
@@ -144,7 +158,7 @@ namespace Zezo.Core.Grains
         public IStepGrain GetParentGrain()
         {
             if (State.ParentNode != null) {
-                return GetStepGrain(State.ParentNode);
+                return GetStepGrain(State.ParentNode.GetValueOrDefault());
             } else {
                 return null;
             }
@@ -162,7 +176,8 @@ namespace Zezo.Core.Grains
             }
             else 
             {
-                throw new InvalidOperationException($"Cannot change from status {State.Status} to Stopped.");
+                logger.LogError($"Cannot change from status {State.Status} to Started.");
+                throw new InvalidOperationException($"Cannot change from status {State.Status} to Started.");
             }
         }
 

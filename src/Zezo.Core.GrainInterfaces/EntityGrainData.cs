@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace Zezo.Core.GrainInterfaces
 {
     public class EntityGrainData {
@@ -5,7 +8,12 @@ namespace Zezo.Core.GrainInterfaces
             Active,
             Archived
         }
-        public EntityStatus Status;
+        public EntityStatus Status { get; set; }
 
+        public Guid ProjectKey { get; set; }
+
+        public Guid PipelineRoot { get; set; }
+
+        public IDictionary<string, Guid> Steps { get; } = new Dictionary<string, Guid>();
     }
 }

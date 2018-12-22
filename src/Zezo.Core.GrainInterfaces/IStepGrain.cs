@@ -22,7 +22,7 @@ namespace Zezo.Core.GrainInterfaces
         /// Called when the Step is first created.
         /// Should only be called once, when the Step is "Uninitialized".
         /// </summary>
-        Task OnInit(Guid parentNode, Guid entity, StepNode config);
+        Task OnInit(Guid? parentNode, Guid entity, StepNode config);
 
         /// <summary>
         /// Called when the Step is ready (allowed to start).
