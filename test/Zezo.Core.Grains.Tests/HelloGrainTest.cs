@@ -18,6 +18,16 @@ namespace Zezo.Core.Grains.Tests
             Assert.Equal("Hello, foo! from grain #1.", greeting);
         }
 
+        [Fact]
+        public async Task HelloGrain_Test2()
+        {
+            Console.WriteLine("=================\n\n\n HelloTest2 \n================\n\n\n\n\n");
+
+            var hello  = GrainFactory.GetGrain<IHello>(2);
+            var greeting = await hello.SayHello("foo");
+            Assert.Equal("Hello, foo! from grain #2.", greeting);
+        }
+
     }
 
 }

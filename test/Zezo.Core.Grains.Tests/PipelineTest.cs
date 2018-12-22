@@ -17,7 +17,7 @@ namespace Zezo.Core.Grains.Tests
     public class PipelineTest : BaseGrainTest
     {
         
-        [Fact]
+        /*[Fact]
         public async Task Project_Test()
         {
             Console.WriteLine("=================\n\n\n Test1 \n================\n\n\n\n\n");
@@ -69,7 +69,7 @@ namespace Zezo.Core.Grains.Tests
                     </Project.Pipeline>
                 </Project>
             ";
-        }
+        } */
     }
 
 }
