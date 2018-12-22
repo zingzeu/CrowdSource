@@ -1,3 +1,3 @@
 # Zezo
 
-[![Build Status](https://ztl8702.visualstudio.com/Zezo/_apis/build/status/Zezo-CI?branchName=zezo)](https://ztl8702.visualstudio.com/Zezo/_build/latest?definitionId=5?branchName=zezo)
+[![Build Status](https://dev.azure.com/radiumz/Zezo/_apis/build/status/ztl8702.CrowdSource?branchName=zezo)](https://dev.azure.com/radiumz/Zezo/_build/latest?definitionId=1?branchName=zezo)
