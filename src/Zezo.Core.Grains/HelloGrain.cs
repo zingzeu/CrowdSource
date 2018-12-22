@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Zezo.Core.GrainInterfaces;
+using Orleans;
 
 namespace Zezo.Core.Grains
 {
@@ -17,7 +18,7 @@ namespace Zezo.Core.Grains
         public Task<string> SayHello(string greeting)
         {
             logger.LogInformation($"\nSaying hello, greeting='{greeting}'\n");
-            return Task.FromResult($"Hello, {greeting}! from grain.");
+            return Task.FromResult($"Hello, {greeting}! from grain #{this.GetPrimaryKeyLong()}.");
         }
     }
 }

@@ -8,6 +8,7 @@ using Zezo.Core.Configuration;
 using Zezo.Core.Configuration.Steps;
 using Zezo.Core.GrainInterfaces;
 using Zezo.Core.Grains.StepLogic;
+using static Zezo.Core.GrainInterfaces.EntityGrainData;
 
 namespace Zezo.Core.Grains
 {
@@ -20,12 +21,19 @@ namespace Zezo.Core.Grains
         {
             this.logger = logger;
         }
+
+        public Task<EntityGrainData.EntityStatus> GetStatus()
+        {
+            return Task.FromResult(this.State.Status);
+        }
+
         public async Task Init(Guid project, ProjectNode projectConfig)
         {
             State.ProjectKey = project;
             logger.LogInformation($"Entity {this.GetPrimaryKey()} created from project {project}");
             logger.LogInformation("Spawning first child");
             State.PipelineRoot = await SpawnRoot(projectConfig.Pipeline);
+            State.Status = EntityStatus.Initialized;
         }
 
         public async Task<Guid> SpawnChild(StepNode config, Guid parentStep)
@@ -50,6 +58,7 @@ namespace Zezo.Core.Grains
 
         public Task Start()
         {
+            State.Status = EntityStatus.Active;
             return GrainFactory.GetGrain<IStepGrain>(State.PipelineRoot).OnReady();
         }
     }

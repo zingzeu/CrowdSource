@@ -14,10 +14,15 @@ namespace Zezo.Client
         private static readonly string SimpleProject = @"
             <Project Id=""test"">
                 <Project.Pipeline>
-                    <Sequence Id=""seq"">
+                    <Sequence Id=""seq1"">
                         <Sequence.Children>
-                            <DummyStep Id=""dummy1"" />
-                            <DummyStep Id=""dummy2"" />
+                            <Sequence Id=""seq_inner"">
+                                <Sequence.Children>
+                                    <DummyStep Id=""dummy1"" />
+                                    <DummyStep Id=""dummy2"" />
+                                </Sequence.Children>
+                            </Sequence>
+                            <DummyStep Id=""dummy3"" />
                         </Sequence.Children>
                     </Sequence>
                 </Project.Pipeline>
