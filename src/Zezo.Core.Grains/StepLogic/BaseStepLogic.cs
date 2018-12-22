@@ -20,7 +20,7 @@ namespace Zezo.Core.Grains.StepLogic {
             return Task.CompletedTask;
         }
         
-        public abstract Task HandleReady();
+        public abstract Task OnActivate();
         public abstract Task HandlePausing();
         public abstract Task HandleResuming();
         public abstract Task HandleForceStart();

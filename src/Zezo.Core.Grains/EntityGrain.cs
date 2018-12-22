@@ -38,7 +38,7 @@ namespace Zezo.Core.Grains
         {
             var newKey = Guid.NewGuid();
             var newStep = GrainFactory.GetGrain<IStepGrain>(newKey);
-            await newStep.OnInit(parentStep, this.GetPrimaryKey(), config);
+            await newStep.Init(parentStep, this.GetPrimaryKey(), config);
             State.Steps[config.Id] = newKey;
             logger.LogInformation($"spawned child step id={config.Id}");
             return newKey;
@@ -48,7 +48,7 @@ namespace Zezo.Core.Grains
         {
             var newKey = Guid.NewGuid();
             var newStep = GrainFactory.GetGrain<IStepGrain>(newKey);
-            await newStep.OnInit(null, this.GetPrimaryKey(), config);
+            await newStep.Init(null, this.GetPrimaryKey(), config);
             State.Steps[config.Id] = newKey;
             logger.LogInformation($"spawned root step id={config.Id}");
             return newKey;
@@ -57,7 +57,7 @@ namespace Zezo.Core.Grains
         public Task Start()
         {
             State.Status = EntityStatus.Active;
-            return GrainFactory.GetGrain<IStepGrain>(State.PipelineRoot).OnReady();
+            return GrainFactory.GetGrain<IStepGrain>(State.PipelineRoot).Activate();
         }
     }
 }

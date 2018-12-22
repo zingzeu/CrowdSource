@@ -47,7 +47,7 @@ namespace Zezo.Core.Grains.StepLogic
             return Task.CompletedTask;
         }
 
-        public override Task HandleReady()
+        public override Task OnActivate()
         {
             Say($"I am allowed to start working. I will start working later.");
             Task.Factory.StartNew(

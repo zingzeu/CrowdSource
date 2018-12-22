@@ -12,29 +12,29 @@ namespace Zezo.Core.Grains
 {
     
     [StorageProvider(ProviderName="DevStore")]
-    public class StepGrain : Orleans.Grain<StepGrainData>, IStepGrain, IContainer
+    public partial class StepGrain : Orleans.Grain<StepGrainData>, IStepGrain
     {
         public override Task OnDeactivateAsync() {
             logger.LogInformation("deactivating...");
             return Task.CompletedTask;
         }
+        
         private readonly ILogger logger;
 
         private IStepLogic logic;
 
-        public ILogger Logger => logger;
-
-        public StepStatus Status => State?.Status ?? StepStatus.Uninitialized;
-
-        StepGrainData IContainer.State => this.State;
-
-        public Guid SelfKey => this.GetPrimaryKey();
-
         public override Task OnActivateAsync() {
             logger.LogInformation("activating...");
-            if (this.State.Status != StepStatus.Uninitialized && this.State.Status != StepStatus.Stopped) {
-                logger.LogInformation("restore previous logic...");
+            
+            if (IsInitialized && !IsStopped) {
+                logger.LogInformation("Re-activation of existing StepGrain. Restore previous StepLogic " +
+                                      "implementation...");
                 this.logic = GetStepLogic(State.Config);
+            }
+            else if (State.Status == StepStatus.Initializing)
+            {
+                logger.LogWarning("Re-activation and it was Initializing??? " +
+                                  "(Probably initialization failed?)");
             }
             return Task.CompletedTask;
         }
@@ -45,12 +45,12 @@ namespace Zezo.Core.Grains
 
         public Task<StepStatus> GetStatus()
         {
-            return Task.FromResult(this.State.Status);
+            return Task.FromResult(State.Status);
         }
 
         public Task<bool> IsRoot()
         {
-            return Task.FromResult(this.State.ParentNode == null);
+            return Task.FromResult(State.ParentNode == null);
         }
 
         public Task OnChildPaused(Guid caller)
@@ -68,51 +68,95 @@ namespace Zezo.Core.Grains
             return logic.HandleChildStopped(caller);
         }
 
-        public async Task OnInit(Guid? parentNode, Guid entity, StepNode config)
+        public async Task Init(Guid? parentNode, Guid entity, StepNode config)
         {
-            if (this.State.Status != StepStatus.Uninitialized) {
+            if (IsInitialized) 
+            {
+                logger.LogError("Attempting to initialize twice!");
                 throw new Exception("Cannot initialize a StepGrain twice!");
-            } else {
-                logger.LogInformation($"StepGrain initialising with {config.StepType}...");
+            } 
+            else if (State.Status == StepStatus.Initializing)
+            {
+                logger.LogError("Grain is already initializing!");
+                throw new Exception("Grain is already initializing!");
+            }
+            else
+            {
+                State.Status = StepStatus.Initializing;
+
+                logger.LogInformation($"StepGrain initialising with {config.StepType}... \n" +
+                                      (parentNode == null ? $"As Root of Entity {entity}" 
+                                          : $"With Parent Step {parentNode.Value} ") + "\n"
+                                      );
+                
                 State.Config = config;
                 State.ParentNode = parentNode;
                 State.Entity = entity;
-                logic = GetStepLogic(config);
-                await logic.HandleInit();
-                this.State.Status = StepStatus.Initialized;
-                logger.LogInformation($"initialized...");
-                return;
+
+                try
+                {
+                    logic = GetStepLogic(config);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError($"Step failed due to Exception: {e}");
+                    State.Status = StepStatus.Error;
+                    throw;
+                }
+
+                try
+                {
+                    await logic.HandleInit();
+                }
+                catch (Exception e)
+                {
+                    logger.LogError($"Step failed due to Exception during HandleInit: {e}");
+                    State.Status = StepStatus.Error;
+                    throw;
+                }
+                State.Status = StepStatus.Inactive;
+                logger.LogInformation($"Successfully initialized.");
             }
         }
 
-        public Task OnPausing()
+        public Task Pause()
         {
             throw new NotImplementedException();
         }
 
-        public Task OnReady()
+        public async Task Activate()
         {
             DelayDeactivation(TimeSpan.FromMinutes(10));
-            State.Status = StepStatus.Ready;
-            return logic.HandleReady();
+            State.Status = StepStatus.Active;
+            logger.LogInformation("State Changed to Active");
+            try
+            {
+                await logic.OnActivate();
+            }
+            catch (Exception e)
+            {
+                logger.LogError("Error during OnActivate: {e}");
+                // don't set state to Error (for now) to allow retry
+                throw;
+            }
         }
 
-        public Task OnResuming()
+        public Task Resume()
         {
             throw new NotImplementedException();
         }
 
-        public Task OnStopping()
+        public Task Stop()
         {
             throw new NotImplementedException();
         }
 
         public Task ForceStart()
         {
-            if (this.Status == StepStatus.Ready) {
+            if (this.Status == StepStatus.Inactive) {
                 return logic.HandleForceStart();
             } else {
-                Logger.LogWarning("Did not start because Step is not ready.");
+                logger.LogWarning("Did not start because Step is not ready.");
                 return Task.CompletedTask;
             }
         }
@@ -136,65 +180,12 @@ namespace Zezo.Core.Grains
             return GrainFactory.GetGrain<IStepGrain>(key);
         }
 
-        public void CompleteSelf(bool success)
-        {
-            if (State.Status == StepStatus.Ready ||
-                State.Status  == StepStatus.Working) {
-                State.Status = StepStatus.Stopped;
-                if (this.State.ParentNode == null) {
-                    // root
-                    // TODO: inform Entity
-                } else {
-                    // fire and forget
-                    GetParentGrain().OnChildStopped(this.GetPrimaryKey());
-                }
-            }
-            else 
-            {
-                throw new InvalidOperationException($"Cannot change from status {State.Status} to Stopped.");
-            }
-        }
-
-        public IStepGrain GetParentGrain()
-        {
-            if (State.ParentNode != null) {
-                return GetStepGrain(State.ParentNode.GetValueOrDefault());
-            } else {
-                return null;
-            }
-        }
-
-        public void MarkSelfStarted()
-        {
-            if (State.Status == StepStatus.Ready) {
-                State.Status = StepStatus.Working;
-                if (this.State.ParentNode == null) {
-                    // inform Entity
-                } else {
-                    GetParentGrain().OnChildStarted(this.GetPrimaryKey());
-                }
-            }
-            else 
-            {
-                logger.LogError($"Cannot change from status {State.Status} to Started.");
-                throw new InvalidOperationException($"Cannot change from status {State.Status} to Started.");
-            }
-        }
-
-        public Task<Guid> SpawnStep(StepNode childConfig)
-        {
-            var entityGrain = GetEntityGrain();
-            return entityGrain.SpawnChild(childConfig, SelfKey);
-        }
-
+        
         public Task<StepStopReason> GetStopReason()
         {
             return Task.FromResult(StepStopReason.Completed);
         }
 
-        public IEntityGrain GetEntityGrain()
-        {
-            return GrainFactory.GetGrain<IEntityGrain>(State.Entity);
-        }
+
     }
 }

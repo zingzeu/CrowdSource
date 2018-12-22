@@ -22,7 +22,7 @@ namespace Zezo.Core.Grains.StepLogic
 
         public override Task HandleChildStarted(Guid caller)
         {
-            if (container.Status == StepStatus.Ready) {
+            if (container.Status == StepStatus.Inactive) {
                 container.MarkSelfStarted();
             }
             return Task.CompletedTask;
@@ -46,7 +46,7 @@ namespace Zezo.Core.Grains.StepLogic
                         else
                         {
                             // activate next child
-                            _ = container.GetStepGrain(container.State.ChildNodes[i+1]).OnReady();
+                            _ = container.GetStepGrain(container.State.ChildNodes[i+1]).Activate();
                         }
                         return;
                     }
@@ -68,7 +68,7 @@ namespace Zezo.Core.Grains.StepLogic
             // finds first child that is ready, and force it
             foreach (var childKey in container.State.ChildNodes) {
                 var child = container.GetStepGrain(childKey);
-                if (await child.GetStatus() != StepStatus.Ready) continue;
+                if (await child.GetStatus() != StepStatus.Inactive) continue;
                 _ = child.ForceStart();
                 return;
             }
@@ -92,12 +92,12 @@ namespace Zezo.Core.Grains.StepLogic
             Logger.LogInformation($"SequenceStep: {seqConfig.Children.Count} children created.");
         }
 
-        public override Task HandleReady()
+        public override Task OnActivate()
         {
             // Make first child ready.
             if (container.State.ChildCount > 0) {
                 var firstChild = container.State.ChildNodes[0];
-                container.GetStepGrain(firstChild).OnReady();
+                container.GetStepGrain(firstChild).Activate();
             } else {
                 Logger.LogWarning("No children, moving to Completed state");
                 container.CompleteSelf(true);
@@ -119,8 +119,9 @@ namespace Zezo.Core.Grains.StepLogic
             // finds first child that is ready, and force it
             foreach (var childKey in container.State.ChildNodes) {
                 var child = container.GetStepGrain(childKey);
-                if (await child.GetStatus() != StepStatus.Stopped) {
-                    await child.OnStopping();
+                var childStatus = await child.GetStatus();
+                if (childStatus != StepStatus.StoppedWithSuccess && childStatus != StepStatus.Error) {
+                    await child.Stop();
                 }
             }
         }
