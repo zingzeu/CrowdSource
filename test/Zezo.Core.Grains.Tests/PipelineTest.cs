@@ -14,13 +14,13 @@ namespace Zezo.Core.Grains.Tests
     /// Tests that involve EntityGrain, StepGrain and ProjectGrain,
     /// as well as the different StepLogics.
     /// </summary>
+    [Collection("Default")] // All tests in the same collection, prevents parallel runs
     public class PipelineTest : BaseGrainTest
     {
         
-        /*[Fact]
+        [Fact]
         public async Task Project_Test()
         {
-            Console.WriteLine("=================\n\n\n Test1 \n================\n\n\n\n\n");
             var configStr = @"<Project Id=""test"">
                 <Project.Pipeline>
                     <Sequence Id=""seq"">
@@ -33,9 +33,7 @@ namespace Zezo.Core.Grains.Tests
             </Project>";
             var parser = new Parser();
             var config = parser.ParseXmlString(configStr) as ProjectNode;
-            Console.WriteLine("=================\n\n\n parsed \n================\n\n\n\n\n");
             
-            Console.WriteLine("Creating project...");
             var project = GrainFactory.GetGrain<IProjectGrain>(Guid.NewGuid());
             Console.WriteLine("Loading config...");
             await project.LoadConfig(config);
@@ -49,7 +47,7 @@ namespace Zezo.Core.Grains.Tests
             Console.WriteLine("Started entity");
         }
 
-        //[Fact]
+        [Fact]
         public void Project_Test2()
         {
             var configStr = @"
@@ -69,7 +67,7 @@ namespace Zezo.Core.Grains.Tests
                     </Project.Pipeline>
                 </Project>
             ";
-        } */
+        }
     }
 
 }
