@@ -54,6 +54,12 @@ namespace Zezo.Core.Grains
             return newKey;
         }
 
+        public Task<Guid?> GetStepById(string id)
+        {
+            return State.Steps.TryGetValue(id, out var guid) 
+                ? Task.FromResult((Guid?)guid) : Task.FromResult((Guid?)null);
+        }
+
         public Task Start()
         {
             State.Status = EntityStatus.Active;

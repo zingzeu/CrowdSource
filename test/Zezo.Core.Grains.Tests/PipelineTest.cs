@@ -50,6 +50,26 @@ namespace Zezo.Core.Grains.Tests
             _testOutputHelper.WriteLine("Starting entity");
             await e1.Start();
             _testOutputHelper.WriteLine("Started entity");
+
+            await Task.Delay(20*1000);
+
+            var dummy1Key = await e1.GetStepById("dummy1");
+            Assert.NotNull(dummy1Key);
+            var dummy1 = GrainFactory.GetGrain<IStepGrain>(dummy1Key.Value);
+            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
+            
+            var dummy2Key = await e1.GetStepById("dummy2");
+            Assert.NotNull(dummy2Key);
+            var dummy2 = GrainFactory.GetGrain<IStepGrain>(dummy2Key.Value);
+            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
+            
+            var seqKey = await e1.GetStepById("seq");
+            Assert.NotNull(dummy1Key);
+            var seq = GrainFactory.GetGrain<IStepGrain>(seqKey.Value);
+            Assert.Equal(StepStatus.StoppedWithSuccess, await seq.GetStatus());
+            
+            _testOutputHelper.WriteLine("End of test");
+
         }
 
         [Fact]
