@@ -181,9 +181,10 @@ namespace Zezo.Core.Grains
             }
         }
 
-        public void SpawnChild(StepNode childConfig)
+        public Task<Guid> SpawnStep(StepNode childConfig)
         {
-            throw new NotImplementedException();
+            var entityGrain = GetEntityGrain();
+            return entityGrain.SpawnChild(childConfig, SelfKey);
         }
 
         public Task<StepStopReason> GetStopReason()

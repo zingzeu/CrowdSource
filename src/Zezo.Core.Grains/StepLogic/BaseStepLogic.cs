@@ -8,12 +8,18 @@ namespace Zezo.Core.Grains.StepLogic {
     public abstract class BaseStepLogic : IStepLogic {
         protected readonly IContainer container;
         protected ILogger Logger => container.Logger;
-        public BaseStepLogic(IContainer container)
+
+        protected BaseStepLogic(IContainer container)
         {
             this.container = container;
         }
 
-        public abstract Task HandleInit();
+        public virtual Task HandleInit()
+        {
+            container.State.Id = container.State.Config.Id;
+            return Task.CompletedTask;
+        }
+        
         public abstract Task HandleReady();
         public abstract Task HandlePausing();
         public abstract Task HandleResuming();

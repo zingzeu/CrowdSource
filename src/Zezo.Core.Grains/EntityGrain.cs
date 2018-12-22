@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Orleans;
@@ -7,22 +6,21 @@ using Orleans.Providers;
 using Zezo.Core.Configuration;
 using Zezo.Core.Configuration.Steps;
 using Zezo.Core.GrainInterfaces;
-using Zezo.Core.Grains.StepLogic;
 using static Zezo.Core.GrainInterfaces.EntityGrainData;
 
 namespace Zezo.Core.Grains
 {
     [StorageProvider(ProviderName = "DevStore")]
-    public class EntityGrain : Orleans.Grain<EntityGrainData>, IEntityGrain
+    public class EntityGrain : Grain<EntityGrainData>, IEntityGrain
     {
-        private ILogger<HelloGrain> logger;
+        private readonly ILogger<HelloGrain> logger;
 
         public EntityGrain(ILogger<HelloGrain> logger)
         {
             this.logger = logger;
         }
 
-        public Task<EntityGrainData.EntityStatus> GetStatus()
+        public Task<EntityStatus> GetStatus()
         {
             return Task.FromResult(this.State.Status);
         }

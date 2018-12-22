@@ -1,11 +1,6 @@
 using System;
-using Xunit;
 using Orleans;
 using Orleans.TestingHost;
-using Zezo.Core.GrainInterfaces;
-using System.Threading.Tasks;
-using Zezo.Core.Configuration;
-using static Zezo.Core.GrainInterfaces.EntityGrainData;
 using Orleans.Hosting;
 
 namespace Zezo.Core.Grains.Tests
@@ -16,7 +11,8 @@ namespace Zezo.Core.Grains.Tests
     
         protected TestCluster Cluster => cluster;
         protected IGrainFactory GrainFactory => cluster.GrainFactory;
-        public BaseGrainTest()
+
+        protected BaseGrainTest()
         {
             var builder = new TestClusterBuilder();
             builder.AddSiloBuilderConfigurator<TestSiloConfigurator>();

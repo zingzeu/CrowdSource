@@ -58,7 +58,7 @@ namespace Zezo.Core.Grains.StepLogic
             {
                 // failure of a single child Step fails the entire SequenceStep
                 
-                // Stop the rest of childrens.
+                // Stop the rest of children.
                 container.CompleteSelf(false);
             }
         }
@@ -68,24 +68,28 @@ namespace Zezo.Core.Grains.StepLogic
             // finds first child that is ready, and force it
             foreach (var childKey in container.State.ChildNodes) {
                 var child = container.GetStepGrain(childKey);
-                if (await child.GetStatus() == StepStatus.Ready) {
-                    _ = child.ForceStart();
-                    return;
-                }
+                if (await child.GetStatus() != StepStatus.Ready) continue;
+                _ = child.ForceStart();
+                return;
             }
         }
 
         public override async Task HandleInit()
         {
+            await base.HandleInit();
             seqConfig = container.State.Config as SequenceNode;
-            // Spawn childrens
+            if (seqConfig == null)
+            {
+                Logger.LogWarning("HandleInit: Config is null...");
+                return;
+            }
+            // Spawn children nodes
             container.State.ChildNodes.Clear();
-            var entityGrain = container.GetEntityGrain();
             foreach (StepNode childConfig in seqConfig.Children) {
-                var childKey = await entityGrain.SpawnChild(childConfig, container.SelfKey);
+                var childKey = await container.SpawnStep(childConfig);
                 container.State.ChildNodes.Add(childKey);
             }
-            Logger.LogInformation($"SequenceStep: {seqConfig.Children.Count} chilren created.");
+            Logger.LogInformation($"SequenceStep: {seqConfig.Children.Count} children created.");
         }
 
         public override Task HandleReady()
