@@ -6,6 +6,7 @@ namespace Zezo.Core.Configuration.Steps {
     
     public sealed class XorNode : StepNode {
         public new static string TagName { get { return "Xor"; } }
+        public override string StepType { get => "Xor"; }
         private readonly List<StepNode> _children = new List<StepNode>();
         public IReadOnlyList<StepNode> Children { get { return _children; } }
 

@@ -9,14 +9,15 @@ namespace Zezo.Core.Configuration.Steps {
     public sealed class InteractiveNode : StepNode {
         public new static string TagName { get { return "Interactive"; } }
 
+        public override string StepType { get => "Interactive"; }
+
         // id of the queue to publish to
         public string Queue { get; private set; }
         public TimeSpan TimeLimit { get; private set; }
-        
         public IReadOnlyList<MiddlewareNode> BeforePublish { get; private set; }
         public IReadOnlyList<MiddlewareNode> BeforeSubmit { get; private set; }
         public IReadOnlyList<MiddlewareNode> AfterSubmit { get; private set; }
-     
+
         public InteractiveNode(XmlElement xmlElem, IParser parser) : base(xmlElem, parser) {
             Queue = xmlElem.GetStringAttribute("Queue");
             TimeLimit = ParseTime(xmlElem.GetStringAttribute("TimeLimit"));

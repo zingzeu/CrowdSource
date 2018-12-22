@@ -5,6 +5,7 @@ namespace Zezo.Core.Configuration.Steps {
     
     public sealed class DoWhileNode : StepNode {
         public new static string TagName { get { return "DoWhile"; } }
+        public override string StepType { get => "DoWhile"; }
 
         public StepNode ChildTemplate { get; private set; }
 
