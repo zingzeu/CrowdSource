@@ -17,7 +17,7 @@ namespace Zezo.Core.Grains.Tests
     public class PipelineTest : BaseGrainTest
     {
         
-        //[Fact]
+        [Fact]
         public async Task Project_Test()
         {
             var configStr = @"<Project Id=""test"">
@@ -32,10 +32,9 @@ namespace Zezo.Core.Grains.Tests
             </Project>";
             var parser = new Parser();
             var config = parser.ParseXmlString(configStr) as ProjectNode;
-            
+            Console.WriteLine("Creating project...");
             var project = GrainFactory.GetGrain<IProjectGrain>(Guid.NewGuid());
             Console.WriteLine("Loading config...");
-
             await project.LoadConfig(config);
             Console.WriteLine("Creating entity");
             var e1K = await project.CreateEntity(1);
