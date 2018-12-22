@@ -1,9 +1,13 @@
 using Xunit;
 using Zezo.Core.GrainInterfaces;
 using System.Threading.Tasks;
+using System;
+using Zezo.Core.Configuration;
+using static Zezo.Core.GrainInterfaces.EntityGrainData;
 
 namespace Zezo.Core.Grains.Tests
 {
+    [Collection("Default")]
     public class HelloGrainTest : BaseGrainTest
     {
         
