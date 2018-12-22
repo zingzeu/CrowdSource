@@ -1,8 +1,12 @@
 using System;
+using System.Threading.Tasks;
 using Orleans;
 using Orleans.TestingHost;
 using Orleans.Hosting;
+using Xunit;
 using Xunit.Abstractions;
+using Zezo.Core.Configuration;
+using Zezo.Core.GrainInterfaces;
 
 namespace Zezo.Core.Grains.Tests
 {
@@ -10,6 +14,7 @@ namespace Zezo.Core.Grains.Tests
     {
         private readonly TestCluster cluster;
         protected readonly ITestOutputHelper _testOutputHelper;
+        private readonly IParser _parser = new Parser();
     
         protected TestCluster Cluster => cluster;
         protected IGrainFactory GrainFactory => cluster.GrainFactory;
@@ -27,6 +32,19 @@ namespace Zezo.Core.Grains.Tests
         public void Dispose()
         {
             cluster.StopAllSilos();
+        }
+        
+        protected async Task<IStepGrain> GetStepGrainById(IEntityGrain entityGrain, string id)
+        {
+            var key = await entityGrain.GetStepById(id);
+            Assert.NotNull(key);
+            var stepGrain = GrainFactory.GetGrain<IStepGrain>(key.Value);
+            return stepGrain;
+        }
+
+        protected ConfigurationNode ParseConfig(string configStr)
+        {
+            return _parser.ParseXmlString(configStr);
         }
     }
 

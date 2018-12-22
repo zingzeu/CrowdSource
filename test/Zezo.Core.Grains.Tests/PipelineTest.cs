@@ -23,7 +23,7 @@ namespace Zezo.Core.Grains.Tests
         [Fact]
         public async Task Basic_Test()
         {
-            var configStr = @"<Project Id=""test"">
+            var config = ParseConfig(@"<Project Id=""test"">
                 <Project.Pipeline>
                     <Sequence Id=""seq"">
                         <Sequence.Children>
@@ -32,9 +32,7 @@ namespace Zezo.Core.Grains.Tests
                         </Sequence.Children>
                     </Sequence>
                 </Project.Pipeline>
-            </Project>";
-            var parser = new Parser();
-            var config = parser.ParseXmlString(configStr) as ProjectNode;
+            </Project>") as ProjectNode;
             
             var project = GrainFactory.GetGrain<IProjectGrain>(Guid.NewGuid());
             _testOutputHelper.WriteLine("Loading config...");
@@ -50,19 +48,12 @@ namespace Zezo.Core.Grains.Tests
 
             await Task.Delay(20*1000);
 
-            var dummy1Key = await e1.GetStepById("dummy1");
-            Assert.NotNull(dummy1Key);
-            var dummy1 = GrainFactory.GetGrain<IStepGrain>(dummy1Key.Value);
+            var seq = await GetStepGrainById(e1, "seq");
+            var dummy1 = await GetStepGrainById(e1, "dummy1");
+            var dummy2 = await GetStepGrainById(e1, "dummy2");
+
             Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
-            
-            var dummy2Key = await e1.GetStepById("dummy2");
-            Assert.NotNull(dummy2Key);
-            var dummy2 = GrainFactory.GetGrain<IStepGrain>(dummy2Key.Value);
             Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
-            
-            var seqKey = await e1.GetStepById("seq");
-            Assert.NotNull(dummy1Key);
-            var seq = GrainFactory.GetGrain<IStepGrain>(seqKey.Value);
             Assert.Equal(StepStatus.StoppedWithSuccess, await seq.GetStatus());
             
             _testOutputHelper.WriteLine("End of test");
@@ -70,9 +61,9 @@ namespace Zezo.Core.Grains.Tests
         }
 
         [Fact]
-        public void Project_Test2()
+        public async Task Nested_SequenceStep_Test()
         {
-            var configStr = @"
+            var config = ParseConfig( @"
                 <Project Id=""test"">
                     <Project.Pipeline>
                         <Sequence Id=""seq1"">
@@ -88,7 +79,29 @@ namespace Zezo.Core.Grains.Tests
                         </Sequence>
                     </Project.Pipeline>
                 </Project>
-            ";
+            ") as ProjectNode;
+            
+            var project = GrainFactory.GetGrain<IProjectGrain>(Guid.NewGuid());
+            await project.LoadConfig(config);
+            var e1K = await project.CreateEntity(1);
+            var e1 = GrainFactory.GetGrain<IEntityGrain>(e1K);
+            await e1.Start();
+            
+            // TODO: Use callback to watch for state changes; or build a state change history object; instead of Task.Delay
+            await Task.Delay(40*1000);
+
+            var seq1 = await GetStepGrainById(e1, "seq1");
+            var seqInner = await GetStepGrainById(e1, "seq_inner");
+            var dummy1 = await GetStepGrainById(e1, "dummy1");
+            var dummy2 = await GetStepGrainById(e1, "dummy2");
+            var dummy3 = await GetStepGrainById(e1, "dummy3");
+
+            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
+            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
+            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy3.GetStatus());
+            Assert.Equal(StepStatus.StoppedWithSuccess, await seq1.GetStatus());
+            Assert.Equal(StepStatus.StoppedWithSuccess, await seqInner.GetStatus());
+            
         }
     }
 
