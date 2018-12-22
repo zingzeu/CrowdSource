@@ -1,12 +1,9 @@
 using System;
 using Xunit;
-using Orleans;
-using Orleans.TestingHost;
 using Zezo.Core.GrainInterfaces;
 using System.Threading.Tasks;
 using Zezo.Core.Configuration;
 using static Zezo.Core.GrainInterfaces.EntityGrainData;
-using Orleans.Hosting;
 using Xunit.Abstractions;
 
 namespace Zezo.Core.Grains.Tests

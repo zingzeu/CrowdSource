@@ -2,7 +2,6 @@ using System;
 using Orleans;
 using Orleans.TestingHost;
 using Orleans.Hosting;
-using Microsoft.Extensions.Logging;
 using Xunit.Abstractions;
 
 namespace Zezo.Core.Grains.Tests
@@ -11,7 +10,6 @@ namespace Zezo.Core.Grains.Tests
     {
         private readonly TestCluster cluster;
         protected readonly ITestOutputHelper _testOutputHelper;
-
     
         protected TestCluster Cluster => cluster;
         protected IGrainFactory GrainFactory => cluster.GrainFactory;

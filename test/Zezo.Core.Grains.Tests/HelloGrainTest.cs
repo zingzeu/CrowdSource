@@ -1,10 +1,7 @@
 using Xunit;
 using Zezo.Core.GrainInterfaces;
 using System.Threading.Tasks;
-using System;
 using Xunit.Abstractions;
-using Zezo.Core.Configuration;
-using static Zezo.Core.GrainInterfaces.EntityGrainData;
 
 namespace Zezo.Core.Grains.Tests
 {
