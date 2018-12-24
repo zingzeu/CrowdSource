@@ -12,7 +12,6 @@ namespace Zezo.Core.Grains.StepLogic
         public SequenceStepLogic(IContainer container) 
             : base(container)
         {
-            
         }
 
         public override Task HandleChildPaused(Guid caller)
@@ -23,7 +22,7 @@ namespace Zezo.Core.Grains.StepLogic
         public override Task HandleChildStarted(Guid caller)
         {
             if (container.Status == StepStatus.Inactive) {
-                container.MarkSelfStarted();
+                return container.MarkSelfStarted();
             }
             return Task.CompletedTask;
         }
@@ -41,7 +40,7 @@ namespace Zezo.Core.Grains.StepLogic
                         if (i == container.State.ChildCount-1) 
                         {
                             // final one
-                            container.CompleteSelf(true);
+                            await container.CompleteSelf(true);
                         }
                         else
                         {
@@ -59,7 +58,7 @@ namespace Zezo.Core.Grains.StepLogic
                 // failure of a single child Step fails the entire SequenceStep
                 
                 // Stop the rest of children.
-                container.CompleteSelf(false);
+                await container.CompleteSelf(false);
             }
         }
 

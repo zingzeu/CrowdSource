@@ -29,18 +29,15 @@ namespace Zezo.Core.Grains.Tests
                 <Project.Pipeline>
                     <Sequence Id=""seq"">
                         <Sequence.Children>
-                            <DummyStep Id=""dummy1"" BeforeStart=""10ms"" Working=""100ms"" />
-                            <DummyStep Id=""dummy2"" BeforeStart=""10ms"" Working=""100ms"" />
+                            <DummyStep Id=""dummy1"" BeforeStart=""100ms"" Working=""400ms"" />
+                            <DummyStep Id=""dummy2"" BeforeStart=""100ms"" Working=""100ms"" />
                         </Sequence.Children>
                     </Sequence>
                 </Project.Pipeline>
             </Project>") as ProjectNode;
 
-            var project = GrainFactory.GetGrain<IProjectGrain>(Guid.NewGuid());
-            await project.LoadConfig(config);
-            var e1K = await project.CreateEntity(1);
-            _testOutputHelper.WriteLine($"Entity {e1K} created.");
-            var e1 = GrainFactory.GetGrain<IEntityGrain>(e1K);
+            var e1 = await CreateSingleEntityProject(config);
+                
             Assert.Equal(EntityStatus.Initialized, await e1.GetStatus());
 
             var mock = new Mock<IStepGrainObserver>();
@@ -71,7 +68,7 @@ namespace Zezo.Core.Grains.Tests
             Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
             Assert.Equal(StepStatus.Active, await seq.GetStatus());
 
-            await Task.Delay(1000);
+            await Task.Delay(1200);
 
             Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
             Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
@@ -101,10 +98,7 @@ namespace Zezo.Core.Grains.Tests
                 </Project>
             ") as ProjectNode;
 
-            var project = GrainFactory.GetGrain<IProjectGrain>(Guid.NewGuid());
-            await project.LoadConfig(config);
-            var e1K = await project.CreateEntity(1);
-            var e1 = GrainFactory.GetGrain<IEntityGrain>(e1K);
+            var e1 = await CreateSingleEntityProject(config);
             await e1.Start();
 
             // TODO: Use callback to watch for state changes; or build a state change history object; instead of Task.Delay
@@ -123,5 +117,53 @@ namespace Zezo.Core.Grains.Tests
             Assert.Equal(StepStatus.StoppedWithSuccess, await seqInner.GetStatus());
         }
 
+        [Fact]
+        public async Task Test_Parallel_Basic()
+        {
+            var config = ParseConfig(@"
+                <Project Id=""test"">
+                    <Project.Pipeline>
+                        <Parallel Id=""par"">
+                            <Parallel.Children>
+                                <DummyStep Id=""dummy1"" BeforeStart=""10ms"" Working=""100ms"" />
+                                <DummyStep Id=""dummy2"" BeforeStart=""10ms"" Working=""100ms"" />
+                            </Parallel.Children>
+                        </Parallel>
+                    </Project.Pipeline>
+                </Project>
+            ") as ProjectNode;
+
+            var entity = await CreateSingleEntityProject(config);
+            var par = await GetStepGrainById(entity, "par");
+            var dummy1 = await GetStepGrainById(entity, "dummy1");
+            var dummy2 = await GetStepGrainById(entity, "dummy2");
+            
+            // Initially, all Steps are Inactive
+            Assert.Equal(StepStatus.Inactive, await par.GetStatus());
+            Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+            Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
+
+            await entity.Start();
+            
+            Assert.Equal(StepStatus.Active, await par.GetStatus());
+            Assert.Equal(StepStatus.Active, await dummy1.GetStatus());
+            Assert.Equal(StepStatus.Active, await dummy2.GetStatus());
+
+            await Task.Delay(1000);
+            
+            Assert.Equal(StepStatus.StoppedWithSuccess, await par.GetStatus());
+            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
+            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
+        }
+
+
+        protected async Task<IEntityGrain> CreateSingleEntityProject(ProjectNode projConfig)
+        {
+            var project = GrainFactory.GetGrain<IProjectGrain>(Guid.NewGuid());
+            await project.LoadConfig(projConfig);
+            var e1K = await project.CreateEntity(1);
+            var e1 = GrainFactory.GetGrain<IEntityGrain>(e1K);
+            return e1;
+        }
     }
 }

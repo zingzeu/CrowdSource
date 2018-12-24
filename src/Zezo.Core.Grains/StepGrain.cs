@@ -171,6 +171,9 @@ namespace Zezo.Core.Grains
 
                 case "DummyStep":
                 return new DummyStepLogic(this);
+                
+                case "Parallel":
+                return new ParallelStepLogic(this);
 
                 default:
                 throw new Exception($"Unknown StepType {config.StepType}");
