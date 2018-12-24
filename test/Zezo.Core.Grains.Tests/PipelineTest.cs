@@ -155,7 +155,7 @@ namespace Zezo.Core.Grains.Tests
             Assert.Equal(StepStatus.Active, await dummy1.GetStatus());
             Assert.Equal(StepStatus.Active, await dummy2.GetStatus());
 
-            await Task.Delay(1000);
+            await Task.Delay(3000);
             
             Assert.Equal(StepStatus.StoppedWithSuccess, await par.GetStatus());
             Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
