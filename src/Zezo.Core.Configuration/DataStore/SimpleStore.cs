@@ -6,7 +6,7 @@ namespace Zezo.Core.Configuration.Datastore {
     /// <summary>
     /// </summary>
     public sealed class SimpleStore : DatastoreNode {
-        public new static string TagName { get { return "SimpleStore"; } }
+        public new static string TagName => "SimpleStore";
 
         public SimpleStore(XmlElement xmlElem, IParser parser) {
             // todo

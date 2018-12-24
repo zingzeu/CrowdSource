@@ -24,8 +24,8 @@ namespace Zezo.Core.Grains {
         StepGrainData State { get; }
 
         // Status changes
-        void CompleteSelf(bool success);
-        void MarkSelfStarted();
+        Task CompleteSelf(bool success);
+        Task MarkSelfStarted();
 
         /// <summary>
         /// Spawns a new StepGrain in the EntityGrain.

@@ -1,11 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Orleans;
 using Orleans.Providers;
 using Zezo.Core.Configuration.Steps;
 using Zezo.Core.GrainInterfaces;
+using Zezo.Core.GrainInterfaces.Observers;
 using Zezo.Core.Grains.StepLogic;
 
 namespace Zezo.Core.Grains
@@ -23,8 +22,12 @@ namespace Zezo.Core.Grains
 
         private IStepLogic logic;
 
+        private GrainObserverManager<IStepGrainObserver> _subsManager;
+
         public override Task OnActivateAsync() {
-            logger.LogInformation("activating...");
+            _subsManager = new GrainObserverManager<IStepGrainObserver>();
+            _subsManager.ExpirationDuration = TimeSpan.FromHours(1);
+            logger.LogInformation("Activating...");
             
             if (IsInitialized && !IsStopped) {
                 logger.LogInformation("Re-activation of existing StepGrain. Restore previous StepLogic " +
@@ -82,7 +85,7 @@ namespace Zezo.Core.Grains
             }
             else
             {
-                State.Status = StepStatus.Initializing;
+                await ChangeStatus(StepStatus.Initializing);
 
                 logger.LogInformation($"StepGrain initialising with {config.StepType}... \n" +
                                       (parentNode == null ? $"As Root of Entity {entity}" 
@@ -100,7 +103,7 @@ namespace Zezo.Core.Grains
                 catch (Exception e)
                 {
                     logger.LogError($"Step failed due to Exception: {e}");
-                    State.Status = StepStatus.Error;
+                    await ChangeStatus(StepStatus.Error);
                     throw;
                 }
 
@@ -111,10 +114,10 @@ namespace Zezo.Core.Grains
                 catch (Exception e)
                 {
                     logger.LogError($"Step failed due to Exception during HandleInit: {e}");
-                    State.Status = StepStatus.Error;
+                    await ChangeStatus(StepStatus.Error);
                     throw;
                 }
-                State.Status = StepStatus.Inactive;
+                await ChangeStatus(StepStatus.Inactive);
                 logger.LogInformation($"Successfully initialized.");
             }
         }
@@ -127,7 +130,7 @@ namespace Zezo.Core.Grains
         public async Task Activate()
         {
             DelayDeactivation(TimeSpan.FromMinutes(10));
-            State.Status = StepStatus.Active;
+            await ChangeStatus(StepStatus.Active);
             logger.LogInformation("State Changed to Active");
             try
             {
@@ -186,6 +189,52 @@ namespace Zezo.Core.Grains
             return Task.FromResult(StepStopReason.Completed);
         }
 
+
+        private async Task ChangeStatus(StepStatus newStatus)
+        {
+            if (newStatus != State.Status)
+            {
+                logger.LogInformation($"State changed from [{State.Status}] to [{newStatus}]");
+                State.Status = newStatus;
+
+                await WriteStateAsync();
+                _subsManager.Notify(x => x.OnStatusChanged(SelfKey, newStatus));
+                
+                // Calls upstream
+                switch (newStatus)
+                {
+                    case StepStatus.Working:
+                        if (State.ParentNode == null) {
+                            // inform Entity
+                        } else {
+                            _ = GetParentGrain().OnChildStarted(SelfKey);
+                        }
+                        break;
+                      
+                    case StepStatus.StoppedWithSuccess:
+                        if (State.ParentNode == null) {
+                            // root
+                            // TODO: inform Entity
+                        } else {
+                            // fire and forget
+                            _ = GetParentGrain().OnChildStopped(SelfKey);
+                        }
+
+                        break;
+                    case StepStatus.Error:
+                        if (State.ParentNode == null)
+                        {
+                            
+                        }
+                        else
+                        {
+                            _ = GetParentGrain().OnChildStopped(SelfKey);
+                        }
+
+                        break;
+                }
+            }
+        }
 
     }
 }

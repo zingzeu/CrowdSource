@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Zezo.Core.Configuration.Steps;
+using Zezo.Core.GrainInterfaces.Observers;
 using Config = Zezo.Core.Configuration;
 
 namespace Zezo.Core.GrainInterfaces
@@ -57,6 +58,11 @@ namespace Zezo.Core.GrainInterfaces
         Task OnChildStarted(Guid caller);
         Task OnChildStopped(Guid caller);
         Task OnChildPaused(Guid caller);
+        
+        // For client & unit testing
+        Task Subscribe(IStepGrainObserver observer);
+        Task Unsubscribe(IStepGrainObserver observer);
+        
     }
 
     public enum StepStatus {

@@ -18,18 +18,12 @@ namespace Zezo.Core.Grains
 
         public Guid SelfKey => this.GetPrimaryKey();
         
-        public void CompleteSelf(bool success)
+        public async Task CompleteSelf(bool success)
         {
             if (State.Status == StepStatus.Inactive ||
-                State.Status  == StepStatus.Working) {
-                State.Status = success ? StepStatus.StoppedWithSuccess : StepStatus.Error;
-                if (this.State.ParentNode == null) {
-                    // root
-                    // TODO: inform Entity
-                } else {
-                    // fire and forget
-                    GetParentGrain().OnChildStopped(this.GetPrimaryKey());
-                }
+                State.Status  == StepStatus.Working)
+            {
+                await ChangeStatus(success ? StepStatus.StoppedWithSuccess : StepStatus.Error);
             }
             else 
             {
@@ -46,15 +40,11 @@ namespace Zezo.Core.Grains
             }
         }
 
-        public void MarkSelfStarted()
+        public async Task MarkSelfStarted()
         {
             if (State.Status == StepStatus.Inactive) {
-                State.Status = StepStatus.Working;
-                if (this.State.ParentNode == null) {
-                    // inform Entity
-                } else {
-                    _ = GetParentGrain().OnChildStarted(this.GetPrimaryKey());
-                }
+                await ChangeStatus(StepStatus.Working);
+                
             }
             else 
             {
