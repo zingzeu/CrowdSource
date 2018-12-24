@@ -29,7 +29,7 @@ namespace Zezo.Core.Grains.Tests
                 <Project.Pipeline>
                     <Sequence Id=""seq"">
                         <Sequence.Children>
-                            <DummyStep Id=""dummy1"" BeforeStart=""100ms"" Working=""400ms"" />
+                            <DummyStep Id=""dummy1"" BeforeStart=""100ms"" Working=""1000ms"" />
                             <DummyStep Id=""dummy2"" BeforeStart=""100ms"" Working=""100ms"" />
                         </Sequence.Children>
                     </Sequence>
@@ -61,14 +61,12 @@ namespace Zezo.Core.Grains.Tests
             await e1.Start();
             Assert.Equal(EntityStatus.Active, await e1.GetStatus());
 
-            _testOutputHelper.WriteLine("Started entity");
-
             // Now dummy1 will be active but dummy 2 will stay inactive
             Assert.Equal(StepStatus.Active, await dummy1.GetStatus());
             Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
             Assert.Equal(StepStatus.Active, await seq.GetStatus());
 
-            await Task.Delay(1200);
+            await Task.Delay(4000);
 
             Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
             Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());

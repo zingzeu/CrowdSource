@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Orleans.Concurrency;
 using Zezo.Core.Configuration.Steps;
 using Zezo.Core.GrainInterfaces.Observers;
 using Config = Zezo.Core.Configuration;
@@ -8,6 +9,7 @@ namespace Zezo.Core.GrainInterfaces
 {
     public interface IStepGrain : Orleans.IGrainWithGuidKey
     {
+        [AlwaysInterleave]
         Task<StepStatus> GetStatus();
 
         Task<StepStopReason> GetStopReason();
