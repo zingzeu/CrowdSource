@@ -8,10 +8,11 @@ namespace Zezo.Core.GrainInterfaces
     {
         public StepStatus Status { get; set; } = StepStatus.Uninitialized;
         public string Type { get; set; }
+        public string Id { get; set; }
         public Guid? ParentNode { get; set; }
         public Guid Entity {get; set; }
         public List<Guid> ChildNodes { get; set; } = new List<Guid>();
-        public int ChildCount { get { return ChildNodes.Count; } }
+        public int ChildCount => ChildNodes.Count;
         public Dictionary<string, object> Data = new Dictionary<string, object>();
         public StepNode Config { get; set; }
     }

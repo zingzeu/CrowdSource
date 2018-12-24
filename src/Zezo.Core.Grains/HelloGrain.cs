@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Zezo.Core.GrainInterfaces;
@@ -6,7 +5,7 @@ using Orleans;
 
 namespace Zezo.Core.Grains
 {
-    public class HelloGrain : Orleans.Grain, IHello
+    public class HelloGrain : Grain, IHello
     {
         private readonly ILogger logger;
 

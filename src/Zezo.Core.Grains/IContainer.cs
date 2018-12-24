@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Zezo.Core.Configuration.Steps;
 using Zezo.Core.GrainInterfaces;
@@ -23,9 +24,14 @@ namespace Zezo.Core.Grains {
         StepGrainData State { get; }
 
         // Status changes
-        void CompleteSelf(bool success);
-        void MarkSelfStarted();
+        Task CompleteSelf(bool success);
+        Task MarkSelfStarted();
 
-        void SpawnChild(StepNode childConfig);
+        /// <summary>
+        /// Spawns a new StepGrain in the EntityGrain.
+        /// </summary>
+        /// <param name="childConfig">The configuration for the new Step.</param>
+        /// <returns>The Guid of the newly created StepGrain.</returns>
+        Task<Guid> SpawnStep(StepNode childConfig);
     }
 }

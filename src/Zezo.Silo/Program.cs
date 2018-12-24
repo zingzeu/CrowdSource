@@ -8,7 +8,7 @@ using Zezo.Core.Grains;
 
 namespace Zezo.Silo
 {
-    public class Program
+    public static class Program
     {
         public static int Main(string[] args)
         {

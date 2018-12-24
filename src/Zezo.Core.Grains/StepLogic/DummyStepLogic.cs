@@ -10,10 +10,17 @@ namespace Zezo.Core.Grains.StepLogic
     public sealed class DummyStepLogic : BaseStepLogic
     {
         private readonly string id;
+        private readonly TimeSpan _beforeStart;
+        private readonly TimeSpan _workingTime;
+        
         public DummyStepLogic(IContainer container) 
             : base(container)
         {
             id = container.State.Config.Id;
+
+            var config = container.State.Config as DummyStepNode;
+            _beforeStart = config.BeforeStart;
+            _workingTime = config.Working;
         }
 
         public override Task HandleChildPaused(Guid caller)
@@ -37,29 +44,28 @@ namespace Zezo.Core.Grains.StepLogic
             await Task.Delay(2000);
             Say("Starting...");
             await Task.Delay(1000);
-            container.MarkSelfStarted();
+            await container.MarkSelfStarted();
             Say("Started working...");
         }
 
-        public override Task HandleInit()
+        public override Task OnInit()
         {
             Say($"I am born, my parent is {container.State.ParentNode}");
             return Task.CompletedTask;
         }
 
-        public override Task HandleReady()
+        public override Task OnActivate()
         {
             Say($"I am allowed to start working. I will start working later.");
             Task.Factory.StartNew(
                 async () => {
-                    await Task.Delay(4000);
+                    await Task.Delay(_beforeStart);
                     Say("Been ready for a while, now starting...");
-                    container.MarkSelfStarted();
-                    await Task.Delay(1000);
+                    await container.MarkSelfStarted();
                     Say("Working...");
-                    await Task.Delay(3000);
+                    await Task.Delay(_workingTime);
                     Say("Stopping...");
-                    container.CompleteSelf(true);
+                    await container.CompleteSelf(true);
                 }
             );
             return Task.CompletedTask;

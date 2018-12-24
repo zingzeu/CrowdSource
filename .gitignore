@@ -265,3 +265,5 @@ dev/
 .vscode/
 
 .DS_Store
+
+*.DotSettings
