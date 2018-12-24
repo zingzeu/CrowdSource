@@ -12,9 +12,9 @@ namespace Zezo.Core.Grains.StepLogic
         {
         }
 
-        public override async Task HandleInit()
+        public override async Task OnInit()
         {
-            await base.HandleInit();
+            await base.OnInit();
             var parConfig = container.State.Config as ParallelNode;
             if (parConfig == null)
             {

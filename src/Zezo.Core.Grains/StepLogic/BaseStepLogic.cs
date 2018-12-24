@@ -14,7 +14,7 @@ namespace Zezo.Core.Grains.StepLogic {
             this.container = container;
         }
 
-        public virtual Task HandleInit()
+        public virtual Task OnInit()
         {
             container.State.Id = container.State.Config.Id;
             return Task.CompletedTask;

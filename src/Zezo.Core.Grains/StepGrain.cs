@@ -109,7 +109,7 @@ namespace Zezo.Core.Grains
 
                 try
                 {
-                    await logic.HandleInit();
+                    await logic.OnInit();
                 }
                 catch (Exception e)
                 {

@@ -6,7 +6,7 @@ namespace Zezo.Core.GrainInterfaces
 {
     public interface IStepLogic
     {
-        Task HandleInit();
+        Task OnInit();
         Task OnActivate();
         Task HandlePausing();
         Task HandleResuming();

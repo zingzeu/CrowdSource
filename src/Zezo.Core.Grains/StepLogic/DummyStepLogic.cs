@@ -48,7 +48,7 @@ namespace Zezo.Core.Grains.StepLogic
             Say("Started working...");
         }
 
-        public override Task HandleInit()
+        public override Task OnInit()
         {
             Say($"I am born, my parent is {container.State.ParentNode}");
             return Task.CompletedTask;

@@ -73,9 +73,9 @@ namespace Zezo.Core.Grains.StepLogic
             }
         }
 
-        public override async Task HandleInit()
+        public override async Task OnInit()
         {
-            await base.HandleInit();
+            await base.OnInit();
             seqConfig = container.State.Config as SequenceNode;
             if (seqConfig == null)
             {
