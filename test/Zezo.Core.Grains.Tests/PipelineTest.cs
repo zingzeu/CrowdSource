@@ -29,7 +29,7 @@ namespace Zezo.Core.Grains.Tests
                 <Project.Pipeline>
                     <Sequence Id=""seq"">
                         <Sequence.Children>
-                            <DummyStep Id=""dummy1"" BeforeStart=""100ms"" Working=""1000ms"" />
+                            <DummyStep Id=""dummy1"" BeforeStart=""1000ms"" Working=""1000ms"" />
                             <DummyStep Id=""dummy2"" BeforeStart=""100ms"" Working=""100ms"" />
                         </Sequence.Children>
                     </Sequence>
@@ -42,7 +42,11 @@ namespace Zezo.Core.Grains.Tests
 
             var mock = new Mock<IStepGrainObserver>();
             mock.Setup(x => x.OnStatusChanged(It.IsAny<Guid>(), It.IsAny<StepStatus>()))
-                .Callback((Guid g, StepStatus s) => { _testOutputHelper.WriteLine($"Step {g} changed to {s}"); });
+                .Callback((Guid g, StepStatus s) =>
+                {
+                    var now = DateTime.Now;
+                    _testOutputHelper.WriteLine($"{now.Minute}:{now.Second}.{now.Millisecond} - Step {g} changed to {s}");
+                });
             
             var observer = await GrainFactory.CreateObjectReference<IStepGrainObserver>(mock.Object);
 
@@ -62,6 +66,7 @@ namespace Zezo.Core.Grains.Tests
             Assert.Equal(EntityStatus.Active, await e1.GetStatus());
 
             // Now dummy1 will be active but dummy 2 will stay inactive
+            _testOutputHelper.WriteLine("Now test for Inactive dummy2 and Active dummy1");
             Assert.Equal(StepStatus.Active, await dummy1.GetStatus());
             Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
             Assert.Equal(StepStatus.Active, await seq.GetStatus());

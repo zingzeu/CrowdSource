@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Orleans.Concurrency;
 using Zezo.Core.Configuration;
 using Zezo.Core.Configuration.Steps;
 using static Zezo.Core.GrainInterfaces.EntityGrainData;
@@ -9,6 +10,7 @@ namespace Zezo.Core.GrainInterfaces
     public interface IEntityGrain : Orleans.IGrainWithGuidKey
     {
 
+        [AlwaysInterleave]
         Task<EntityStatus> GetStatus();
         
         // Pause
