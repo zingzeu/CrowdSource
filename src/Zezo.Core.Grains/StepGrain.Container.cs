@@ -21,6 +21,7 @@ namespace Zezo.Core.Grains
         public async Task CompleteSelf(bool success)
         {
             if (State.Status == StepStatus.Inactive ||
+                State.Status == StepStatus.Active || 
                 State.Status  == StepStatus.Working)
             {
                 await ChangeStatus(success ? StepStatus.StoppedWithSuccess : StepStatus.Error);
@@ -42,9 +43,8 @@ namespace Zezo.Core.Grains
 
         public async Task MarkSelfStarted()
         {
-            if (State.Status == StepStatus.Inactive) {
+            if (State.Status == StepStatus.Active) {
                 await ChangeStatus(StepStatus.Working);
-                
             }
             else 
             {

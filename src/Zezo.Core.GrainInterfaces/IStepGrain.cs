@@ -88,30 +88,30 @@ namespace Zezo.Core.GrainInterfaces
         /// Active means allowed to do work, but no actual computation / human task is ongoing.
         /// This means the Step is safe to pause and no clean up is needed.
         /// </summary>
-        Active = 2,
+        Active = 3,
         
         /// <summary>
         /// Ongoing work.
         /// This means when the Step is to be paused, clean up (Pausing phase) is needed.
         /// </summary>
-        Working = 3,
+        Working = 4,
         
         /// <summary>
         /// Pausing
         /// </summary>
-        Pausing = 4,
+        Pausing = 5,
         
-        Stopping = 5,
+        Stopping = 6,
         
         /// <summary>
         /// Internal occurred or stopped externally.
         /// </summary>
-        Error = 6,
+        Error = 7,
         
         /// <summary>
         /// Stopped without error.
         /// (e.g. completed task or skipped)
         /// </summary>
-        StoppedWithSuccess = 7
+        StoppedWithSuccess = 8
     }
 }
