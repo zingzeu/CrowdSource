@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 using Zezo.Core.GrainInterfaces;
 using System.Threading.Tasks;
@@ -6,6 +9,7 @@ using Zezo.Core.Configuration;
 using static Zezo.Core.GrainInterfaces.EntityGrainData;
 using Xunit.Abstractions;
 using Moq;
+using Orleans;
 using Zezo.Core.GrainInterfaces.Observers;
 
 namespace Zezo.Core.Grains.Tests
@@ -40,47 +44,40 @@ namespace Zezo.Core.Grains.Tests
                 
             Assert.Equal(EntityStatus.Initialized, await e1.GetStatus());
 
-            var mock = new Mock<IStepGrainObserver>();
-            mock.Setup(x => x.OnStatusChanged(It.IsAny<Guid>(), It.IsAny<StepStatus>()))
-                .Callback((Guid g, StepStatus s) =>
-                {
-                    var now = DateTime.Now;
-                    _testOutputHelper.WriteLine($"{now.Minute}:{now.Second}.{now.Millisecond} - Step {g} changed to {s}");
-                });
-            
-            var observer = await GrainFactory.CreateObjectReference<IStepGrainObserver>(mock.Object);
-
             var seq = await GetStepGrainById(e1, "seq");
             var dummy1 = await GetStepGrainById(e1, "dummy1");
             var dummy2 = await GetStepGrainById(e1, "dummy2");
-            await seq.Subscribe(observer);
-            await dummy1.Subscribe(observer);
-            await dummy2.Subscribe(observer);
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(seq, "seq");
+                await observer.ObserverStep(dummy1, "dummy1");
+                await observer.ObserverStep(dummy2, "dummy2");
+            
+                // Steps should be initialized but not active yet.
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await seq.GetStatus());
 
-            // Steps should be initialized but not active yet.
-            Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
-            Assert.Equal(StepStatus.Inactive, await seq.GetStatus());
+                await e1.Start();
+                var now1 = DateTime.Now;
+                _testOutputHelper.WriteLine($"{now1.Minute}:{now1.Second}.{now1.Millisecond} - Started");
 
-            await e1.Start();
-            var now1 = DateTime.Now;
-            _testOutputHelper.WriteLine($"{now1.Minute}:{now1.Second}.{now1.Millisecond} - Started");
+                Assert.Equal(EntityStatus.Active, await e1.GetStatus());
 
-            Assert.Equal(EntityStatus.Active, await e1.GetStatus());
+                // Now dummy1 will be active but dummy 2 will stay inactive
+                _testOutputHelper.WriteLine("Now test for Inactive dummy2 and Active dummy1");
+                Assert.Equal(StepStatus.Active, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.Active, await seq.GetStatus());
 
-            // Now dummy1 will be active but dummy 2 will stay inactive
-            _testOutputHelper.WriteLine("Now test for Inactive dummy2 and Active dummy1");
-            Assert.Equal(StepStatus.Active, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
-            Assert.Equal(StepStatus.Active, await seq.GetStatus());
+                await observer.WaitUntilStatus("seq", s => s == StepStatus.StoppedWithSuccess);
 
-            await Task.Delay(4000);
+                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.StoppedWithSuccess, await seq.GetStatus());
 
-            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await seq.GetStatus());
-
-            _testOutputHelper.WriteLine("End of test");
+                _testOutputHelper.WriteLine("End of test");
+            }
         }
 
         [Fact]
@@ -105,22 +102,31 @@ namespace Zezo.Core.Grains.Tests
             ") as ProjectNode;
 
             var e1 = await CreateSingleEntityProject(config);
-            await e1.Start();
-
-            // TODO: Use callback to watch for state changes; or build a state change history object; instead of Task.Delay
-            await Task.Delay(1000);
-
             var seq1 = await GetStepGrainById(e1, "seq1");
             var seqInner = await GetStepGrainById(e1, "seq_inner");
             var dummy1 = await GetStepGrainById(e1, "dummy1");
             var dummy2 = await GetStepGrainById(e1, "dummy2");
             var dummy3 = await GetStepGrainById(e1, "dummy3");
+            
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(seq1, "seq1");
+                await observer.ObserverStep(seqInner, "seq_inner");
+                await observer.ObserverStep(dummy1, "dummy1");
+                await observer.ObserverStep(dummy2, "dummy2");
+                await observer.ObserverStep(dummy3, "dummy3");
+                
+                await e1.Start();
 
-            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy3.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await seq1.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await seqInner.GetStatus());
+                await observer.WaitUntilStatus("seq1", s => s == StepStatus.StoppedWithSuccess);
+                
+                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy3.GetStatus());
+                Assert.Equal(StepStatus.StoppedWithSuccess, await seq1.GetStatus());
+                Assert.Equal(StepStatus.StoppedWithSuccess, await seqInner.GetStatus());
+            }
+            
         }
 
         [Fact]
@@ -143,23 +149,31 @@ namespace Zezo.Core.Grains.Tests
             var par = await GetStepGrainById(entity, "par");
             var dummy1 = await GetStepGrainById(entity, "dummy1");
             var dummy2 = await GetStepGrainById(entity, "dummy2");
-            
-            // Initially, all Steps are Inactive
-            Assert.Equal(StepStatus.Inactive, await par.GetStatus());
-            Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
 
-            await entity.Start();
-            
-            Assert.Equal(StepStatus.Active, await par.GetStatus());
-            Assert.Equal(StepStatus.Active, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.Active, await dummy2.GetStatus());
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(par, "par");
+                await observer.ObserverStep(dummy1, "dummy1");
+                await observer.ObserverStep(dummy2, "dummy2");
+                
+                // Initially, all Steps are Inactive
+                Assert.Equal(StepStatus.Inactive, await par.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
 
-            await Task.Delay(3000);
+                await entity.Start();
+                
+                Assert.Equal(StepStatus.Active, await par.GetStatus());
+                Assert.Equal(StepStatus.Active, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Active, await dummy2.GetStatus());
+
+                await observer.WaitUntilStatus("par", s => s == StepStatus.StoppedWithSuccess);
+                    
+                Assert.Equal(StepStatus.StoppedWithSuccess, await par.GetStatus());
+                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
+            }
             
-            Assert.Equal(StepStatus.StoppedWithSuccess, await par.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
         }
 
         [Fact]
@@ -183,22 +197,27 @@ namespace Zezo.Core.Grains.Tests
             var e1 = await CreateSingleEntityProject(config);
             var dummy1 = await GetStepGrainById(e1, "dummy1");
             var ifNode = await GetStepGrainById(e1, "if1");
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(ifNode, "if1");
+                await observer.ObserverStep(dummy1, "dummy1");
+                
+                Assert.Equal(StepStatus.Inactive, await ifNode.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
             
-            Assert.Equal(StepStatus.Inactive, await ifNode.GetStatus());
-            Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
-            
-            // kick off
-            await e1.Start();
+                // kick off
+                await e1.Start();
 
-            await Task.Delay(40);
+                await observer.WaitUntilStatus("if1", s => s == StepStatus.Working);
             
-            Assert.Equal(StepStatus.Working, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.Working, await ifNode.GetStatus());
+                Assert.Equal(StepStatus.Working, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Working, await ifNode.GetStatus());
 
-            await Task.Delay(2000);
+                await observer.WaitUntilStatus("if1", s => s == StepStatus.StoppedWithSuccess);
             
-            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await ifNode.GetStatus());
+                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.StoppedWithSuccess, await ifNode.GetStatus());
+            }
         }
         
         /// <summary>
@@ -214,6 +233,129 @@ namespace Zezo.Core.Grains.Tests
             var e1K = await project.CreateEntity(1);
             var e1 = GrainFactory.GetGrain<IEntityGrain>(e1K);
             return e1;
+        }
+        
+        
+    }
+
+    internal class TestObserver : IStepGrainObserver, IDisposable
+    {
+        
+        private readonly IGrainFactory _grainFactory;
+        private readonly ITestOutputHelper _testOutputHelper;
+        private IStepGrainObserver selfReference = null;
+
+        private Task<IStepGrainObserver> SelfReference
+        {
+            get
+            {
+                if (selfReference != null)
+                {
+                    return Task.FromResult(selfReference);
+                }
+                else
+                {
+                    return _grainFactory.CreateObjectReference<IStepGrainObserver>(this)
+                        .ContinueWith((x) =>
+                        {
+                            selfReference = x.Result;
+                            return selfReference;
+                        });
+                }
+            }
+        }
+
+        private int counter = -1;
+
+        private Dictionary<string, IStepGrain> idToGrainMapping = new Dictionary<string, IStepGrain>();
+        private Dictionary<Guid, string> guidToIdMapping = new Dictionary<Guid, string>();
+        private Dictionary<string, List<(StepStatus, int)>> statusHistory 
+            = new Dictionary<string, List<(StepStatus, int)>>();
+        private ConcurrentDictionary<string, ConcurrentBag<(Func<StepStatus, bool>, TaskCompletionSource<object>)>>
+            awaitingTasks 
+                = new ConcurrentDictionary<string, ConcurrentBag<(Func<StepStatus, bool>, TaskCompletionSource<object>)>>();
+
+        public TestObserver(ITestOutputHelper testOutputHelper, IGrainFactory grainFactory)
+        {
+            _grainFactory = grainFactory;
+            _testOutputHelper = testOutputHelper;
+        }
+        
+        private IList<(StepStatus, int)> GetStatusHistory(string stepId)
+        {
+            if (statusHistory.ContainsKey(stepId))
+            {
+                return statusHistory[stepId];
+            }
+            else
+            {
+                return new List<(StepStatus, int)>();
+            }
+        }
+
+        public void OnStatusChanged(Guid caller, StepStatus newStatus)
+        {
+            var now = DateTime.Now;
+            ++counter;
+            var stepId = guidToIdMapping[caller];
+            Assert.NotNull(stepId);
+            if (!statusHistory.ContainsKey(stepId))
+            {
+                statusHistory[stepId] = new List<(StepStatus, int)>(); 
+            }
+            statusHistory[stepId].Add((newStatus, counter));
+            _testOutputHelper
+                .WriteLine($"({counter}) {now.Minute}:{now.Second}.{now.Millisecond} - Step {stepId} changed to [{newStatus}]");
+            // check awaiting tasks
+            foreach (var (predicate, tcs) in awaitingTasks[stepId])
+            {
+                if (predicate(newStatus))
+                {
+                    tcs.SetResult(null);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stepId"></param>
+        /// <param name="predicate"></param>
+        /// <returns></returns>
+        public Task WaitUntilStatus(string stepId, Func<StepStatus, bool> predicate)
+        {
+            var sh = GetStatusHistory(stepId);
+
+            if (sh.Count > 0)
+            {
+                foreach (var (s, _) in sh)
+                {
+                    if (predicate(s))
+                        return Task.CompletedTask;
+                }
+            }
+
+            // if already waiting
+            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+            awaitingTasks[stepId].Add((predicate, tcs));            
+            
+            return tcs.Task;
+        }
+        
+        public async Task ObserverStep(IStepGrain step, string stepId)
+        {
+            await step.Subscribe(await SelfReference);
+            idToGrainMapping[stepId] = step;
+            guidToIdMapping[step.GetPrimaryKey()] = stepId;
+            awaitingTasks[stepId] = new ConcurrentBag<(Func<StepStatus, bool>, TaskCompletionSource<object>)>();
+        }
+
+        public void Dispose()
+        {
+            foreach (var stepGrain in idToGrainMapping.Values)
+            {
+                stepGrain.Unsubscribe(SelfReference.Result).GetAwaiter().GetResult();
+            }
         }
     }
 }
