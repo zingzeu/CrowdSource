@@ -23,11 +23,6 @@ namespace Zezo.Core.Grains.StepLogic
             _workingTime = config.Working;
         }
 
-        public override Task HandleChildPaused(Guid caller)
-        {
-            return Task.CompletedTask;
-        }
-
         public override Task HandleChildStarted(Guid caller)
         {
             return Task.CompletedTask;
@@ -70,17 +65,18 @@ namespace Zezo.Core.Grains.StepLogic
             );
             return Task.CompletedTask;
         }
-        public override Task HandlePausing()
+        
+        public override Task OnPausing()
         {
             return Task.CompletedTask;
         }
 
-        public override Task HandleResuming()
+        public override Task OnResuming()
         {
             return Task.CompletedTask;
         }
 
-        public override Task HandleStopping()
+        public override Task OnStopping()
         {
             return Task.CompletedTask;
         }

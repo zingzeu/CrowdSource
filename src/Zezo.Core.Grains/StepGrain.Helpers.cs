@@ -8,11 +8,19 @@ namespace Zezo.Core.Grains
 {
     public partial class StepGrain
     {
+        private bool IsInitialized => (State.Status & (StepStatus) 0b1000_0000) != 0;
 
-        private bool IsInitialized => State.Status != StepStatus.Uninitialized &&
-                                      State.Status != StepStatus.Initializing;
-        private bool IsStopped => State.Status == StepStatus.Completed ||
-                                  State.Status == StepStatus.Error;
+        private bool IsStopped => (State.Status & (StepStatus) 0b0100_0000) != 0;
+
+        private static bool CanChangeState(StepStatus oldStatus, StepStatus newStatus)
+        {
+            if ((oldStatus & (StepStatus) 0b0100_0000) != 0) // once stopped, can never be restarted
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 
 }

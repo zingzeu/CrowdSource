@@ -46,17 +46,17 @@ namespace Zezo.Core.Grains.StepLogic
             return Task.CompletedTask;
         }
 
-        public override Task HandlePausing()
+        public override Task OnPausing()
         {
             throw new NotImplementedException();
         }
 
-        public override Task HandleResuming()
+        public override Task OnResuming()
         {
             throw new NotImplementedException();
         }
 
-        public override Task HandleStopping()
+        public override Task OnStopping()
         {
             throw new NotImplementedException();
         }
@@ -89,10 +89,6 @@ namespace Zezo.Core.Grains.StepLogic
             await container.CompleteSelf(true);
         }
 
-        public override Task HandleChildPaused(Guid caller)
-        {
-            throw new NotImplementedException();
-        }
 
         public override Task HandleForceStart()
         {

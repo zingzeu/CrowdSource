@@ -21,4 +21,8 @@
     <ProjectReference Include="..\..\src\Zezo.Core.Configuration\Zezo.Core.Configuration.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Extensions" />
+  </ItemGroup>
+
 </Project>

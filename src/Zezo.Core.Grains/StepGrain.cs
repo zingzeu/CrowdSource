@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;
+using Orleans;
 using Orleans.Providers;
 using Zezo.Core.Configuration.Steps;
 using Zezo.Core.GrainInterfaces;
@@ -55,11 +56,6 @@ namespace Zezo.Core.Grains
         public Task<bool> IsRoot()
         {
             return Task.FromResult(State.ParentNode == null);
-        }
-
-        public Task OnChildPaused(Guid caller)
-        {
-            return logic.HandleChildPaused(caller);
         }
 
         public async Task OnChildStarted(Guid caller)
@@ -130,36 +126,110 @@ namespace Zezo.Core.Grains
             }
         }
 
-        public Task Pause()
+        public async Task Pause()
         {
-            throw new NotImplementedException();
+            if (State.Status == StepStatus.Active)
+            {
+                await ChangeStatus(StepStatus.Paused);
+            }
+            else if (State.Status == StepStatus.Working)
+            {
+                try
+                {
+                    await logic.OnPausing();
+                    await ChangeStatus(StepStatus.Paused);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError($"Error during OnPausing: {e}");
+                    await ChangeStatus(StepStatus.Error);
+                    throw;
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException("Not pause-able.");
+            }
         }
 
         public async Task Activate()
         {
             DelayDeactivation(TimeSpan.FromMinutes(10));
-            await ChangeStatus(StepStatus.Active);
-            logger.LogInformation("State Changed to Active");
             try
             {
+                await ChangeStatus(StepStatus.Active);
                 await logic.OnActivate();
             }
             catch (Exception e)
             {
                 logger.LogError("Error during OnActivate: {e}");
                 // don't set state to Error (for now) to allow retry
+                await ChangeStatus(StepStatus.Inactive);
                 throw;
             }
         }
 
-        public Task Resume()
+        public async Task Resume()
         {
-            throw new NotImplementedException();
+            if (State.Status == StepStatus.Paused)
+            {
+                await ChangeStatus(StepStatus.Resuming);
+                logger.LogInformation("Resuming...");
+                try
+                {
+                    await logic.OnResuming();
+                    await ChangeStatus(s => s == StepStatus.Working
+                        ? StepStatus.Working : StepStatus.Active);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(("Error during OnResume: {e}"));
+                    await ChangeStatus(StepStatus.Error);
+                    throw;
+                }
+            }
+            else
+            {
+                throw new InvalidOperationException("Cannot resume. It is not paused.");
+            }
         }
 
-        public Task Stop()
+        public async Task Stop()
         {
-            throw new NotImplementedException();
+            if (IsStopped)
+            {
+                throw new InvalidOperationException("Already stopped.");
+            }
+
+            if (!IsInitialized)
+            {
+                throw new InvalidOperationException("Not initialized.");
+            }
+            if (State.Status == StepStatus.Active || State.Status == StepStatus.Paused
+                || State.Status == StepStatus.Inactive)
+            {
+                await ChangeStatus(StepStatus.Skipped);
+            }
+            else if (State.Status == StepStatus.Working || State.Status == StepStatus.Pausing)
+            {
+                try
+                {
+                    await logic.OnStopping();
+                    await ChangeStatus( s =>
+                        (s & (StepStatus) 0b0100_0000) == 0 ? StepStatus.Skipped : s);
+                }
+                catch (Exception e)
+                {
+                    logger.LogError($"Error during OnPausing: {e}");
+                    await ChangeStatus(StepStatus.Error);
+                    throw;
+                }
+            }
+            else
+            {
+                logger.LogWarning($"Unexpected state {State.Status}");
+                await ChangeStatus(StepStatus.Skipped);
+            }
         }
 
         public Task ForceStart()
@@ -203,11 +273,21 @@ namespace Zezo.Core.Grains
             return Task.FromResult(StepStopReason.Completed);
         }
 
-
-        private async Task ChangeStatus(StepStatus newStatus)
+        private Task ChangeStatus(StepStatus newStatus)
         {
+            return ChangeStatus((_) => newStatus);
+        }
+        
+        private async Task ChangeStatus(Func<StepStatus, StepStatus> predicate)
+        {
+            var newStatus = predicate(State.Status);
             if (newStatus != State.Status)
             {
+                if (!CanChangeState(State.Status, newStatus))
+                {
+                    logger.LogWarning($"Illegal status transition: [{State.Status}]->[{newStatus}]");
+                    return;
+                }
                 logger.LogInformation($"State changed from [{State.Status}] to [{newStatus}]");
                 State.Status = newStatus;
 

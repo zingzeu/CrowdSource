@@ -56,29 +56,49 @@ namespace Zezo.Core.Grains.StepLogic
                 {
                     await container.CompleteSelf(true);
                 }
-        }
+            }
             else
             {
+                if (container.State.ChildCount > 0)
+                {
+                    var firstAndOnlyChild = container.GetStepGrain(container.State.ChildNodes[0]);
+                    _ = firstAndOnlyChild.Activate();
+                    await firstAndOnlyChild.Stop();
+                }
                 // skip child
                 await container.CompleteSelf(true);
             }
         }
 
-
-
-        public override Task HandlePausing()
+        public override async Task OnPausing()
         {
-            throw new NotImplementedException();
+            if (container.State.ChildCount > 0)
+            {
+                var firstAndOnlyChild = container.GetStepGrain(container.State.ChildNodes[0]);
+                await firstAndOnlyChild.Pause();
+            }
         }
 
-        public override Task HandleResuming()
+        public override async Task OnResuming()
         {
-            throw new NotImplementedException();
+            if (container.State.ChildCount > 0)
+            {
+                var firstAndOnlyChild = container.GetStepGrain(container.State.ChildNodes[0]);
+                await firstAndOnlyChild.Resume();
+            }
         }
 
-        public override Task HandleStopping()
+        public override async Task OnStopping()
         {
-            throw new NotImplementedException();
+            if (container.State.ChildCount > 0)
+            {
+                var firstAndOnlyChild = container.GetStepGrain(container.State.ChildNodes[0]);
+                await firstAndOnlyChild.Stop();
+                if (await firstAndOnlyChild.GetStatus() == StepStatus.Error)
+                {
+                    await container.CompleteSelf(false);
+                }
+            }
         }
 
         public override Task HandleChildStarted(Guid caller)
@@ -104,10 +124,6 @@ namespace Zezo.Core.Grains.StepLogic
             }
         }
 
-        public override Task HandleChildPaused(Guid caller)
-        {
-            throw new NotImplementedException();
-        }
 
         public override Task HandleForceStart()
         {
@@ -120,6 +136,8 @@ namespace Zezo.Core.Grains.StepLogic
             {
                 case TrueNode trueNode:
                     return new TrueConditionLogic(trueNode);
+                case FalseNode falseNode:
+                    return new FalseConditionLogic(falseNode);
                 default:
                     throw new Exception($"Unknown Condition logic type.");
             }
