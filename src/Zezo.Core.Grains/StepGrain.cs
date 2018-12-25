@@ -225,7 +225,7 @@ namespace Zezo.Core.Grains
                         }
                         break;
                       
-                    case StepStatus.StoppedWithSuccess:
+                    case StepStatus.Completed:
                         if (State.ParentNode == null) {
                             // root
                             // TODO: inform Entity

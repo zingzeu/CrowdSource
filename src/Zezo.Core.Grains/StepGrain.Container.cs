@@ -24,7 +24,7 @@ namespace Zezo.Core.Grains
                 State.Status == StepStatus.Active || 
                 State.Status  == StepStatus.Working)
             {
-                await ChangeStatus(success ? StepStatus.StoppedWithSuccess : StepStatus.Error);
+                await ChangeStatus(success ? StepStatus.Completed : StepStatus.Error);
             }
             else 
             {

@@ -70,11 +70,11 @@ namespace Zezo.Core.Grains.Tests
                 Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
                 Assert.Equal(StepStatus.Active, await seq.GetStatus());
 
-                await observer.WaitUntilStatus("seq", s => s == StepStatus.StoppedWithSuccess);
+                await observer.WaitUntilStatus("seq", s => s == StepStatus.Completed);
 
-                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
-                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
-                Assert.Equal(StepStatus.StoppedWithSuccess, await seq.GetStatus());
+                Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Completed, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.Completed, await seq.GetStatus());
 
                 _testOutputHelper.WriteLine("End of test");
             }
@@ -118,13 +118,13 @@ namespace Zezo.Core.Grains.Tests
                 
                 await e1.Start();
 
-                await observer.WaitUntilStatus("seq1", s => s == StepStatus.StoppedWithSuccess);
+                await observer.WaitUntilStatus("seq1", s => s == StepStatus.Completed);
                 
-                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
-                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
-                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy3.GetStatus());
-                Assert.Equal(StepStatus.StoppedWithSuccess, await seq1.GetStatus());
-                Assert.Equal(StepStatus.StoppedWithSuccess, await seqInner.GetStatus());
+                Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Completed, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.Completed, await dummy3.GetStatus());
+                Assert.Equal(StepStatus.Completed, await seq1.GetStatus());
+                Assert.Equal(StepStatus.Completed, await seqInner.GetStatus());
             }
             
         }
@@ -167,11 +167,11 @@ namespace Zezo.Core.Grains.Tests
                 Assert.Equal(StepStatus.Active, await dummy1.GetStatus());
                 Assert.Equal(StepStatus.Active, await dummy2.GetStatus());
 
-                await observer.WaitUntilStatus("par", s => s == StepStatus.StoppedWithSuccess);
+                await observer.WaitUntilStatus("par", s => s == StepStatus.Completed);
                     
-                Assert.Equal(StepStatus.StoppedWithSuccess, await par.GetStatus());
-                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
-                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.Completed, await par.GetStatus());
+                Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Completed, await dummy2.GetStatus());
             }
             
         }
@@ -213,10 +213,10 @@ namespace Zezo.Core.Grains.Tests
                 Assert.Equal(StepStatus.Working, await dummy1.GetStatus());
                 Assert.Equal(StepStatus.Working, await ifNode.GetStatus());
 
-                await observer.WaitUntilStatus("if1", s => s == StepStatus.StoppedWithSuccess);
+                await observer.WaitUntilStatus("if1", s => s == StepStatus.Completed);
             
-                Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
-                Assert.Equal(StepStatus.StoppedWithSuccess, await ifNode.GetStatus());
+                Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Completed, await ifNode.GetStatus());
             }
         }
         

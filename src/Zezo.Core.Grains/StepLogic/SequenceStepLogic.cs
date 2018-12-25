@@ -119,7 +119,7 @@ namespace Zezo.Core.Grains.StepLogic
             foreach (var childKey in container.State.ChildNodes) {
                 var child = container.GetStepGrain(childKey);
                 var childStatus = await child.GetStatus();
-                if (childStatus != StepStatus.StoppedWithSuccess && childStatus != StepStatus.Error) {
+                if (childStatus != StepStatus.Completed && childStatus != StepStatus.Error) {
                     await child.Stop();
                 }
             }

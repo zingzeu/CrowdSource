@@ -112,6 +112,6 @@ namespace Zezo.Core.GrainInterfaces
         /// Stopped without error.
         /// (e.g. completed task or skipped)
         /// </summary>
-        StoppedWithSuccess = 8
+        Completed = 8
     }
 }

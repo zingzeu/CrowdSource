@@ -80,7 +80,7 @@ namespace Zezo.Core.Grains.StepLogic
                     await container.CompleteSelf(false);
                     return;
                 } 
-                else if (s != StepStatus.StoppedWithSuccess)
+                else if (s != StepStatus.Completed)
                 {
                     return;
                 }

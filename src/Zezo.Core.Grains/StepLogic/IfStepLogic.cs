@@ -94,7 +94,7 @@ namespace Zezo.Core.Grains.StepLogic
             {
                 await container.CompleteSelf(false);
             }
-            else if (childStatus == StepStatus.StoppedWithSuccess)
+            else if (childStatus == StepStatus.Completed)
             {
                 await container.CompleteSelf(true);
             }

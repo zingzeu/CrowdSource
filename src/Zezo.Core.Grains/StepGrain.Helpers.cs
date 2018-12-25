@@ -11,7 +11,7 @@ namespace Zezo.Core.Grains
 
         private bool IsInitialized => State.Status != StepStatus.Uninitialized &&
                                       State.Status != StepStatus.Initializing;
-        private bool IsStopped => State.Status == StepStatus.StoppedWithSuccess ||
+        private bool IsStopped => State.Status == StepStatus.Completed ||
                                   State.Status == StepStatus.Error;
     }
 
