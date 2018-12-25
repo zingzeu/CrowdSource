@@ -10,6 +10,7 @@ using static Zezo.Core.GrainInterfaces.EntityGrainData;
 using Xunit.Abstractions;
 using Moq;
 using Orleans;
+using Xunit.Sdk;
 using Zezo.Core.GrainInterfaces.Observers;
 
 namespace Zezo.Core.Grains.Tests
@@ -162,10 +163,15 @@ namespace Zezo.Core.Grains.Tests
                 Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
 
                 await entity.Start();
+
+                await observer.WaitUntilStatus("dummy1", s => s == StepStatus.Working);
                 
-                Assert.Equal(StepStatus.Active, await par.GetStatus());
-                Assert.Equal(StepStatus.Active, await dummy1.GetStatus());
-                Assert.Equal(StepStatus.Active, await dummy2.GetStatus());
+                observer.Observed()
+                    .StartsWith("pars", s => s == StepStatus.Active)
+                    .LaterOn("dummy1", s => s == StepStatus.Active)
+                    .LaterOn("dummy2", s => s == StepStatus.Active)
+                    .LaterOn("dummy1", s=> s == StepStatus.Working)
+                    .Validate();
 
                 await observer.WaitUntilStatus("par", s => s == StepStatus.Completed);
                     
@@ -357,5 +363,66 @@ namespace Zezo.Core.Grains.Tests
                 stepGrain.Unsubscribe(SelfReference.Result).GetAwaiter().GetResult();
             }
         }
+
+        public ObservedSequence Observed()
+        {
+            return new ObservedSequence(this);
+        }
+        
+        internal class ObservedSequence {
+            private readonly TestObserver _testObserver;
+            private IList<(string, Func<StepStatus, bool>)> predicates = new List<(string, Func<StepStatus, bool>)>();
+
+            public ObservedSequence(TestObserver testObserver)
+            {
+                _testObserver = testObserver;
+            }
+
+            public ObservedSequence StartsWith(string stepId, Func<StepStatus, bool> predicate)
+            {
+                predicates.Add((stepId, predicate));
+                return this;
+            }
+
+            public ObservedSequence LaterOn(string stepId, Func<StepStatus, bool> predicate)
+            {
+                predicates.Add((stepId, predicate));
+                return this;
+            }
+
+            public void Validate()
+            {
+                int lastCount = -1;
+                int i = 0;
+                foreach (var (stepId, predicate) in predicates)
+                {
+                    ++i;
+                    var found = false;
+                    foreach (var (status, sequence) in _testObserver.statusHistory[stepId])
+                    {
+                        if (predicate(status))
+                        {
+                            if (sequence > lastCount)
+                            {
+                                lastCount = sequence;
+                                found = true;
+                                break;
+                            }
+                            else
+                            {
+                                throw new Exception($"Condition #{i} happened before last one.");
+                            }
+                        }
+                    }
+                    if (!found)
+                    {
+                          throw new Exception($"Condition #{i} did not happen.");  
+                    }
+                }
+            }
+            
+        }
     }
+    
+    
 }
