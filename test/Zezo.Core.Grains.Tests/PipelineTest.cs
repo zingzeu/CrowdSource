@@ -164,10 +164,15 @@ namespace Zezo.Core.Grains.Tests
                 await observer.WaitUntilStatus("dummy1", s => s == StepStatus.Working);
                 
                 observer.Observed()
-                    .StartsWith("pars", s => s == StepStatus.Active)
+                    .StartsWith("par", s => s == StepStatus.Active)
                     .LaterOn("dummy1", s => s == StepStatus.Active)
+                    .LaterOn("dummy1", s => s == StepStatus.Working)
+                    .Validate();
+                
+                observer.Observed()
+                    .StartsWith("par", s => s == StepStatus.Active)
                     .LaterOn("dummy2", s => s == StepStatus.Active)
-                    .LaterOn("dummy1", s=> s == StepStatus.Working)
+                    .LaterOn("dummy1", s => s == StepStatus.Working)
                     .Validate();
 
                 await observer.WaitUntilStatus("par", s => s == StepStatus.Completed);
