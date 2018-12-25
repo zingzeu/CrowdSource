@@ -62,7 +62,6 @@ namespace Zezo.Core.Grains.StepLogic
                 if (container.State.ChildCount > 0)
                 {
                     var firstAndOnlyChild = container.GetStepGrain(container.State.ChildNodes[0]);
-                    _ = firstAndOnlyChild.Activate();
                     await firstAndOnlyChild.Stop();
                 }
                 // skip child
