@@ -6,7 +6,7 @@ using Zezo.Core.Configuration.Extensions;
 namespace Zezo.Core.Configuration.Steps {
     
     public sealed class DummyStepNode : StepNode {
-        public new static string TagName { get { return "DummyStep"; } }
+        public new static string TagName => "DummyStep";
         public override string StepType { get => "DummyStep"; }
         
         /// <summary>

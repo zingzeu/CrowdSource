@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Serialization;
 using Orleans.Providers;
 using Zezo.Core.Configuration.Steps;
 using Zezo.Core.GrainInterfaces;
@@ -61,9 +62,16 @@ namespace Zezo.Core.Grains
             return logic.HandleChildPaused(caller);
         }
 
-        public Task OnChildStarted(Guid caller)
+        public async Task OnChildStarted(Guid caller)
         {
-            return logic.HandleChildStarted(caller);
+            try
+            {
+                await logic.HandleChildStarted(caller);
+            }
+            catch (Exception e)
+            {
+                Logger.LogError($"Error during HandleChildStarted: {e}");
+            }
         }
 
         public Task OnChildStopped(Guid caller)
@@ -167,16 +175,19 @@ namespace Zezo.Core.Grains
         private IStepLogic GetStepLogic(StepNode config) {
             switch (config.StepType) {
                 case "Sequence":
-                return new SequenceStepLogic(this);
+                    return new SequenceStepLogic(this);
 
                 case "DummyStep":
-                return new DummyStepLogic(this);
+                    return new DummyStepLogic(this);
                 
                 case "Parallel":
-                return new ParallelStepLogic(this);
+                    return new ParallelStepLogic(this);
 
+                case "If":
+                    return new IfStepLogic(this);
+                
                 default:
-                throw new Exception($"Unknown StepType {config.StepType}");
+                    throw new Exception($"Unknown StepType {config.StepType}");
 
             }
         }

@@ -23,7 +23,7 @@ namespace Zezo.Core.Grains.Tests
         }
 
         [Fact]
-        public async Task Basic_Test()
+        public async Task Basic_Sequence_Test()
         {
             var config = ParseConfig(@"<Project Id=""test"">
                 <Project.Pipeline>
@@ -84,7 +84,7 @@ namespace Zezo.Core.Grains.Tests
         }
 
         [Fact]
-        public async Task Nested_SequenceStep_Test()
+        public async Task Nested_Sequence_Test()
         {
             var config = ParseConfig(@"
                 <Project Id=""test"">
@@ -162,7 +162,51 @@ namespace Zezo.Core.Grains.Tests
             Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
         }
 
+        [Fact]
+        public async Task Basic_If_AlwaysTrue_Test()
+        {
+            var config = ParseConfig(@"
+                <Project Id=""test"">
+                    <Project.Pipeline>
+                        <If Id=""if1"">
+                            <If.Child>
+                                <DummyStep Id=""dummy1"" BeforeStart=""10ms"" Working=""1000ms"" />
+                            </If.Child>
+                            <If.Condition>
+                                <True />
+                            </If.Condition>
+                        </If>
+                    </Project.Pipeline>
+                </Project>
+            ") as ProjectNode;
 
+            var e1 = await CreateSingleEntityProject(config);
+            var dummy1 = await GetStepGrainById(e1, "dummy1");
+            var ifNode = await GetStepGrainById(e1, "if1");
+            
+            Assert.Equal(StepStatus.Inactive, await ifNode.GetStatus());
+            Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+            
+            // kick off
+            await e1.Start();
+
+            await Task.Delay(40);
+            
+            Assert.Equal(StepStatus.Working, await dummy1.GetStatus());
+            Assert.Equal(StepStatus.Working, await ifNode.GetStatus());
+
+            await Task.Delay(2000);
+            
+            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
+            Assert.Equal(StepStatus.StoppedWithSuccess, await ifNode.GetStatus());
+        }
+        
+        /// <summary>
+        /// Create a Project with the given config, and instantiates an Entity
+        /// under that Project.
+        /// </summary>
+        /// <param name="projConfig"></param>
+        /// <returns>The EntityGrain</returns>
         protected async Task<IEntityGrain> CreateSingleEntityProject(ProjectNode projConfig)
         {
             var project = GrainFactory.GetGrain<IProjectGrain>(Guid.NewGuid());
