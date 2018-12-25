@@ -270,7 +270,7 @@ namespace Zezo.Core.Grains.Tests
                     <Project.Pipeline>
                         <Xor Id=""xor1"">
                             <Xor.Children>
-                                <DummyStep Id=""dummy1"" BeforeStart=""10ms"" Working=""1000ms"" />
+                                <DummyStep Id=""dummy1"" BeforeStart=""10ms"" Working=""6000ms"" />
                                 <DummyStep Id=""dummy2"" BeforeStart=""1000ms"" Working=""1000ms"" />
                                 <DummyStep Id=""dummy3"" BeforeStart=""2000ms"" Working=""1000ms"" />
                             </Xor.Children>
@@ -303,6 +303,57 @@ namespace Zezo.Core.Grains.Tests
                 Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
                 Assert.Equal(StepStatus.Skipped, await dummy2.GetStatus());
                 Assert.Equal(StepStatus.Skipped, await dummy3.GetStatus());
+            }
+        }
+        
+        
+        [Fact]
+        public async Task Xor_PauseResume_Test()
+        {
+            var config = ParseConfig(@"
+                <Project Id=""test"">
+                    <Project.Pipeline>
+                        <Xor Id=""xor1"">
+                            <Xor.Children>
+                                <DummyStep Id=""dummy1"" BeforeStart=""10ms"" Working=""0ms"" WorkingSequence=""1000ms, 5000ms, 1000ms, 1000ms, 1000ms"" />
+                                <DummyStep Id=""dummy2"" BeforeStart=""1000ms"" Working=""1000ms"" />
+                                <DummyStep Id=""dummy3"" BeforeStart=""2000ms"" Working=""1000ms"" />
+                            </Xor.Children>
+                        </Xor>
+                    </Project.Pipeline>
+                </Project>
+            ") as ProjectNode;
+
+            /*
+             time     10       1100
+             dummy1   |----------|
+             dummy2
+             dummy3
+             
+             */
+            
+            var e1 = await CreateSingleEntityProject(config);
+            var dummy1 = await GetStepGrainById(e1, "dummy1");
+            var dummy2 = await GetStepGrainById(e1, "dummy2");
+            var dummy3 = await GetStepGrainById(e1, "dummy3");
+            var xorNode = await GetStepGrainById(e1, "xor1");
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(xorNode, "xor1");
+                await observer.ObserverStep(dummy1, "dummy1");
+                await observer.ObserverStep(dummy2, "dummy2");
+                await observer.ObserverStep(dummy3, "dummy3");
+                
+                Assert.Equal(StepStatus.Inactive, await xorNode.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy3.GetStatus());
+            
+                // kick off
+                await e1.Start();
+
+                await observer.WaitUntilStatus("xor1", s => s == StepStatus.Completed);
+               
             }
         }
         

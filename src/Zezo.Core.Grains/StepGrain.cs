@@ -332,7 +332,7 @@ namespace Zezo.Core.Grains
                         }
 
                         break;
-                    case StepStatus.Inactive:
+                    case StepStatus.ActiveIdle:
                         if (oldStatus == StepStatus.Working)
                         {
                             if (State.ParentNode == null) {

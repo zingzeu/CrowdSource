@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,7 @@ namespace Zezo.Core.Grains.StepLogic
         private readonly string id;
         private readonly TimeSpan _beforeStart;
         private readonly TimeSpan _workingTime;
+        private readonly IList<TimeSpan> _workingSeq;
         
         public DummyStepLogic(IContainer container) 
             : base(container)
@@ -21,6 +23,7 @@ namespace Zezo.Core.Grains.StepLogic
             var config = container.State.Config as DummyStepNode;
             _beforeStart = config.BeforeStart;
             _workingTime = config.Working;
+            _workingSeq = config.WorkingSequence;
         }
 
         public override Task HandleChildStarted(Guid caller)
@@ -61,10 +64,33 @@ namespace Zezo.Core.Grains.StepLogic
                 async () => {
                     await Task.Delay(_beforeStart);
                     Say("Been ready for a while, now starting...");
-                    await container.MarkSelfBusy();
-                    Say("Working...");
-                    await Task.Delay(_workingTime);
-                    Say("Stopping...");
+                    if (_workingSeq == null)
+                    {
+                        await container.MarkSelfBusy();
+                        Say("Working...");
+                        await Task.Delay(_workingTime);
+                        Say("Stopping...");
+                    }
+                    else
+                    {
+                        var toActive = true;
+                        foreach (var time in _workingSeq)
+                        {
+                            if (toActive)
+                            {
+                                await container.MarkSelfBusy();
+                                Say("Working...");
+                                await Task.Delay(time);
+                            }
+                            else
+                            {
+                                await container.MarkSelfIdle();
+                                Say("Pausing...");
+                                await Task.Delay(time);                               
+                            }
+                            toActive = !toActive;
+                        }
+                    }
                     await container.CompleteSelf(true);
                 }
             );
