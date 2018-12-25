@@ -31,6 +31,8 @@ namespace Zezo.Core.GrainInterfaces
 
         // Called by child
         Task HandleChildStarted(Guid caller);
+        Task HandleChildIdle(Guid caller);
+
         Task HandleChildStopped(Guid caller);
     }
 }

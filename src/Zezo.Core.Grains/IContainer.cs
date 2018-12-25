@@ -25,7 +25,9 @@ namespace Zezo.Core.Grains {
 
         // Status changes
         Task CompleteSelf(bool success);
-        Task MarkSelfStarted();
+        Task MarkSelfBusy();
+
+        Task MarkSelfIdle();
 
         /// <summary>
         /// Spawns a new StepGrain in the EntityGrain.

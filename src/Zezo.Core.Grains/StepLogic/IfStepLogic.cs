@@ -102,7 +102,12 @@ namespace Zezo.Core.Grains.StepLogic
 
         public override Task HandleChildStarted(Guid caller)
         {
-            return container.MarkSelfStarted();
+            return container.MarkSelfBusy();
+        }
+
+        public override Task HandleChildIdle(Guid caller)
+        {
+            return container.MarkSelfIdle();
         }
 
         public override async Task HandleChildStopped(Guid caller)

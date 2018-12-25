@@ -60,9 +60,9 @@ namespace Zezo.Core.Grains.Tests
 
                 // Now dummy1 will be active but dummy 2 will stay inactive
                 _testOutputHelper.WriteLine("Now test for Inactive dummy2 and Active dummy1");
-                Assert.Equal(StepStatus.Active, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.ActiveIdle, await dummy1.GetStatus());
                 Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
-                Assert.Equal(StepStatus.Active, await seq.GetStatus());
+                Assert.Equal(StepStatus.ActiveIdle, await seq.GetStatus());
 
                 await observer.WaitUntilStatus("seq", s => s == StepStatus.Completed);
 
@@ -160,14 +160,14 @@ namespace Zezo.Core.Grains.Tests
                 await observer.WaitUntilStatus("dummy1", s => s == StepStatus.Working);
                 
                 observer.Observed()
-                    .StartsWith("par", s => s == StepStatus.Active)
-                    .LaterOn("dummy1", s => s == StepStatus.Active)
+                    .StartsWith("par", s => s == StepStatus.ActiveIdle)
+                    .LaterOn("dummy1", s => s == StepStatus.ActiveIdle)
                     .LaterOn("dummy1", s => s == StepStatus.Working)
                     .Validate();
                 
                 observer.Observed()
-                    .StartsWith("par", s => s == StepStatus.Active)
-                    .LaterOn("dummy2", s => s == StepStatus.Active)
+                    .StartsWith("par", s => s == StepStatus.ActiveIdle)
+                    .LaterOn("dummy2", s => s == StepStatus.ActiveIdle)
                     .LaterOn("dummy1", s => s == StepStatus.Working)
                     .Validate();
 
@@ -260,6 +260,52 @@ namespace Zezo.Core.Grains.Tests
                 Assert.Equal(StepStatus.Skipped, await dummy1.GetStatus());
             }
         }
+        
+        
+        [Fact]
+        public async Task Basic_Xor_Test()
+        {
+            var config = ParseConfig(@"
+                <Project Id=""test"">
+                    <Project.Pipeline>
+                        <Xor Id=""xor1"">
+                            <Xor.Children>
+                                <DummyStep Id=""dummy1"" BeforeStart=""10ms"" Working=""1000ms"" />
+                                <DummyStep Id=""dummy2"" BeforeStart=""1000ms"" Working=""1000ms"" />
+                                <DummyStep Id=""dummy3"" BeforeStart=""2000ms"" Working=""1000ms"" />
+                            </Xor.Children>
+                        </Xor>
+                    </Project.Pipeline>
+                </Project>
+            ") as ProjectNode;
+
+            var e1 = await CreateSingleEntityProject(config);
+            var dummy1 = await GetStepGrainById(e1, "dummy1");
+            var dummy2 = await GetStepGrainById(e1, "dummy2");
+            var dummy3 = await GetStepGrainById(e1, "dummy3");
+            var xorNode = await GetStepGrainById(e1, "xor1");
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(xorNode, "xor1");
+                await observer.ObserverStep(dummy1, "dummy1");
+                await observer.ObserverStep(dummy2, "dummy2");
+                await observer.ObserverStep(dummy3, "dummy3");
+                
+                Assert.Equal(StepStatus.Inactive, await xorNode.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy3.GetStatus());
+            
+                // kick off
+                await e1.Start();
+
+                await observer.WaitUntilStatus("xor1", s => s == StepStatus.Completed);
+                Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Skipped, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.Skipped, await dummy3.GetStatus());
+            }
+        }
+        
         
         /// <summary>
         /// Create a Project with the given config, and instantiates an Entity

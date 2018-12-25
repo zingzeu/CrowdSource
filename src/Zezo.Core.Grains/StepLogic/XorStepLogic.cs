@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Zezo.Core.Configuration.Steps;
@@ -6,28 +7,29 @@ using Zezo.Core.GrainInterfaces;
 
 namespace Zezo.Core.Grains.StepLogic
 {
-    public class ParallelStepLogic : BaseStepLogic
+    public class XorStepLogic : BaseStepLogic
     {
-        public ParallelStepLogic(IContainer container) : base(container)
+        public XorStepLogic(IContainer container) : base(container)
         {
         }
 
         public override async Task OnInit()
         {
             await base.OnInit();
-            var parConfig = container.State.Config as ParallelNode;
-            if (parConfig == null)
+            var xorConfig = container.State.Config as XorNode;
+            if (xorConfig == null)
             {
-                Logger.LogWarning("HandleInit: Config is null...");
+                Logger.LogWarning("OnInit: Config is null...");
+                await container.CompleteSelf(false);
                 return;
             }
             // Spawn children nodes
             container.State.ChildNodes.Clear();
-            foreach (StepNode childConfig in parConfig.Children) {
+            foreach (StepNode childConfig in xorConfig.Children) {
                 var childKey = await container.SpawnStep(childConfig);
                 container.State.ChildNodes.Add(childKey);
             }
-            Logger.LogInformation($"SequenceStep: {parConfig.Children.Count} children created.");
+            Logger.LogInformation($"XorStep: {xorConfig.Children.Count} children created.");
 
         }
 
@@ -61,28 +63,55 @@ namespace Zezo.Core.Grains.StepLogic
             throw new NotImplementedException();
         }
 
-        public override Task HandleChildStarted(Guid caller)
+        public override async Task HandleChildStarted(Guid caller)
         {
-            if (container.Status == StepStatus.Inactive) {
-                return container.MarkSelfBusy();
+            if (container.Status == StepStatus.ActiveIdle) {
+                foreach (var child in container.State.ChildNodes)
+                {
+                    // pause other
+                    if (child != caller)
+                    {
+                        try
+                        {
+                            await container.GetStepGrain(child).Pause();
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // do nothing
+                        }
+                    }
+                }
+                await container.MarkSelfBusy();
             }
-            return Task.CompletedTask;
         }
 
         public override async Task HandleChildIdle(Guid caller)
         {
             if (container.Status == StepStatus.Working)
             {
+                await container.MarkSelfIdle();
                 foreach (var child in container.State.ChildNodes)
                 {
-                    var s = await container.GetStepGrain(child).GetStatus();
-                    if (s == StepStatus.Working)
+                    if (child != caller)
                     {
-                        return;
+                        try
+                        {
+                            var childGrain = container.GetStepGrain(child);
+                            var status = await childGrain.GetStatus();
+                            if (status == StepStatus.Paused)
+                            {
+                                _ = childGrain.Resume();
+                            } else if (status == StepStatus.Inactive)
+                            {
+                                _ = childGrain.Activate();
+                            }
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // do nothing
+                        }
                     }
                 }
-
-                await container.MarkSelfIdle();
             }
         }
 
@@ -91,7 +120,8 @@ namespace Zezo.Core.Grains.StepLogic
             // check all children
             foreach (var child in container.State.ChildNodes)
             {
-                var s = await container.GetStepGrain(child).GetStatus();
+                var childGrain = container.GetStepGrain(child);
+                var s = await childGrain.GetStatus();
                 if (s == StepStatus.Error)
                 {
                     await container.CompleteSelf(false);
@@ -99,10 +129,9 @@ namespace Zezo.Core.Grains.StepLogic
                 } 
                 else if (s != StepStatus.Completed)
                 {
-                    return;
+                    await childGrain.Stop();
                 }
             }
-
             await container.CompleteSelf(true);
         }
 

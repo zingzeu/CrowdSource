@@ -21,7 +21,7 @@ namespace Zezo.Core.Grains
         public async Task CompleteSelf(bool success)
         {
             if (State.Status == StepStatus.Inactive ||
-                State.Status == StepStatus.Active || 
+                State.Status == StepStatus.ActiveIdle || 
                 State.Status  == StepStatus.Working)
             {
                 await ChangeStatus(success ? StepStatus.Completed : StepStatus.Error);
@@ -41,15 +41,31 @@ namespace Zezo.Core.Grains
             }
         }
 
-        public async Task MarkSelfStarted()
+        public async Task MarkSelfBusy()
         {
-            if (State.Status == StepStatus.Active) {
+            if (State.Status == StepStatus.ActiveIdle) {
                 await ChangeStatus(StepStatus.Working);
             }
             else 
             {
                 logger.LogError($"Cannot change from status {State.Status} to Started.");
                 throw new InvalidOperationException($"Cannot change from status {State.Status} to Started.");
+            }
+        }
+
+        public async Task MarkSelfIdle()
+        {
+            if (State.Status == StepStatus.ActiveIdle)
+            {
+                // do nothing
+            }
+            else if (State.Status == StepStatus.Working)
+            {
+                await ChangeStatus(StepStatus.ActiveIdle);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Cannot change from status {State.Status} to Active (Idle)");
             }
         }
 

@@ -69,12 +69,24 @@ namespace Zezo.Core.Grains
                 Logger.LogError($"Error during HandleChildStarted: {e}");
             }
         }
+        
+        public async Task OnChildIdle(Guid caller)
+        {
+            try
+            {
+                await logic.HandleChildIdle(caller);
+            }
+            catch (Exception e)
+            {
+                Logger.LogError($"Error during HandleChildIdle: {e}");
+            }
+        }
 
-        public Task OnChildStopped(Guid caller)
+        public Task OnChildStopped(Guid caller, ChildStoppedEventArgs eventArgs)
         {
             return logic.HandleChildStopped(caller);
         }
-
+        
         public async Task Init(Guid? parentNode, Guid entity, StepNode config)
         {
             if (IsInitialized) 
@@ -128,7 +140,7 @@ namespace Zezo.Core.Grains
 
         public async Task Pause()
         {
-            if (State.Status == StepStatus.Active)
+            if (State.Status == StepStatus.ActiveIdle)
             {
                 await ChangeStatus(StepStatus.Paused);
             }
@@ -157,7 +169,7 @@ namespace Zezo.Core.Grains
             DelayDeactivation(TimeSpan.FromMinutes(10));
             try
             {
-                await ChangeStatus(StepStatus.Active);
+                await ChangeStatus(StepStatus.ActiveIdle);
                 await logic.OnActivate();
             }
             catch (Exception e)
@@ -179,7 +191,7 @@ namespace Zezo.Core.Grains
                 {
                     await logic.OnResuming();
                     await ChangeStatus(s => s == StepStatus.Working
-                        ? StepStatus.Working : StepStatus.Active);
+                        ? StepStatus.Working : StepStatus.ActiveIdle);
                 }
                 catch (Exception e)
                 {
@@ -205,7 +217,7 @@ namespace Zezo.Core.Grains
             {
                 throw new InvalidOperationException("Not initialized.");
             }
-            if (State.Status == StepStatus.Active || State.Status == StepStatus.Paused
+            if (State.Status == StepStatus.ActiveIdle || State.Status == StepStatus.Paused
                 || State.Status == StepStatus.Inactive)
             {
                 await ChangeStatus(StepStatus.Skipped);
@@ -256,6 +268,9 @@ namespace Zezo.Core.Grains
                 case "If":
                     return new IfStepLogic(this);
                 
+                case "Xor":
+                    return new XorStepLogic(this);
+                
                 default:
                     throw new Exception($"Unknown StepType {config.StepType}");
 
@@ -281,9 +296,10 @@ namespace Zezo.Core.Grains
         private async Task ChangeStatus(Func<StepStatus, StepStatus> predicate)
         {
             var newStatus = predicate(State.Status);
-            if (newStatus != State.Status)
+            var oldStatus = State.Status;
+            if (newStatus != oldStatus)
             {
-                if (!CanChangeState(State.Status, newStatus))
+                if (!CanChangeState(oldStatus, newStatus))
                 {
                     logger.LogWarning($"Illegal status transition: [{State.Status}]->[{newStatus}]");
                     return;
@@ -311,10 +327,26 @@ namespace Zezo.Core.Grains
                             // TODO: inform Entity
                         } else {
                             // fire and forget
-                            _ = GetParentGrain().OnChildStopped(SelfKey);
+                            _ = GetParentGrain().OnChildStopped(SelfKey, 
+                                new ChildStoppedEventArgs(StepId, Status));
                         }
 
                         break;
+                    case StepStatus.Inactive:
+                        if (oldStatus == StepStatus.Working)
+                        {
+                            if (State.ParentNode == null) {
+                                // TODO: inform Entity
+                            } 
+                            else 
+                            {
+                                // fire and forget
+                                _ = GetParentGrain().OnChildIdle(SelfKey);
+                            }
+                        }
+
+                        break;
+                    
                     case StepStatus.Error:
                         if (State.ParentNode == null)
                         {
@@ -322,7 +354,9 @@ namespace Zezo.Core.Grains
                         }
                         else
                         {
-                            _ = GetParentGrain().OnChildStopped(SelfKey);
+                            _ = GetParentGrain().OnChildStopped(SelfKey,
+                                new ChildStoppedEventArgs(StepId, Status)
+                                );
                         }
 
                         break;

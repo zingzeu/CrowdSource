@@ -28,6 +28,8 @@ namespace Zezo.Core.Grains.StepLogic {
 
         
         public abstract Task HandleChildStarted(Guid caller);
+        public abstract Task HandleChildIdle(Guid caller);
+
         public abstract Task HandleChildStopped(Guid caller);
 
     }

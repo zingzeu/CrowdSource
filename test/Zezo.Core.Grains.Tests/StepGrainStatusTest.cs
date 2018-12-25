@@ -18,7 +18,7 @@ namespace Zezo.Core.Grains.Tests
         [InlineData(StepStatus.Uninitialized)]
         [InlineData(StepStatus.Initializing)]
         [InlineData(StepStatus.Inactive)]
-        [InlineData(StepStatus.Active)]
+        [InlineData(StepStatus.ActiveIdle)]
         [InlineData(StepStatus.Paused)]
         [InlineData(StepStatus.Working)]
         [InlineData(StepStatus.Stopping)]
@@ -37,7 +37,7 @@ namespace Zezo.Core.Grains.Tests
         
         [Theory]
         [InlineData(StepStatus.Inactive)]
-        [InlineData(StepStatus.Active)]
+        [InlineData(StepStatus.ActiveIdle)]
         [InlineData(StepStatus.Working)]
         [InlineData(StepStatus.Pausing)]
         [InlineData(StepStatus.Paused)]
@@ -81,7 +81,7 @@ namespace Zezo.Core.Grains.Tests
         [Theory]
         [InlineData(StepStatus.Uninitialized)]
         [InlineData(StepStatus.Inactive)]
-        [InlineData(StepStatus.Active)]
+        [InlineData(StepStatus.ActiveIdle)]
         [InlineData(StepStatus.Paused)]
         [InlineData(StepStatus.Skipped)]
         [InlineData(StepStatus.Completed)]
@@ -98,7 +98,7 @@ namespace Zezo.Core.Grains.Tests
                 StepStatus.Initializing,
                 StepStatus.Inactive,
                 StepStatus.Paused,
-                StepStatus.Active,
+                StepStatus.ActiveIdle,
                 StepStatus.Working,
                 StepStatus.Pausing,
                 StepStatus.Stopping,

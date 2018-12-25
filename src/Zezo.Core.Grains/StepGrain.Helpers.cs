@@ -12,6 +12,8 @@ namespace Zezo.Core.Grains
 
         private bool IsStopped => (State.Status & (StepStatus) 0b0100_0000) != 0;
 
+        private string StepId => State?.Config?.Id ?? null;
+
         private static bool CanChangeState(StepStatus oldStatus, StepStatus newStatus)
         {
             if ((oldStatus & (StepStatus) 0b0100_0000) != 0) // once stopped, can never be restarted

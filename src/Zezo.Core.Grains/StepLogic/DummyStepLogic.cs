@@ -28,6 +28,11 @@ namespace Zezo.Core.Grains.StepLogic
             return Task.CompletedTask;
         }
 
+        public override Task HandleChildIdle(Guid caller)
+        {
+            return Task.CompletedTask;
+        }
+
         public override Task HandleChildStopped(Guid caller)
         {
             return Task.CompletedTask;
@@ -39,7 +44,7 @@ namespace Zezo.Core.Grains.StepLogic
             await Task.Delay(2000);
             Say("Starting...");
             await Task.Delay(1000);
-            await container.MarkSelfStarted();
+            await container.MarkSelfBusy();
             Say("Started working...");
         }
 
@@ -56,7 +61,7 @@ namespace Zezo.Core.Grains.StepLogic
                 async () => {
                     await Task.Delay(_beforeStart);
                     Say("Been ready for a while, now starting...");
-                    await container.MarkSelfStarted();
+                    await container.MarkSelfBusy();
                     Say("Working...");
                     await Task.Delay(_workingTime);
                     Say("Stopping...");

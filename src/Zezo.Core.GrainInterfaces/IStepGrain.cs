@@ -58,12 +58,37 @@ namespace Zezo.Core.GrainInterfaces
 
         // Called by children
         Task OnChildStarted(Guid caller);
-        Task OnChildStopped(Guid caller);
+        /// <summary>
+        /// Invoked when a child becomes Active (Idle) from Working.
+        /// </summary>
+        /// <param name="caller"></param>
+        /// <returns></returns>
+        Task OnChildIdle(Guid caller);
+        Task OnChildStopped(Guid caller, ChildStoppedEventArgs eventArgs);
         
         // For client & unit testing
         Task Subscribe(IStepGrainObserver observer);
         Task Unsubscribe(IStepGrainObserver observer);
         
+    }
+
+    public class ChildStatusChangedEventArgs : EventArgs
+    {
+        public string ChildStepId { get; }
+        public StepStatus NewStatus { get; }
+
+
+        public ChildStatusChangedEventArgs(string childStepId, StepStatus newStatus)
+        {
+            ChildStepId = childStepId;
+            NewStatus = newStatus;
+        }
+    }
+    public class ChildStoppedEventArgs : ChildStatusChangedEventArgs
+    {
+        public ChildStoppedEventArgs(string childStepId, StepStatus newStatus) : base (childStepId, newStatus)
+        {
+        }
     }
 
     [Flags]
@@ -102,10 +127,11 @@ namespace Zezo.Core.GrainInterfaces
         Paused = 0b1000_0001,
         
         /// <summary>
+        /// Active (but Idle).
         /// Active means allowed to do work, but no actual computation / human task is ongoing.
         /// This means the Step is safe to pause and no clean up is needed.
         /// </summary>
-        Active = 0b1010_0000,
+        ActiveIdle = 0b1010_0000,
         
         /// <summary>
         /// Ongoing work.
