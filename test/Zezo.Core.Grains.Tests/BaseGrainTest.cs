@@ -1,8 +1,14 @@
+#define SiloLogging
+
 using System;
 using System.Threading.Tasks;
+#if SiloLogging
+using Microsoft.Extensions.Logging;
+#endif
 using Orleans;
 using Orleans.TestingHost;
 using Orleans.Hosting;
+using Polly;
 using Xunit;
 using Xunit.Abstractions;
 using Zezo.Core.Configuration;
@@ -12,7 +18,7 @@ namespace Zezo.Core.Grains.Tests
 {
     public class BaseGrainTest : IDisposable
     {
-        private readonly TestCluster cluster;
+        private TestCluster cluster;
         protected readonly ITestOutputHelper _testOutputHelper;
         private readonly IParser _parser = new Parser();
     
@@ -23,15 +29,36 @@ namespace Zezo.Core.Grains.Tests
         {
             _testOutputHelper = testOutputHelper;
 
-            var builder = new TestClusterBuilder();
-            builder.AddSiloBuilderConfigurator<TestSiloConfigurator>();
-            cluster = builder.Build();
-            cluster.Deploy();
+            _testOutputHelper.WriteLine("Starting Test Silo...");
+            Policy
+                .Handle<Exception>()
+                .Retry(3, async (_, __) =>
+                {
+                    await Task.Delay(3000);
+                    _testOutputHelper.WriteLine("Retrying...");
+                })
+                .Execute(() =>
+                {
+                    var builder = new TestClusterBuilder();
+                    builder.AddSiloBuilderConfigurator<TestSiloConfigurator>();
+                    cluster = builder.Build();
+                    cluster.Deploy();
+                });
+
         }
         
         public void Dispose()
         {
-            cluster.StopAllSilos();
+            _testOutputHelper.WriteLine("Stopping Test Silo...");
+            Policy
+                .Handle<Exception>()
+                .Retry(3, async (_, __) =>
+                {
+                    await Task.Delay(3000);
+                    _testOutputHelper.WriteLine("Retrying...");
+                })
+                .Execute(() => { cluster.StopAllSilos(); });
+
         }
         
         protected async Task<IStepGrain> GetStepGrainById(IEntityGrain entityGrain, string id)
