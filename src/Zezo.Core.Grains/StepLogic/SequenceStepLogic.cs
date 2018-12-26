@@ -14,17 +14,20 @@ namespace Zezo.Core.Grains.StepLogic
         {
         }
 
-        public override Task HandleChildPaused(Guid caller)
-        {
-            throw new NotImplementedException();
-        }
-
         public override Task HandleChildStarted(Guid caller)
         {
             if (container.Status == StepStatus.Inactive) {
-                return container.MarkSelfStarted();
+                return container.MarkSelfBusy();
             }
             return Task.CompletedTask;
+        }
+
+        public override async Task HandleChildIdle(Guid caller)
+        {
+            if (container.Status == StepStatus.Working)
+            {
+                await container.MarkSelfIdle();
+            }
         }
 
         public override async Task HandleChildStopped(Guid caller)
@@ -103,23 +106,23 @@ namespace Zezo.Core.Grains.StepLogic
             }
             return Task.CompletedTask;
         }
-        public override Task HandlePausing()
+        public override Task OnPausing()
         {
             throw new NotImplementedException();
         }
 
-        public override Task HandleResuming()
+        public override Task OnResuming()
         {
             throw new NotImplementedException();
         }
 
-        public override async Task HandleStopping()
+        public override async Task OnStopping()
         {
             // finds first child that is ready, and force it
             foreach (var childKey in container.State.ChildNodes) {
                 var child = container.GetStepGrain(childKey);
                 var childStatus = await child.GetStatus();
-                if (childStatus != StepStatus.StoppedWithSuccess && childStatus != StepStatus.Error) {
+                if (childStatus != StepStatus.Completed && childStatus != StepStatus.Error) {
                     await child.Stop();
                 }
             }

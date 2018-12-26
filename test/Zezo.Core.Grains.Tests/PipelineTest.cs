@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using Zezo.Core.Configuration;
 using static Zezo.Core.GrainInterfaces.EntityGrainData;
 using Xunit.Abstractions;
-using Moq;
-using Zezo.Core.GrainInterfaces.Observers;
 
 namespace Zezo.Core.Grains.Tests
 {
@@ -23,7 +21,7 @@ namespace Zezo.Core.Grains.Tests
         }
 
         [Fact]
-        public async Task Basic_Test()
+        public async Task Basic_Sequence_Test()
         {
             var config = ParseConfig(@"<Project Id=""test"">
                 <Project.Pipeline>
@@ -40,51 +38,44 @@ namespace Zezo.Core.Grains.Tests
                 
             Assert.Equal(EntityStatus.Initialized, await e1.GetStatus());
 
-            var mock = new Mock<IStepGrainObserver>();
-            mock.Setup(x => x.OnStatusChanged(It.IsAny<Guid>(), It.IsAny<StepStatus>()))
-                .Callback((Guid g, StepStatus s) =>
-                {
-                    var now = DateTime.Now;
-                    _testOutputHelper.WriteLine($"{now.Minute}:{now.Second}.{now.Millisecond} - Step {g} changed to {s}");
-                });
-            
-            var observer = await GrainFactory.CreateObjectReference<IStepGrainObserver>(mock.Object);
-
             var seq = await GetStepGrainById(e1, "seq");
             var dummy1 = await GetStepGrainById(e1, "dummy1");
             var dummy2 = await GetStepGrainById(e1, "dummy2");
-            await seq.Subscribe(observer);
-            await dummy1.Subscribe(observer);
-            await dummy2.Subscribe(observer);
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(seq, "seq");
+                await observer.ObserverStep(dummy1, "dummy1");
+                await observer.ObserverStep(dummy2, "dummy2");
+            
+                // Steps should be initialized but not active yet.
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await seq.GetStatus());
 
-            // Steps should be initialized but not active yet.
-            Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
-            Assert.Equal(StepStatus.Inactive, await seq.GetStatus());
+                await e1.Start();
+                var now1 = DateTime.Now;
+                _testOutputHelper.WriteLine($"{now1.Minute}:{now1.Second}.{now1.Millisecond} - Started");
 
-            await e1.Start();
-            var now1 = DateTime.Now;
-            _testOutputHelper.WriteLine($"{now1.Minute}:{now1.Second}.{now1.Millisecond} - Started");
+                Assert.Equal(EntityStatus.Active, await e1.GetStatus());
 
-            Assert.Equal(EntityStatus.Active, await e1.GetStatus());
+                // Now dummy1 will be active but dummy 2 will stay inactive
+                _testOutputHelper.WriteLine("Now test for Inactive dummy2 and Active dummy1");
+                Assert.Equal(StepStatus.ActiveIdle, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.ActiveIdle, await seq.GetStatus());
 
-            // Now dummy1 will be active but dummy 2 will stay inactive
-            _testOutputHelper.WriteLine("Now test for Inactive dummy2 and Active dummy1");
-            Assert.Equal(StepStatus.Active, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
-            Assert.Equal(StepStatus.Active, await seq.GetStatus());
+                await observer.WaitUntilStatus("seq", s => s == StepStatus.Completed);
 
-            await Task.Delay(4000);
+                Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Completed, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.Completed, await seq.GetStatus());
 
-            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await seq.GetStatus());
-
-            _testOutputHelper.WriteLine("End of test");
+                _testOutputHelper.WriteLine("End of test");
+            }
         }
 
         [Fact]
-        public async Task Nested_SequenceStep_Test()
+        public async Task Nested_Sequence_Test()
         {
             var config = ParseConfig(@"
                 <Project Id=""test"">
@@ -105,22 +96,31 @@ namespace Zezo.Core.Grains.Tests
             ") as ProjectNode;
 
             var e1 = await CreateSingleEntityProject(config);
-            await e1.Start();
-
-            // TODO: Use callback to watch for state changes; or build a state change history object; instead of Task.Delay
-            await Task.Delay(1000);
-
             var seq1 = await GetStepGrainById(e1, "seq1");
             var seqInner = await GetStepGrainById(e1, "seq_inner");
             var dummy1 = await GetStepGrainById(e1, "dummy1");
             var dummy2 = await GetStepGrainById(e1, "dummy2");
             var dummy3 = await GetStepGrainById(e1, "dummy3");
+            
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(seq1, "seq1");
+                await observer.ObserverStep(seqInner, "seq_inner");
+                await observer.ObserverStep(dummy1, "dummy1");
+                await observer.ObserverStep(dummy2, "dummy2");
+                await observer.ObserverStep(dummy3, "dummy3");
+                
+                await e1.Start();
 
-            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy3.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await seq1.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await seqInner.GetStatus());
+                await observer.WaitUntilStatus("seq1", s => s == StepStatus.Completed);
+                
+                Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Completed, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.Completed, await dummy3.GetStatus());
+                Assert.Equal(StepStatus.Completed, await seq1.GetStatus());
+                Assert.Equal(StepStatus.Completed, await seqInner.GetStatus());
+            }
+            
         }
 
         [Fact]
@@ -143,26 +143,226 @@ namespace Zezo.Core.Grains.Tests
             var par = await GetStepGrainById(entity, "par");
             var dummy1 = await GetStepGrainById(entity, "dummy1");
             var dummy2 = await GetStepGrainById(entity, "dummy2");
-            
-            // Initially, all Steps are Inactive
-            Assert.Equal(StepStatus.Inactive, await par.GetStatus());
-            Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
 
-            await entity.Start();
-            
-            Assert.Equal(StepStatus.Active, await par.GetStatus());
-            Assert.Equal(StepStatus.Active, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.Active, await dummy2.GetStatus());
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(par, "par");
+                await observer.ObserverStep(dummy1, "dummy1");
+                await observer.ObserverStep(dummy2, "dummy2");
+                
+                // Initially, all Steps are Inactive
+                Assert.Equal(StepStatus.Inactive, await par.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
 
-            await Task.Delay(3000);
+                await entity.Start();
+
+                await observer.WaitUntilStatus("dummy1", s => s == StepStatus.Working);
+                
+                observer.Observed()
+                    .StartsWith("par", s => s == StepStatus.ActiveIdle)
+                    .LaterOn("dummy1", s => s == StepStatus.ActiveIdle)
+                    .LaterOn("dummy1", s => s == StepStatus.Working)
+                    .Validate();
+                
+                observer.Observed()
+                    .StartsWith("par", s => s == StepStatus.ActiveIdle)
+                    .LaterOn("dummy2", s => s == StepStatus.ActiveIdle)
+                    .LaterOn("dummy1", s => s == StepStatus.Working)
+                    .Validate();
+
+                await observer.WaitUntilStatus("par", s => s == StepStatus.Completed);
+                    
+                Assert.Equal(StepStatus.Completed, await par.GetStatus());
+                Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Completed, await dummy2.GetStatus());
+            }
             
-            Assert.Equal(StepStatus.StoppedWithSuccess, await par.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy1.GetStatus());
-            Assert.Equal(StepStatus.StoppedWithSuccess, await dummy2.GetStatus());
         }
 
+        [Fact]
+        public async Task Basic_If_AlwaysTrue_Test()
+        {
+            var config = ParseConfig(@"
+                <Project Id=""test"">
+                    <Project.Pipeline>
+                        <If Id=""if1"">
+                            <If.Child>
+                                <DummyStep Id=""dummy1"" BeforeStart=""10ms"" Working=""1000ms"" />
+                            </If.Child>
+                            <If.Condition>
+                                <True />
+                            </If.Condition>
+                        </If>
+                    </Project.Pipeline>
+                </Project>
+            ") as ProjectNode;
 
+            var e1 = await CreateSingleEntityProject(config);
+            var dummy1 = await GetStepGrainById(e1, "dummy1");
+            var ifNode = await GetStepGrainById(e1, "if1");
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(ifNode, "if1");
+                await observer.ObserverStep(dummy1, "dummy1");
+                
+                Assert.Equal(StepStatus.Inactive, await ifNode.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+            
+                // kick off
+                await e1.Start();
+
+                await observer.WaitUntilStatus("if1", s => s == StepStatus.Working);
+            
+                Assert.Equal(StepStatus.Working, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Working, await ifNode.GetStatus());
+
+                await observer.WaitUntilStatus("if1", s => s == StepStatus.Completed);
+            
+                Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Completed, await ifNode.GetStatus());
+            }
+        }
+        
+        [Fact]
+        public async Task Basic_If_AlwaysFalse_Test()
+        {
+            var config = ParseConfig(@"
+                <Project Id=""test"">
+                    <Project.Pipeline>
+                        <If Id=""if1"">
+                            <If.Child>
+                                <DummyStep Id=""dummy1"" BeforeStart=""10ms"" Working=""1000ms"" />
+                            </If.Child>
+                            <If.Condition>
+                                <False />
+                            </If.Condition>
+                        </If>
+                    </Project.Pipeline>
+                </Project>
+            ") as ProjectNode;
+
+            var e1 = await CreateSingleEntityProject(config);
+            var dummy1 = await GetStepGrainById(e1, "dummy1");
+            var ifNode = await GetStepGrainById(e1, "if1");
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(ifNode, "if1");
+                await observer.ObserverStep(dummy1, "dummy1");
+                
+                Assert.Equal(StepStatus.Inactive, await ifNode.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+            
+                // kick off
+                await e1.Start();
+
+                await observer.WaitUntilStatus("if1", s => s == StepStatus.Completed);
+                Assert.Equal(StepStatus.Skipped, await dummy1.GetStatus());
+            }
+        }
+        
+        
+        [Fact]
+        public async Task Basic_Xor_Test()
+        {
+            var config = ParseConfig(@"
+                <Project Id=""test"">
+                    <Project.Pipeline>
+                        <Xor Id=""xor1"">
+                            <Xor.Children>
+                                <DummyStep Id=""dummy1"" BeforeStart=""10ms"" Working=""6000ms"" />
+                                <DummyStep Id=""dummy2"" BeforeStart=""1000ms"" Working=""1000ms"" />
+                                <DummyStep Id=""dummy3"" BeforeStart=""2000ms"" Working=""1000ms"" />
+                            </Xor.Children>
+                        </Xor>
+                    </Project.Pipeline>
+                </Project>
+            ") as ProjectNode;
+
+            var e1 = await CreateSingleEntityProject(config);
+            var dummy1 = await GetStepGrainById(e1, "dummy1");
+            var dummy2 = await GetStepGrainById(e1, "dummy2");
+            var dummy3 = await GetStepGrainById(e1, "dummy3");
+            var xorNode = await GetStepGrainById(e1, "xor1");
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(xorNode, "xor1");
+                await observer.ObserverStep(dummy1, "dummy1");
+                await observer.ObserverStep(dummy2, "dummy2");
+                await observer.ObserverStep(dummy3, "dummy3");
+                
+                Assert.Equal(StepStatus.Inactive, await xorNode.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy3.GetStatus());
+            
+                // kick off
+                await e1.Start();
+
+                await observer.WaitUntilStatus("xor1", s => s == StepStatus.Completed);
+                Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Skipped, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.Skipped, await dummy3.GetStatus());
+            }
+        }
+        
+        
+        [Fact]
+        public async Task Xor_PauseResume_Test()
+        {
+            var config = ParseConfig(@"
+                <Project Id=""test"">
+                    <Project.Pipeline>
+                        <Xor Id=""xor1"">
+                            <Xor.Children>
+                                <DummyStep Id=""dummy1"" BeforeStart=""10ms"" Working=""0ms"" WorkingSequence=""1000ms, 5000ms, 1000ms, 1000ms, 1000ms"" />
+                                <DummyStep Id=""dummy2"" BeforeStart=""1000ms"" Working=""1000ms"" />
+                                <DummyStep Id=""dummy3"" BeforeStart=""2000ms"" Working=""1000ms"" />
+                            </Xor.Children>
+                        </Xor>
+                    </Project.Pipeline>
+                </Project>
+            ") as ProjectNode;
+
+            /*
+             time     10       1100
+             dummy1   |----------|
+             dummy2
+             dummy3
+             
+             */
+            
+            var e1 = await CreateSingleEntityProject(config);
+            var dummy1 = await GetStepGrainById(e1, "dummy1");
+            var dummy2 = await GetStepGrainById(e1, "dummy2");
+            var dummy3 = await GetStepGrainById(e1, "dummy3");
+            var xorNode = await GetStepGrainById(e1, "xor1");
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(xorNode, "xor1");
+                await observer.ObserverStep(dummy1, "dummy1");
+                await observer.ObserverStep(dummy2, "dummy2");
+                await observer.ObserverStep(dummy3, "dummy3");
+                
+                Assert.Equal(StepStatus.Inactive, await xorNode.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy3.GetStatus());
+            
+                // kick off
+                await e1.Start();
+
+                await observer.WaitUntilStatus("xor1", s => s == StepStatus.Completed);
+            }
+        }
+        
+        
+        /// <summary>
+        /// Create a Project with the given config, and instantiates an Entity
+        /// under that Project.
+        /// </summary>
+        /// <param name="projConfig"></param>
+        /// <returns>The EntityGrain</returns>
         protected async Task<IEntityGrain> CreateSingleEntityProject(ProjectNode projConfig)
         {
             var project = GrainFactory.GetGrain<IProjectGrain>(Guid.NewGuid());
@@ -171,5 +371,6 @@ namespace Zezo.Core.Grains.Tests
             var e1 = GrainFactory.GetGrain<IEntityGrain>(e1K);
             return e1;
         }
+        
     }
 }

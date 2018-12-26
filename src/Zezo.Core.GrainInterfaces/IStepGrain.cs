@@ -58,8 +58,13 @@ namespace Zezo.Core.GrainInterfaces
 
         // Called by children
         Task OnChildStarted(Guid caller);
-        Task OnChildStopped(Guid caller);
-        Task OnChildPaused(Guid caller);
+        /// <summary>
+        /// Invoked when a child becomes Active (Idle) from Working.
+        /// </summary>
+        /// <param name="caller"></param>
+        /// <returns></returns>
+        Task OnChildIdle(Guid caller);
+        Task OnChildStopped(Guid caller, ChildStoppedEventArgs eventArgs);
         
         // For client & unit testing
         Task Subscribe(IStepGrainObserver observer);
@@ -67,51 +72,94 @@ namespace Zezo.Core.GrainInterfaces
         
     }
 
+    public class ChildStatusChangedEventArgs : EventArgs
+    {
+        public string ChildStepId { get; }
+        public StepStatus NewStatus { get; }
+
+
+        public ChildStatusChangedEventArgs(string childStepId, StepStatus newStatus)
+        {
+            ChildStepId = childStepId;
+            NewStatus = newStatus;
+        }
+    }
+    public class ChildStoppedEventArgs : ChildStatusChangedEventArgs
+    {
+        public ChildStoppedEventArgs(string childStepId, StepStatus newStatus) : base (childStepId, newStatus)
+        {
+        }
+    }
+
+    [Flags]
     public enum StepStatus {
+        
+        /**
+         * Bits
+         *  7     6     5     4     3     2     1     0
+         * 7 - Has initialized or not
+         * 6 - Stopped or not
+         * 5 - Allowed to work
+         * 4 - Has Ongoing Work (Busy)
+         * 3-0 - Additional types
+         *    3 Has Error or not
+         *    2
+         *    1
+         *    0 
+         */
+        
         /// <summary>
         /// When the Grain is first created by Orleans, and state has not been set.
         /// </summary>
-        Uninitialized = 0,
+        Uninitialized = 0b0000_0000,
         
         /// <summary>
         /// Initializing, potentially waiting for children tasks to initialize.
         /// </summary>
-        Initializing = 1,
+        Initializing = 0b0001_0000,
 
         /// <summary>
         /// Initialized (with all children initialized).
         /// Or after being paused.
         /// </summary>
-        Inactive = 2,
+        Inactive = 0b1000_0000,
+        
+        Paused = 0b1000_0001,
         
         /// <summary>
+        /// Active (but Idle).
         /// Active means allowed to do work, but no actual computation / human task is ongoing.
         /// This means the Step is safe to pause and no clean up is needed.
         /// </summary>
-        Active = 3,
+        ActiveIdle = 0b1010_0000,
         
         /// <summary>
         /// Ongoing work.
         /// This means when the Step is to be paused, clean up (Pausing phase) is needed.
         /// </summary>
-        Working = 4,
+        Working = 0b1011_0000,
         
         /// <summary>
         /// Pausing
         /// </summary>
-        Pausing = 5,
+        Pausing = 0b1001_0001,
         
-        Stopping = 6,
+        Stopping = 0b1001_0011,
+        
+        Resuming = 0b1011_0001,
         
         /// <summary>
         /// Internal occurred or stopped externally.
         /// </summary>
-        Error = 7,
+        Error = 0b1100_1000,
         
         /// <summary>
         /// Stopped without error.
         /// (e.g. completed task or skipped)
         /// </summary>
-        StoppedWithSuccess = 8
+        Completed = 0b1100_0000,
+        
+        Skipped = 0b1100_0001
+        
     }
 }

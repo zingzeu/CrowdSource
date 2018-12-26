@@ -21,15 +21,16 @@ namespace Zezo.Core.Grains.StepLogic {
         }
         
         public abstract Task OnActivate();
-        public abstract Task HandlePausing();
-        public abstract Task HandleResuming();
+        public abstract Task OnPausing();
+        public abstract Task OnResuming();
         public abstract Task HandleForceStart();
-        public abstract Task HandleStopping();
+        public abstract Task OnStopping();
 
         
         public abstract Task HandleChildStarted(Guid caller);
+        public abstract Task HandleChildIdle(Guid caller);
+
         public abstract Task HandleChildStopped(Guid caller);
-        public abstract Task HandleChildPaused(Guid caller);
 
     }
 }
