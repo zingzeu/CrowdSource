@@ -53,11 +53,11 @@ namespace Zezo.Core.Grains.Tests
             _testOutputHelper = testOutputHelper;
         }
         
-        private IList<(StepStatus, int)> GetStatusHistory(string stepId)
+        private IReadOnlyList<(StepStatus, int)> GetStatusHistory(string stepId)
         {
             if (statusHistory.ContainsKey(stepId))
             {
-                return statusHistory[stepId];
+                return new List<(StepStatus, int)>(statusHistory[stepId]);
             }
             else
             {

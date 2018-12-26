@@ -353,7 +353,6 @@ namespace Zezo.Core.Grains.Tests
                 await e1.Start();
 
                 await observer.WaitUntilStatus("xor1", s => s == StepStatus.Completed);
-               
             }
         }
         
