@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Zezo.Core.Configuration.Steps;
-using Zezo.Core.GrainInterfaces;
 
 namespace Zezo.Core.Grains.StepLogic
 {
@@ -60,13 +58,14 @@ namespace Zezo.Core.Grains.StepLogic
         public override Task OnActivate()
         {
             Say($"I am allowed to start working. I will start working later.");
-            Task.Factory.StartNew(
+            var selfReference = container.SelfReference;
+            Task.Run(
                 async () => {
                     await Task.Delay(_beforeStart);
                     Say("Been ready for a while, now starting...");
                     if (_workingSeq == null)
                     {
-                        await container.MarkSelfBusy();
+                        await selfReference._Call("MarkSelfBusy");
                         Say("Working...");
                         await Task.Delay(_workingTime);
                         Say("Stopping...");
@@ -78,20 +77,21 @@ namespace Zezo.Core.Grains.StepLogic
                         {
                             if (toActive)
                             {
-                                await container.MarkSelfBusy();
+                                await selfReference._Call("MarkSelfBusy");
                                 Say("Working...");
                                 await Task.Delay(time);
                             }
                             else
                             {
-                                await container.MarkSelfIdle();
+                                await selfReference._Call("MarkSelfIdle");
                                 Say("Pausing...");
                                 await Task.Delay(time);                               
                             }
                             toActive = !toActive;
                         }
                     }
-                    await container.CompleteSelf(true);
+                    await selfReference._Call("CompleteSelf", true);
+                    Say("Completed..");
                 }
             );
             return Task.CompletedTask;
@@ -110,6 +110,21 @@ namespace Zezo.Core.Grains.StepLogic
         public override Task OnStopping()
         {
             return Task.CompletedTask;
+        }
+
+        public override Task _Call(string action, params object[] parameters)
+        {
+            switch (action)
+            {
+                case "MarkSelfBusy":
+                    return container.MarkSelfBusy();
+                case "MarkSelfIdle":
+                    return container.MarkSelfIdle();
+                case "CompleteSelf":
+                    return container.CompleteSelf((bool)parameters[0]);
+                default:
+                    return Task.CompletedTask;
+            }
         }
 
         private void Say(string thing) {

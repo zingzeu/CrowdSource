@@ -34,6 +34,7 @@ namespace Zezo.Silo
             var builder = new SiloHostBuilder()
                 .UseLocalhostClustering()
                 .AddMemoryGrainStorage("DevStore")
+                .EnableDirectClient()
                 .Configure<ClusterOptions>(options => {
                     options.ClusterId = "dev";
                     options.ServiceId = "Zezo";

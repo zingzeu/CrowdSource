@@ -34,5 +34,9 @@ namespace Zezo.Core.GrainInterfaces
         Task HandleChildIdle(Guid caller);
 
         Task HandleChildStopped(Guid caller);
+        
+        
+        // Background callback
+        Task _Call(string action, params object[] parameters);
     }
 }

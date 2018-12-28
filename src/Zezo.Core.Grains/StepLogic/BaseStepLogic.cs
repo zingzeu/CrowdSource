@@ -32,5 +32,9 @@ namespace Zezo.Core.Grains.StepLogic {
 
         public abstract Task HandleChildStopped(Guid caller);
 
+        public virtual Task _Call(string action, params object[] parameters)
+        {
+            return Task.CompletedTask;
+        }
     }
 }
