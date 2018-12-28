@@ -16,8 +16,12 @@ namespace Zezo.Core.Grains
 
         StepGrainData IContainer.State => this.State;
 
+        IStepGrain IContainer.SelfReference => GrainFactory.GetGrain<IStepGrain>(SelfKey);
+
         public Guid SelfKey => this.GetPrimaryKey();
-        
+
+        IGrainFactory IContainer.GrainFactory => this.GrainFactory;
+
         public async Task CompleteSelf(bool success)
         {
             if (State.Status == StepStatus.Inactive ||
@@ -73,6 +77,7 @@ namespace Zezo.Core.Grains
         {
             var entityGrain = GetEntityGrain();
             return entityGrain.SpawnChild(childConfig, SelfKey);
+            
         }
 
         public IEntityGrain GetEntityGrain()

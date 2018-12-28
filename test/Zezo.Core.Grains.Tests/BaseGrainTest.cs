@@ -81,6 +81,7 @@ namespace Zezo.Core.Grains.Tests
         {
             hostBuilder
                 .AddMemoryGrainStorage("DevStore")
+                .EnableDirectClient()
 #if SiloLogging
                 .ConfigureLogging(logging => 
                     logging.AddConsole());

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Zezo.Core.Configuration.Steps;
+using Zezo.Core.GrainInterfaces.Observers;
 
 namespace Zezo.Core.GrainInterfaces
 {
@@ -15,5 +16,8 @@ namespace Zezo.Core.GrainInterfaces
         public int ChildCount => ChildNodes.Count;
         public Dictionary<string, object> Data = new Dictionary<string, object>();
         public StepNode Config { get; set; }
+        
+        public HashSet<IStepGrainObserver> Observers = new HashSet<IStepGrainObserver>();
+        
     }
 }

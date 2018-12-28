@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Orleans;
 using Zezo.Core.Configuration.Steps;
 using Zezo.Core.GrainInterfaces;
 
@@ -22,6 +23,9 @@ namespace Zezo.Core.Grains {
         ILogger Logger { get; }
         StepStatus Status { get; }
         StepGrainData State { get; }
+        
+        IGrainFactory GrainFactory {get;}
+        IStepGrain SelfReference { get;  }
 
         // Status changes
         Task CompleteSelf(bool success);

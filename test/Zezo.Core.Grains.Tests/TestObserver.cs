@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Timers;
 using Orleans;
 using Xunit;
 using Xunit.Abstractions;
@@ -107,9 +108,17 @@ namespace Zezo.Core.Grains.Tests
                 }
             }
 
+            
             // if already waiting
             TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
             awaitingTasks[stepId].Add((predicate, tcs));            
+            
+            Task.Run(async () =>
+            {
+                await Task.Delay(5000);
+                //tcs.TrySetException(new TimeoutException());
+            });
+            
             
             return tcs.Task;
         }

@@ -47,7 +47,7 @@ namespace Zezo.Core.GrainInterfaces
         Task Resume();
 
         /// <summary>
-        /// Ons the stopping.
+        /// Stops the Step.
         /// </summary>
         Task Stop();
 
@@ -67,9 +67,20 @@ namespace Zezo.Core.GrainInterfaces
         Task OnChildStopped(Guid caller, ChildStoppedEventArgs eventArgs);
         
         // For client & unit testing
+        /// <summary>
+        /// This is for testing only.
+        /// Assumes the observer is always valid.
+        /// </summary>
+        /// <param name="observer"></param>
+        /// <returns></returns>
         Task Subscribe(IStepGrainObserver observer);
         Task Unsubscribe(IStepGrainObserver observer);
         
+        
+        // For Logic (background work)
+        [AlwaysInterleave]
+        Task _Call(string action, params object[] parameters);
+
     }
 
     public class ChildStatusChangedEventArgs : EventArgs

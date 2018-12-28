@@ -24,11 +24,7 @@ namespace Zezo.Core.Grains
 
         private IStepLogic logic;
 
-        private GrainObserverManager<IStepGrainObserver> _subsManager;
-
         public override Task OnActivateAsync() {
-            _subsManager = new GrainObserverManager<IStepGrainObserver>();
-            _subsManager.ExpirationDuration = TimeSpan.FromHours(1);
             logger.LogInformation("Activating...");
             
             if (IsInitialized && !IsStopped) {
@@ -86,7 +82,12 @@ namespace Zezo.Core.Grains
         {
             return logic.HandleChildStopped(caller);
         }
-        
+
+        public Task _Call(string action, params object[] parameters)
+        {
+            return logic._Call(action, parameters);
+        }
+
         public async Task Init(Guid? parentNode, Guid entity, StepNode config)
         {
             if (IsInitialized) 
@@ -166,7 +167,7 @@ namespace Zezo.Core.Grains
 
         public async Task Activate()
         {
-            DelayDeactivation(TimeSpan.FromMinutes(10));
+            //DelayDeactivation(TimeSpan.FromMinutes(10));
             try
             {
                 await ChangeStatus(StepStatus.ActiveIdle);
@@ -179,6 +180,7 @@ namespace Zezo.Core.Grains
                 await ChangeStatus(StepStatus.Inactive);
                 throw;
             }
+            DeactivateOnIdle();
         }
 
         public async Task Resume()
@@ -308,7 +310,7 @@ namespace Zezo.Core.Grains
                 State.Status = newStatus;
 
                 await WriteStateAsync();
-                _subsManager.Notify(x => x.OnStatusChanged(SelfKey, newStatus));
+                Notify(x => x.OnStatusChanged(SelfKey, newStatus));
                 
                 // Calls upstream
                 switch (newStatus)
