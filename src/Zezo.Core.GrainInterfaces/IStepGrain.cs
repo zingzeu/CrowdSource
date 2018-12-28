@@ -76,8 +76,16 @@ namespace Zezo.Core.GrainInterfaces
         Task Subscribe(IStepGrainObserver observer);
         Task Unsubscribe(IStepGrainObserver observer);
         
-        
         // For Logic (background work)
+        
+        /// <summary>
+        /// Called by long running tasks spawned by the StepGrain to update its status.
+        /// This should be the only interface through which a long running non-Orleans thread
+        /// interact with the Grain state.
+        /// </summary>
+        /// <param name="action"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
         [AlwaysInterleave]
         Task _Call(string action, params object[] parameters);
 

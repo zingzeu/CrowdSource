@@ -24,7 +24,6 @@ namespace Zezo.Core.Grains {
         StepStatus Status { get; }
         StepGrainData State { get; }
         
-        IGrainFactory GrainFactory {get;}
         IStepGrain SelfReference { get;  }
 
         // Status changes

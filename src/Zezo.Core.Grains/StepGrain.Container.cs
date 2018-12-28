@@ -9,7 +9,6 @@ namespace Zezo.Core.Grains
 {
     public partial class StepGrain : IContainer
     {        
-        
         public ILogger Logger => logger;
 
         public StepStatus Status => State?.Status ?? StepStatus.Uninitialized;
@@ -19,8 +18,6 @@ namespace Zezo.Core.Grains
         IStepGrain IContainer.SelfReference => GrainFactory.GetGrain<IStepGrain>(SelfKey);
 
         public Guid SelfKey => this.GetPrimaryKey();
-
-        IGrainFactory IContainer.GrainFactory => this.GrainFactory;
 
         public async Task CompleteSelf(bool success)
         {
