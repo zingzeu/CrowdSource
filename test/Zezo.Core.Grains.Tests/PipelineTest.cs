@@ -131,8 +131,8 @@ namespace Zezo.Core.Grains.Tests
                     <Project.Pipeline>
                         <Parallel Id=""par"">
                             <Parallel.Children>
-                                <DummyStep Id=""dummy1"" BeforeStart=""100ms"" Working=""1000ms"" />
-                                <DummyStep Id=""dummy2"" BeforeStart=""100ms"" Working=""1000ms"" />
+                                <DummyStep Id=""dummy1"" BeforeStart=""1000ms"" Working=""1000ms"" />
+                                <DummyStep Id=""dummy2"" BeforeStart=""1000ms"" Working=""1000ms"" />
                             </Parallel.Children>
                         </Parallel>
                     </Project.Pipeline>
@@ -156,7 +156,7 @@ namespace Zezo.Core.Grains.Tests
                 Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
 
                 await entity.Start();
-
+                 
                 await observer.WaitUntilStatus("dummy1", s => s == StepStatus.Working);
                 
                 observer.Observed()

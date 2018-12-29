@@ -17,7 +17,7 @@ namespace Zezo.Core.Grains.Tests
         private readonly IGrainFactory _grainFactory;
         private readonly ITestOutputHelper _testOutputHelper;
         private IStepGrainObserver selfReference = null;
-        public TimeSpan WaitingTimeout { get; set; } = TimeSpan.FromSeconds(30);
+        public TimeSpan WaitingTimeout { get; set; } = TimeSpan.FromSeconds(60);
 
         private Task<IStepGrainObserver> SelfReference
         {
