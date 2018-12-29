@@ -83,7 +83,6 @@ namespace Zezo.Core.Grains.Datastores
                 }
             }
             
-                
             State.Initialized = true;
 
             return WriteStateAsync();

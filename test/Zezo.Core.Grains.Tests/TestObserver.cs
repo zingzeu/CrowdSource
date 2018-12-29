@@ -109,7 +109,6 @@ namespace Zezo.Core.Grains.Tests
                 }
             }
 
-            
             // if already waiting
             TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
             awaitingTasks[stepId].Add((predicate, tcs));            
