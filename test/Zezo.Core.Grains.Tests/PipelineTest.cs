@@ -261,6 +261,92 @@ namespace Zezo.Core.Grains.Tests
             }
         }
         
+        [Fact]
+        public async Task Basic_If_ScriptCondition_True_Test()
+        {
+            var config = ParseConfig(@"
+                <Project Id=""test"">
+                    <Project.Pipeline>
+                        <If Id=""if1"">
+                            <If.Child>
+                                <DummyStep Id=""dummy1"" BeforeStart=""10ms"" Working=""1000ms"" />
+                            </If.Child>
+                            <If.Condition>
+                                <ScriptCondition Language=""csharp"">
+                                    <![CDATA[
+                                        var a = 1+1;
+                                        var b = 2;
+                                        return a == b;
+                                    ]]>
+                                </ScriptCondition>
+                            </If.Condition>
+                        </If>
+                    </Project.Pipeline>
+                </Project>
+            ") as ProjectNode;
+
+            var e1 = await CreateSingleEntityProject(config);
+            var dummy1 = await GetStepGrainById(e1, "dummy1");
+            var ifNode = await GetStepGrainById(e1, "if1");
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(ifNode, "if1");
+                await observer.ObserverStep(dummy1, "dummy1");
+                
+                Assert.Equal(StepStatus.Inactive, await ifNode.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+            
+                // kick off
+                await e1.Start();
+
+                await observer.WaitUntilStatus("if1", s => s == StepStatus.Completed);
+                Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
+            }
+        }
+
+        [Fact]
+        public async Task Basic_If_ScriptCondition_False_Test()
+        {
+            var config = ParseConfig(@"
+                <Project Id=""test"">
+                    <Project.Pipeline>
+                        <If Id=""if1"">
+                            <If.Child>
+                                <DummyStep Id=""dummy1"" BeforeStart=""10ms"" Working=""1000ms"" />
+                            </If.Child>
+                            <If.Condition>
+                                <ScriptCondition Language=""csharp"">
+                                    <![CDATA[
+                                        var a = 1+1;
+                                        var b = 2;
+                                        return a != b;
+                                    ]]>
+                                </ScriptCondition>
+                            </If.Condition>
+                        </If>
+                    </Project.Pipeline>
+                </Project>
+            ") as ProjectNode;
+
+            var e1 = await CreateSingleEntityProject(config);
+            var dummy1 = await GetStepGrainById(e1, "dummy1");
+            var ifNode = await GetStepGrainById(e1, "if1");
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(ifNode, "if1");
+                await observer.ObserverStep(dummy1, "dummy1");
+                
+                Assert.Equal(StepStatus.Inactive, await ifNode.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+            
+                // kick off
+                await e1.Start();
+
+                await observer.WaitUntilStatus("if1", s => s == StepStatus.Completed);
+                Assert.Equal(StepStatus.Skipped, await dummy1.GetStatus());
+            }
+        }
+
         
         [Fact]
         public async Task Basic_Xor_Test()

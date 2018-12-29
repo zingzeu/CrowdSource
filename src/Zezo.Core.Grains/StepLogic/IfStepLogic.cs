@@ -142,8 +142,10 @@ namespace Zezo.Core.Grains.StepLogic
                     return new TrueConditionLogic(trueNode);
                 case FalseNode falseNode:
                     return new FalseConditionLogic(falseNode);
+                case ScriptConditionNode scriptConditionNode:
+                    return new ScriptConditionLogic(scriptConditionNode);
                 default:
-                    throw new Exception($"Unknown Condition logic type.");
+                    throw new Exception($"Unknown Condition logic type {conditionConfig.GetTagName()}.");
             }
         }
     }

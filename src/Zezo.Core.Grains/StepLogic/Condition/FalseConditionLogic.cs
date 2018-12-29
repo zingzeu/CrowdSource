@@ -5,7 +5,7 @@ namespace Zezo.Core.Grains.StepLogic.Condition
 {
     public class FalseConditionLogic : IConditionLogic
     {
-        public FalseConditionLogic(ConditionNode node)
+        public FalseConditionLogic(FalseNode node)
         {
             
         }
