@@ -29,6 +29,8 @@ namespace Zezo.Core.Grains
             return Task.FromResult(this.State.Status);
         }
 
+        private IProjectGrain ProjectGrain => GrainFactory.GetGrain<IProjectGrain>(State.ProjectKey);
+        
         public async Task Init(Guid project, ProjectNode projectConfig)
         {
             State.ProjectKey = project;
@@ -82,6 +84,18 @@ namespace Zezo.Core.Grains
         {
             return State.Steps.TryGetValue(id, out var guid) 
                 ? Task.FromResult((Guid?)guid) : Task.FromResult((Guid?)null);
+        }
+
+        public async Task<IDictionary<string, string>> GetDatastores()
+        {
+            var config = await ProjectGrain.GetConfig();
+            var result = new Dictionary<string, string>();
+            foreach (var d in config.Datastores)
+            {
+                result[d.Id] = d.GetTagName();
+            }
+
+            return result;
         }
 
         public Task Start()

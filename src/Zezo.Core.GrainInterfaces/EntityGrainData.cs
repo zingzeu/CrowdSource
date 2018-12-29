@@ -15,7 +15,7 @@ namespace Zezo.Core.GrainInterfaces
         public Guid ProjectKey { get; set; }
 
         public Guid PipelineRoot { get; set; }
-
+        
         public IDictionary<string, Guid> Steps { get; } = new Dictionary<string, Guid>();
     }
 }

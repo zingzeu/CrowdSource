@@ -44,7 +44,18 @@ namespace Zezo.Core.Grains.StepLogic
             var config = container.State.Config as IfNode;
             var conditionConfig = config.Condition;
             var conditionLogic = GetConditionLogic(conditionConfig);
-            if (await conditionLogic.Evaluate())
+            bool result;
+            try
+            {
+                result = await conditionLogic.Evaluate();
+            }
+            catch (Exception)
+            {
+                await container.CompleteSelf(false);
+                throw;
+            }
+            
+            if (result)
             {
                 // activate child
                 if (container.State.ChildCount > 0)
@@ -128,7 +139,6 @@ namespace Zezo.Core.Grains.StepLogic
             }
         }
 
-
         public override Task HandleForceStart()
         {
             throw new NotImplementedException();
@@ -143,7 +153,7 @@ namespace Zezo.Core.Grains.StepLogic
                 case FalseNode falseNode:
                     return new FalseConditionLogic(falseNode);
                 case ScriptConditionNode scriptConditionNode:
-                    return new ScriptConditionLogic(scriptConditionNode);
+                    return new ScriptConditionLogic(scriptConditionNode, container);
                 default:
                     throw new Exception($"Unknown Condition logic type {conditionConfig.GetTagName()}.");
             }

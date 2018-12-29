@@ -73,6 +73,16 @@ namespace Zezo.Core.Grains.Datastores
                     return Task.FromException(new Exception($"Field '{fieldDef.Name}' is not nullable"));
                 }
             }
+
+            // fill in nullable fields
+            foreach (var fieldDef in State.FieldDefs.Where(x => x.Nullable))
+            {
+                if (!State.Values.ContainsKey(fieldDef.Name))
+                {
+                    State.Values[fieldDef.Name] = null;
+                }
+            }
+            
                 
             State.Initialized = true;
 

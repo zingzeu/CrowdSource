@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 using Zezo.Core.Configuration;
+using Zezo.Core.GrainInterfaces;
 
 namespace Zezo.Core.Grains.Tests
 {
@@ -26,7 +27,7 @@ namespace Zezo.Core.Grains.Tests
                                     <![CDATA[
                                         var a = 1+1;
                                         var b = 2;
-                                        return a == b;
+                                        return Datastores[""default""][""ImageFile""] == null;
                                     ]]>
                                 </ScriptCondition>
                             </If.Condition>
@@ -43,6 +44,23 @@ namespace Zezo.Core.Grains.Tests
             ") as ProjectNode;
 
             var e1 = await CreateSingleEntityProject(config);
+            
+            var dummy1 = await GetStepGrainById(e1, "dummy1");
+            var ifNode = await GetStepGrainById(e1, "if1");
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(ifNode, "if1");
+                await observer.ObserverStep(dummy1, "dummy1");
+                
+                Assert.Equal(StepStatus.Inactive, await ifNode.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+            
+                // kick off
+                await e1.Start();
+
+                await observer.WaitUntilStatus("if1", s => s == StepStatus.Completed);
+                Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
+            }
         }
     }
 }

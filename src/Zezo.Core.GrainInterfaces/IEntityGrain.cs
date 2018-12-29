@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Orleans.Concurrency;
 using Zezo.Core.Configuration;
@@ -28,6 +30,9 @@ namespace Zezo.Core.GrainInterfaces
         /// <param name="id"></param>
         /// <returns>The Guid of the StepGrain</returns>
         Task<Guid?> GetStepById(string id);
+
+        [AlwaysInterleave]
+        Task<IDictionary<string, string>> GetDatastores();
 
         Task Start();
     }
