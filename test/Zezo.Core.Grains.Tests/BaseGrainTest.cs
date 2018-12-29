@@ -73,6 +73,21 @@ namespace Zezo.Core.Grains.Tests
         {
             return _parser.ParseXmlString(configStr);
         }
+        
+        /// <summary>
+        /// Create a Project with the given config, and instantiates an Entity
+        /// under that Project.
+        /// </summary>
+        /// <param name="projConfig"></param>
+        /// <returns>The EntityGrain</returns>
+        protected async Task<IEntityGrain> CreateSingleEntityProject(ProjectNode projConfig)
+        {
+            var project = GrainFactory.GetGrain<IProjectGrain>(Guid.NewGuid());
+            await project.LoadConfig(projConfig);
+            var e1K = await project.CreateEntity(1);
+            var e1 = GrainFactory.GetGrain<IEntityGrain>(e1K);
+            return e1;
+        }
     }
 
     internal class TestSiloConfigurator : ISiloBuilderConfigurator

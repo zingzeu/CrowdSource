@@ -153,7 +153,9 @@
     </Project.Pipeline>
     <Project.Datastores>
         <SimpleStore Id="default">
-            <FieldDef Id="ImageFile" Type="String" Nullable="False" />
+            <SimpleStore.Fields>
+                <FieldDef Id="ImageFile" Type="String" Nullable="False" />
+            </SimpleStore.Fields>
         </SimpleStore>
         <JournalStore Id="fields">
             <JournalStore.Fields>

@@ -9,7 +9,7 @@ namespace Zezo.Core.Configuration.Datastore {
     public sealed class FlagsStore : DatastoreNode {
         public new static string TagName { get { return "FlagsStore"; } }
 
-        public FlagsStore(XmlElement xmlElem, IParser parser) {
+        public FlagsStore(XmlElement xmlElem, IParser parser): base(xmlElem, parser) {
             // todo
         }
     }
