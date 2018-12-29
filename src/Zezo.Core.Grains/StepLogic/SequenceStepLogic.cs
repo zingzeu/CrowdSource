@@ -94,17 +94,16 @@ namespace Zezo.Core.Grains.StepLogic
             Logger.LogInformation($"SequenceStep: {seqConfig.Children.Count} children created.");
         }
 
-        public override Task OnActivate()
+        public override async Task OnActivate()
         {
             // Make first child ready.
             if (container.State.ChildCount > 0) {
                 var firstChild = container.State.ChildNodes[0];
-                container.GetStepGrain(firstChild).Activate();
+                await container.GetStepGrain(firstChild).Activate();
             } else {
                 Logger.LogWarning("No children, moving to Completed state");
-                container.CompleteSelf(true);
+                await container.CompleteSelf(true);
             }
-            return Task.CompletedTask;
         }
         public override Task OnPausing()
         {
