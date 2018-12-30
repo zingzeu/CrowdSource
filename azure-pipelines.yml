@@ -20,14 +20,18 @@ variables:
 
 steps:
 - task: DotNetCoreInstaller@0
+  displayName: Install .NET Core
   inputs:
     version: '2.1.401' 
 
 - script: dotnet restore Zezo.sln
+  displayName: Restore Solution
 
 - script: dotnet build Zezo.sln
+  displayName: Build Solution
 
 - task: DotNetCoreCLI@2
+  displayName: Run Unit Tests
   inputs:
     command: test
     projects: 'test/Zezo**Tests/*.csproj'

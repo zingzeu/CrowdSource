@@ -1,4 +1,4 @@
-#define SiloLogging
+//#define SiloLogging
 
 using System;
 using System.Threading.Tasks;
@@ -9,6 +9,7 @@ using Orleans;
 using Orleans.TestingHost;
 using Orleans.Hosting;
 using Polly;
+using Polly.Timeout;
 using Xunit;
 using Xunit.Abstractions;
 using Zezo.Core.Configuration;
@@ -31,12 +32,16 @@ namespace Zezo.Core.Grains.Tests
 
             _testOutputHelper.WriteLine("Starting Test Silo...");
             Policy
-                .Handle<Exception>()
-                .Retry(3, async (_, __) =>
-                {
-                    await Task.Delay(3000);
-                    _testOutputHelper.WriteLine("Retrying...");
-                })
+                .Timeout(60, TimeoutStrategy.Pessimistic, (_,__,___) 
+                    => { _testOutputHelper.WriteLine("***********\n\n Timeout starting TestSilo \n\n***********");})
+                .Wrap(
+                    Policy.Handle<Exception>()
+                    .Retry(3, async (_, __) =>
+                    {
+                        await Task.Delay(3000);
+                        _testOutputHelper.WriteLine("Retrying...");
+                    })
+                )
                 .Execute(() =>
                 {
                     var builder = new TestClusterBuilder();
@@ -51,14 +56,17 @@ namespace Zezo.Core.Grains.Tests
         {
             _testOutputHelper.WriteLine("Stopping Test Silo...");
             Policy
-                .Handle<Exception>()
-                .Retry(3, async (_, __) =>
-                {
-                    await Task.Delay(3000);
-                    _testOutputHelper.WriteLine("Retrying...");
-                })
+                .Timeout(60, TimeoutStrategy.Pessimistic, (_,__,___) 
+                    => { _testOutputHelper.WriteLine("***********\n\n Timeout stopping TestSilo \n\n***********");})
+                .Wrap(
+                    Policy.Handle<Exception>()
+                    .Retry(3, async (_, __) =>
+                    {
+                        await Task.Delay(3000);
+                        _testOutputHelper.WriteLine("Retrying...");
+                    })
+                )
                 .Execute(() => { cluster.StopAllSilos(); });
-
         }
         
         protected async Task<IStepGrain> GetStepGrainById(IEntityGrain entityGrain, string id)

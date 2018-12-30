@@ -6,11 +6,10 @@ using Zezo.Core.GrainInterfaces;
 
 namespace Zezo.Core.Grains.Tests
 {
+    [Collection("Default")] // All tests in the same collection, prevents parallel runs
     public class DatastoreTest : BaseGrainTest
     {
-        public DatastoreTest(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
-        {
-        }
+        public DatastoreTest(ITestOutputHelper testOutputHelper) : base(testOutputHelper) {}
 
         [Fact]
         public async Task Can_Create_Entity_with_Datastore()
@@ -42,11 +41,12 @@ namespace Zezo.Core.Grains.Tests
                     </Project.Datastores>
                 </Project>
             ") as ProjectNode;
-
-            var e1 = await CreateSingleEntityProject(config);
             
+            var e1 = await CreateSingleEntityProject(config);
+
             var dummy1 = await GetStepGrainById(e1, "dummy1");
             var ifNode = await GetStepGrainById(e1, "if1");
+
             using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
             {
                 await observer.ObserverStep(ifNode, "if1");
@@ -54,7 +54,7 @@ namespace Zezo.Core.Grains.Tests
                 
                 Assert.Equal(StepStatus.Inactive, await ifNode.GetStatus());
                 Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
-            
+
                 // kick off
                 await e1.Start();
 

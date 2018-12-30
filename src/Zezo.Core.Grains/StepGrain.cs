@@ -173,7 +173,7 @@ namespace Zezo.Core.Grains
                 await ChangeStatus(StepStatus.ActiveIdle);
                 await logic.OnActivate();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 logger.LogError("Error during OnActivate: {e}");
                 // don't set state to Error (for now) to allow retry
@@ -195,7 +195,7 @@ namespace Zezo.Core.Grains
                     await ChangeStatus(s => s == StepStatus.Working
                         ? StepStatus.Working : StepStatus.ActiveIdle);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     logger.LogError(("Error during OnResume: {e}"));
                     await ChangeStatus(StepStatus.Error);
@@ -281,7 +281,11 @@ namespace Zezo.Core.Grains
 
         public IStepGrain GetStepGrain(Guid key)
         {
-            return GrainFactory.GetGrain<IStepGrain>(key);
+            if (_grainFactory == null)
+            {
+                _grainFactory = GrainFactory;
+            }
+            return _grainFactory.GetGrain<IStepGrain>(key);
         }
 
         

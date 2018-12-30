@@ -12,12 +12,10 @@ namespace Zezo.Core.Grains.StepLogic.Condition
 {
     public class ScriptConditionLogic : IConditionLogic
     {
-        private readonly IContainer _container;
         private readonly string _code;
 
-        public ScriptConditionLogic(ScriptConditionNode config, IContainer container)
+        public ScriptConditionLogic(ScriptConditionNode config)
         {
-            _container = container;
             _code = config.InlineSource;
         }
 
@@ -26,7 +24,7 @@ namespace Zezo.Core.Grains.StepLogic.Condition
             public DatastoreRegistry Datastores;
         }
         
-        public async Task<bool> Evaluate()
+        public async Task<bool> Evaluate(DatastoreRegistry registry)
         {
             try
             {
@@ -40,7 +38,7 @@ namespace Zezo.Core.Grains.StepLogic.Condition
                 
                 bool result = (await script.RunAsync(new Globals()
                 {
-                    Datastores = await _container.GetDatastoreRegistry()
+                    Datastores = registry
                 })).ReturnValue;
                 return result;
             }
