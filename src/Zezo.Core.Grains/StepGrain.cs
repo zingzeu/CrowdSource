@@ -281,7 +281,11 @@ namespace Zezo.Core.Grains
 
         public IStepGrain GetStepGrain(Guid key)
         {
-            return GrainFactory.GetGrain<IStepGrain>(key);
+            if (_grainFactory == null)
+            {
+                _grainFactory = GrainFactory;
+            }
+            return _grainFactory.GetGrain<IStepGrain>(key);
         }
 
         

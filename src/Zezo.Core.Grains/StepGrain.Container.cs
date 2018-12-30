@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Orleans;
@@ -10,14 +11,29 @@ using Zezo.Core.Grains.Datastores.Scripting;
 namespace Zezo.Core.Grains
 {
     public partial class StepGrain : IContainer
-    {        
+    {
+        /// <summary>
+        /// Private copy of GrainFactory. Avoids calling Orleans Runtime on non-Orleans threads.
+        /// </summary>
+        private IGrainFactory _grainFactory = null;
         public ILogger Logger => logger;
 
         public StepStatus Status => State?.Status ?? StepStatus.Uninitialized;
 
         StepGrainData IContainer.State => this.State;
 
-        IStepGrain IContainer.SelfReference => GrainFactory.GetGrain<IStepGrain>(SelfKey);
+        private IStepGrain _selfReference = null;
+        IStepGrain IContainer.SelfReference
+        {
+            get
+            {
+                if (_selfReference == null)
+                {
+                    _selfReference = GrainFactory.GetGrain<IStepGrain>(SelfKey);
+                }
+                return _selfReference;
+            }
+        }
 
         public Guid SelfKey => this.GetPrimaryKey();
 

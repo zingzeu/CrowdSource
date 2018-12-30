@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Zezo.Core.Configuration.Steps.Condition;
+using Zezo.Core.Grains.Datastores.Scripting;
 
 namespace Zezo.Core.Grains.StepLogic.Condition
 {
@@ -10,7 +11,7 @@ namespace Zezo.Core.Grains.StepLogic.Condition
             
         }
 
-        public Task<bool> Evaluate()
+        public Task<bool> Evaluate(DatastoreRegistry registry)
         {
             return Task.FromResult(false);
         }
