@@ -58,10 +58,11 @@ namespace Zezo.Core.Grains.StepLogic
                     // TODO: pass some kind of Context object to Evaluate()
                     result = await conditionLogic.Evaluate(datastoreRegistry);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     await selfReference._Call("CompleteSelf", false);
-                    throw;
+                    Logger.LogError($"Error during Evaluate: {e}");
+                    return;
                 }
             
                 if (result)

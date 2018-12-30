@@ -1,4 +1,4 @@
-//#define SiloLogging
+#define SiloLogging
 
 using System;
 using System.Threading.Tasks;
