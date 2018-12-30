@@ -1,8 +1,4 @@
-using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
-using Polly;
-using Polly.Timeout;
 using Xunit;
 using Xunit.Abstractions;
 using Zezo.Core.Configuration;
@@ -13,18 +9,10 @@ namespace Zezo.Core.Grains.Tests
     [Collection("Default")] // All tests in the same collection, prevents parallel runs
     public class DatastoreTest : BaseGrainTest
     {
-        public DatastoreTest(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
-        {
-        }
+        public DatastoreTest(ITestOutputHelper testOutputHelper) : base(testOutputHelper) {}
 
         [Fact]
-        public Task Can_Create_Entity_with_Datastore()
-        {
-            return Policy.TimeoutAsync(60, TimeoutStrategy.Pessimistic)
-                .ExecuteAsync(DO_Can_Create_Entity_with_Datastore);
-        }
-        
-        private async Task DO_Can_Create_Entity_with_Datastore()
+        public async Task Can_Create_Entity_with_Datastore()
         {
             var config = ParseConfig(@"
                 <Project Id=""test"">
