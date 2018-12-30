@@ -10,6 +10,7 @@ using Zezo.Core.GrainInterfaces;
 
 namespace Zezo.Core.Grains.Tests
 {
+    [Collection("Default")] // All tests in the same collection, prevents parallel runs
     public class DatastoreTest : BaseGrainTest
     {
         public DatastoreTest(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
