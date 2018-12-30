@@ -1,7 +1,7 @@
 using System;
 using Xunit;
 using Zezo.Core.Configuration.Steps;
-using static Zezo.Core.Configuration.Steps.IfNode;
+using Zezo.Core.Configuration.Steps.Condition;
 
 namespace Zezo.Core.Configuration.Tests
 {

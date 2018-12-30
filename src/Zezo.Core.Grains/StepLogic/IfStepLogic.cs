@@ -44,29 +44,49 @@ namespace Zezo.Core.Grains.StepLogic
             var config = container.State.Config as IfNode;
             var conditionConfig = config.Condition;
             var conditionLogic = GetConditionLogic(conditionConfig);
-            if (await conditionLogic.Evaluate())
+            var selfReference = container.SelfReference;
+            var hasChild = container.State.ChildCount > 0;
+            var firstAndOnlyChild = hasChild ? container.GetStepGrain(container.State.ChildNodes[0]) : null;
+            var datastoreRegistry = await container.GetDatastoreRegistry();
+            bool result;
+            // Because the Evaluation of Condition logic can take a while (if it is a script)
+            // we let it run on the .NET thread pool instead of Orleans threads.
+            _ = Task.Run(async () =>
             {
-                // activate child
-                if (container.State.ChildCount > 0)
+                try
                 {
-                    var firstAndOnlyChild = container.GetStepGrain(container.State.ChildNodes[0]);
-                    _ = firstAndOnlyChild.Activate();
+                    // TODO: pass some kind of Context object to Evaluate()
+                    result = await conditionLogic.Evaluate(datastoreRegistry);
+                }
+                catch (Exception e)
+                {
+                    await selfReference._Call("CompleteSelf", false);
+                    Logger.LogError($"Error during Evaluate: {e}");
+                    return;
+                }
+            
+                if (result)
+                {
+                    // activate child
+                    if (hasChild)
+                    {
+                        _ = firstAndOnlyChild?.Activate();
+                    }
+                    else
+                    {
+                        await selfReference._Call("CompleteSelf", true);
+                    }
                 }
                 else
                 {
-                    await container.CompleteSelf(true);
+                    if (hasChild)
+                    {
+                        await (firstAndOnlyChild?.Stop() ?? Task.CompletedTask);
+                    }
+                    // skip child
+                    await selfReference._Call("CompleteSelf", true);
                 }
-            }
-            else
-            {
-                if (container.State.ChildCount > 0)
-                {
-                    var firstAndOnlyChild = container.GetStepGrain(container.State.ChildNodes[0]);
-                    await firstAndOnlyChild.Stop();
-                }
-                // skip child
-                await container.CompleteSelf(true);
-            }
+            });
         }
 
         public override async Task OnPausing()
@@ -128,10 +148,24 @@ namespace Zezo.Core.Grains.StepLogic
             }
         }
 
-
         public override Task HandleForceStart()
         {
             throw new NotImplementedException();
+        }
+        
+        public override Task _Call(string action, params object[] parameters)
+        {
+            switch (action)
+            {
+                case "MarkSelfBusy":
+                    return container.MarkSelfBusy();
+                case "MarkSelfIdle":
+                    return container.MarkSelfIdle();
+                case "CompleteSelf":
+                    return container.CompleteSelf((bool)parameters[0]);
+                default:
+                    return Task.CompletedTask;
+            }
         }
         
         private IConditionLogic GetConditionLogic(ConditionNode conditionConfig)
@@ -142,8 +176,10 @@ namespace Zezo.Core.Grains.StepLogic
                     return new TrueConditionLogic(trueNode);
                 case FalseNode falseNode:
                     return new FalseConditionLogic(falseNode);
+                case ScriptConditionNode scriptConditionNode:
+                    return new ScriptConditionLogic(scriptConditionNode);
                 default:
-                    throw new Exception($"Unknown Condition logic type.");
+                    throw new Exception($"Unknown Condition logic type {conditionConfig.GetTagName()}.");
             }
         }
     }

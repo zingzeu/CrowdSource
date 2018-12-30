@@ -19,14 +19,6 @@ namespace Zezo.Core.Configuration.Steps {
             Condition = xmlElem.GetComplexSingleAttribute<ConditionNode>("Condition", parser);
         }
 
-        public sealed class ScriptConditionNode : ConditionNode {
-            public new static string TagName { get { return "ScriptCondition"; } }
-            public string InlineSource { get; private set; }
-
-            public ScriptConditionNode(XmlElement xmlElem, IParser parser) {
-                InlineSource = xmlElem.InnerText;
-            }
-        }
     }
 
 }

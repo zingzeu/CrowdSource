@@ -26,7 +26,13 @@ namespace Zezo.Core.Grains
             var newEntity = GrainFactory.GetGrain<IEntityGrain>(newEntityKey);
             await newEntity.Init(this.GetPrimaryKey(), State.Config);
             State.Entities.Add(newEntityKey);
+            await WriteStateAsync();
             return newEntityKey;
+        }
+
+        public Task<ProjectNode> GetConfig()
+        {
+            return Task.FromResult(State.Config);
         }
 
         public Task<IReadOnlyList<Guid>> GetEntities()
@@ -48,7 +54,7 @@ namespace Zezo.Core.Grains
         {
             State.Config = config;
             logger.LogInformation($"Config loaded {config} {config.Id}");
-            return Task.CompletedTask;
+            return WriteStateAsync();
         }
     }
 }

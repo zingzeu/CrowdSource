@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Orleans;
 using Zezo.Core.Configuration.Steps;
 using Zezo.Core.GrainInterfaces;
+using Zezo.Core.Grains.Datastores.Scripting;
 
 namespace Zezo.Core.Grains {
     /// <summary>
@@ -38,5 +39,8 @@ namespace Zezo.Core.Grains {
         /// <param name="childConfig">The configuration for the new Step.</param>
         /// <returns>The Guid of the newly created StepGrain.</returns>
         Task<Guid> SpawnStep(StepNode childConfig);
+        
+        // Datastore access
+        Task<DatastoreRegistry> GetDatastoreRegistry();
     }
 }

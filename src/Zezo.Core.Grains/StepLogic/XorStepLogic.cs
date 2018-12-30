@@ -33,19 +33,18 @@ namespace Zezo.Core.Grains.StepLogic
 
         }
 
-        public override Task OnActivate()
+        public override async Task OnActivate()
         {
             // Make all children ready.
             if (container.State.ChildCount > 0) {
                 foreach (var child in container.State.ChildNodes)
                 {
-                    _ = container.GetStepGrain(child).Activate();
+                    await container.GetStepGrain(child).Activate();
                 }
             } else {
                 Logger.LogWarning("No children, moving to Completed state");
-                container.CompleteSelf(true);
+                await container.CompleteSelf(true);
             }
-            return Task.CompletedTask;
         }
 
         public override Task OnPausing()

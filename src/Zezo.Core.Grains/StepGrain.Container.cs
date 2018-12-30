@@ -1,21 +1,39 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Orleans;
 using Zezo.Core.Configuration.Steps;
 using Zezo.Core.GrainInterfaces;
+using Zezo.Core.GrainInterfaces.Datastores;
+using Zezo.Core.Grains.Datastores.Scripting;
 
 namespace Zezo.Core.Grains
 {
     public partial class StepGrain : IContainer
-    {        
+    {
+        /// <summary>
+        /// Private copy of GrainFactory. Avoids calling Orleans Runtime on non-Orleans threads.
+        /// </summary>
+        private IGrainFactory _grainFactory = null;
         public ILogger Logger => logger;
 
         public StepStatus Status => State?.Status ?? StepStatus.Uninitialized;
 
         StepGrainData IContainer.State => this.State;
 
-        IStepGrain IContainer.SelfReference => GrainFactory.GetGrain<IStepGrain>(SelfKey);
+        private IStepGrain _selfReference = null;
+        IStepGrain IContainer.SelfReference
+        {
+            get
+            {
+                if (_selfReference == null)
+                {
+                    _selfReference = GrainFactory.GetGrain<IStepGrain>(SelfKey);
+                }
+                return _selfReference;
+            }
+        }
 
         public Guid SelfKey => this.GetPrimaryKey();
 
@@ -75,6 +93,29 @@ namespace Zezo.Core.Grains
             var entityGrain = GetEntityGrain();
             return entityGrain.SpawnChild(childConfig, SelfKey);
             
+        }
+
+        public async Task<DatastoreRegistry> GetDatastoreRegistry()
+        {
+            var dataStores = await GetEntityGrain().GetDatastores();
+            var registryBuilder = new DatastoreRegistry.Builder();
+            foreach (var pair in dataStores)
+            {
+                var id = pair.Key;
+                var type = pair.Value;
+                switch (type)
+                {
+                    case "SimpleStore":
+                        var grain = GrainFactory.GetGrain<ISimpleStoreGrain>(State.Entity, id, null);
+                        var proxy = await grain.GetProxy();
+                        registryBuilder.AddDatastoreProxy(id, proxy);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            return registryBuilder.Build();
         }
 
         public IEntityGrain GetEntityGrain()

@@ -17,7 +17,7 @@ namespace Zezo.Core.Grains.Tests
         private readonly IGrainFactory _grainFactory;
         private readonly ITestOutputHelper _testOutputHelper;
         private IStepGrainObserver selfReference = null;
-        public TimeSpan WaitingTimeout { get; set; } = TimeSpan.FromSeconds(30);
+        public TimeSpan WaitingTimeout { get; set; } = TimeSpan.FromSeconds(60);
 
         private Task<IStepGrainObserver> SelfReference
         {
@@ -41,10 +41,10 @@ namespace Zezo.Core.Grains.Tests
 
         private int counter = -1;
 
-        private Dictionary<string, IStepGrain> idToGrainMapping = new Dictionary<string, IStepGrain>();
-        private Dictionary<Guid, string> guidToIdMapping = new Dictionary<Guid, string>();
-        private Dictionary<string, List<(StepStatus, int)>> statusHistory 
-            = new Dictionary<string, List<(StepStatus, int)>>();
+        private IDictionary<string, IStepGrain> idToGrainMapping = new ConcurrentDictionary<string, IStepGrain>();
+        private IDictionary<Guid, string> guidToIdMapping = new ConcurrentDictionary<Guid, string>();
+        private IDictionary<string, ConcurrentBag<(StepStatus, int)>> statusHistory 
+            = new ConcurrentDictionary<string, ConcurrentBag<(StepStatus, int)>>();
         private ConcurrentDictionary<string, ConcurrentBag<(Func<StepStatus, bool>, TaskCompletionSource<object>)>>
             awaitingTasks 
                 = new ConcurrentDictionary<string, ConcurrentBag<(Func<StepStatus, bool>, TaskCompletionSource<object>)>>();
@@ -75,7 +75,7 @@ namespace Zezo.Core.Grains.Tests
             Assert.NotNull(stepId);
             if (!statusHistory.ContainsKey(stepId))
             {
-                statusHistory[stepId] = new List<(StepStatus, int)>(); 
+                statusHistory[stepId] = new ConcurrentBag<(StepStatus, int)>();
             }
             statusHistory[stepId].Add((newStatus, counter));
             _testOutputHelper
@@ -109,7 +109,6 @@ namespace Zezo.Core.Grains.Tests
                 }
             }
 
-            
             // if already waiting
             TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
             awaitingTasks[stepId].Add((predicate, tcs));            

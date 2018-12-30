@@ -131,8 +131,8 @@ namespace Zezo.Core.Grains.Tests
                     <Project.Pipeline>
                         <Parallel Id=""par"">
                             <Parallel.Children>
-                                <DummyStep Id=""dummy1"" BeforeStart=""100ms"" Working=""1000ms"" />
-                                <DummyStep Id=""dummy2"" BeforeStart=""100ms"" Working=""1000ms"" />
+                                <DummyStep Id=""dummy1"" BeforeStart=""1000ms"" Working=""1000ms"" />
+                                <DummyStep Id=""dummy2"" BeforeStart=""1000ms"" Working=""1000ms"" />
                             </Parallel.Children>
                         </Parallel>
                     </Project.Pipeline>
@@ -157,7 +157,10 @@ namespace Zezo.Core.Grains.Tests
 
                 await entity.Start();
 
-                await observer.WaitUntilStatus("dummy1", s => s == StepStatus.Working);
+                await Task.WhenAll(
+                    observer.WaitUntilStatus("dummy1", s => s == StepStatus.Working),
+                    observer.WaitUntilStatus("dummy2", s => s == StepStatus.Working)
+                );
                 
                 observer.Observed()
                     .StartsWith("par", s => s == StepStatus.ActiveIdle)
@@ -168,7 +171,7 @@ namespace Zezo.Core.Grains.Tests
                 observer.Observed()
                     .StartsWith("par", s => s == StepStatus.ActiveIdle)
                     .LaterOn("dummy2", s => s == StepStatus.ActiveIdle)
-                    .LaterOn("dummy1", s => s == StepStatus.Working)
+                    .LaterOn("dummy2", s => s == StepStatus.Working)
                     .Validate();
 
                 await observer.WaitUntilStatus("par", s => s == StepStatus.Completed);
@@ -177,7 +180,6 @@ namespace Zezo.Core.Grains.Tests
                 Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
                 Assert.Equal(StepStatus.Completed, await dummy2.GetStatus());
             }
-            
         }
 
         [Fact]
@@ -261,6 +263,92 @@ namespace Zezo.Core.Grains.Tests
             }
         }
         
+        [Fact]
+        public async Task Basic_If_ScriptCondition_True_Test()
+        {
+            var config = ParseConfig(@"
+                <Project Id=""test"">
+                    <Project.Pipeline>
+                        <If Id=""if1"">
+                            <If.Child>
+                                <DummyStep Id=""dummy1"" BeforeStart=""10ms"" Working=""1000ms"" />
+                            </If.Child>
+                            <If.Condition>
+                                <ScriptCondition Language=""csharp"">
+                                    <![CDATA[
+                                        var a = 1+1;
+                                        var b = 2;
+                                        return a == b;
+                                    ]]>
+                                </ScriptCondition>
+                            </If.Condition>
+                        </If>
+                    </Project.Pipeline>
+                </Project>
+            ") as ProjectNode;
+
+            var e1 = await CreateSingleEntityProject(config);
+            var dummy1 = await GetStepGrainById(e1, "dummy1");
+            var ifNode = await GetStepGrainById(e1, "if1");
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(ifNode, "if1");
+                await observer.ObserverStep(dummy1, "dummy1");
+                
+                Assert.Equal(StepStatus.Inactive, await ifNode.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+            
+                // kick off
+                await e1.Start();
+
+                await observer.WaitUntilStatus("if1", s => s == StepStatus.Completed);
+                Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
+            }
+        }
+
+        [Fact]
+        public async Task Basic_If_ScriptCondition_False_Test()
+        {
+            var config = ParseConfig(@"
+                <Project Id=""test"">
+                    <Project.Pipeline>
+                        <If Id=""if1"">
+                            <If.Child>
+                                <DummyStep Id=""dummy1"" BeforeStart=""10ms"" Working=""1000ms"" />
+                            </If.Child>
+                            <If.Condition>
+                                <ScriptCondition Language=""csharp"">
+                                    <![CDATA[
+                                        var a = 1+1;
+                                        var b = 2;
+                                        return a != b;
+                                    ]]>
+                                </ScriptCondition>
+                            </If.Condition>
+                        </If>
+                    </Project.Pipeline>
+                </Project>
+            ") as ProjectNode;
+
+            var e1 = await CreateSingleEntityProject(config);
+            var dummy1 = await GetStepGrainById(e1, "dummy1");
+            var ifNode = await GetStepGrainById(e1, "if1");
+            using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
+            {
+                await observer.ObserverStep(ifNode, "if1");
+                await observer.ObserverStep(dummy1, "dummy1");
+                
+                Assert.Equal(StepStatus.Inactive, await ifNode.GetStatus());
+                Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
+            
+                // kick off
+                await e1.Start();
+
+                await observer.WaitUntilStatus("if1", s => s == StepStatus.Completed);
+                Assert.Equal(StepStatus.Skipped, await dummy1.GetStatus());
+            }
+        }
+
         
         [Fact]
         public async Task Basic_Xor_Test()
@@ -354,22 +442,6 @@ namespace Zezo.Core.Grains.Tests
 
                 await observer.WaitUntilStatus("xor1", s => s == StepStatus.Completed);
             }
-        }
-        
-        
-        /// <summary>
-        /// Create a Project with the given config, and instantiates an Entity
-        /// under that Project.
-        /// </summary>
-        /// <param name="projConfig"></param>
-        /// <returns>The EntityGrain</returns>
-        protected async Task<IEntityGrain> CreateSingleEntityProject(ProjectNode projConfig)
-        {
-            var project = GrainFactory.GetGrain<IProjectGrain>(Guid.NewGuid());
-            await project.LoadConfig(projConfig);
-            var e1K = await project.CreateEntity(1);
-            var e1 = GrainFactory.GetGrain<IEntityGrain>(e1K);
-            return e1;
         }
         
     }
