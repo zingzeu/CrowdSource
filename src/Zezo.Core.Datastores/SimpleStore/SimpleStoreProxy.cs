@@ -89,8 +89,7 @@ namespace Zezo.Core.Datastores.SimpleStore
             this.fields = new List<FieldDef>(fields);
             this.fieldInitialValues = new ReadOnlyDictionary<string, object>(fieldInitialValues);
         }
-        
-        
+
     }
 
 }
