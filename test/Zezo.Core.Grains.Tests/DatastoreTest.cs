@@ -54,13 +54,10 @@ namespace Zezo.Core.Grains.Tests
                 </Project>
             ") as ProjectNode;
             
-            _testOutputHelper.WriteLine("=xx============= TEST BEGIN. CREATING ENTITY ");
             var e1 = await CreateSingleEntityProject(config);
-            _testOutputHelper.WriteLine("=xx============= CREATED ENTITY ");
 
             var dummy1 = await GetStepGrainById(e1, "dummy1");
             var ifNode = await GetStepGrainById(e1, "if1");
-            _testOutputHelper.WriteLine("=xx============= GOT STEPS ");
 
             using (var observer = new TestObserver(_testOutputHelper, GrainFactory))
             {
@@ -69,12 +66,9 @@ namespace Zezo.Core.Grains.Tests
                 
                 Assert.Equal(StepStatus.Inactive, await ifNode.GetStatus());
                 Assert.Equal(StepStatus.Inactive, await dummy1.GetStatus());
-                _testOutputHelper.WriteLine("=xx============= BEFORE KICK OFF ");
 
                 // kick off
                 await e1.Start();
-                _testOutputHelper.WriteLine("=xx============= AFTER KICK OFF ");
-
 
                 await observer.WaitUntilStatus("if1", s => s == StepStatus.Completed);
                 Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
