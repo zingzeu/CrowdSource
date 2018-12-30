@@ -156,8 +156,11 @@ namespace Zezo.Core.Grains.Tests
                 Assert.Equal(StepStatus.Inactive, await dummy2.GetStatus());
 
                 await entity.Start();
-                 
-                await observer.WaitUntilStatus("dummy1", s => s == StepStatus.Working);
+
+                await Task.WhenAll(
+                    observer.WaitUntilStatus("dummy1", s => s == StepStatus.Working),
+                    observer.WaitUntilStatus("dummy2", s => s == StepStatus.Working);
+                );
                 
                 observer.Observed()
                     .StartsWith("par", s => s == StepStatus.ActiveIdle)
@@ -168,7 +171,7 @@ namespace Zezo.Core.Grains.Tests
                 observer.Observed()
                     .StartsWith("par", s => s == StepStatus.ActiveIdle)
                     .LaterOn("dummy2", s => s == StepStatus.ActiveIdle)
-                    .LaterOn("dummy1", s => s == StepStatus.Working)
+                    .LaterOn("dummy2", s => s == StepStatus.Working)
                     .Validate();
 
                 await observer.WaitUntilStatus("par", s => s == StepStatus.Completed);
@@ -177,7 +180,6 @@ namespace Zezo.Core.Grains.Tests
                 Assert.Equal(StepStatus.Completed, await dummy1.GetStatus());
                 Assert.Equal(StepStatus.Completed, await dummy2.GetStatus());
             }
-            
         }
 
         [Fact]
