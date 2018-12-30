@@ -159,7 +159,7 @@ namespace Zezo.Core.Grains.Tests
 
                 await Task.WhenAll(
                     observer.WaitUntilStatus("dummy1", s => s == StepStatus.Working),
-                    observer.WaitUntilStatus("dummy2", s => s == StepStatus.Working);
+                    observer.WaitUntilStatus("dummy2", s => s == StepStatus.Working)
                 );
                 
                 observer.Observed()
