@@ -6,10 +6,7 @@ namespace Zezo.Core.Grains.StepLogic.Condition
 {
     public class TrueConditionLogic : IConditionLogic
     {
-        public TrueConditionLogic(TrueNode node)
-        {
-            
-        }
+        public TrueConditionLogic(TrueNode node) {}
 
         public Task<bool> Evaluate(DatastoreRegistry registry)
         {
