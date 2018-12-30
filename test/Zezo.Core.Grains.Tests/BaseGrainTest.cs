@@ -91,8 +91,11 @@ namespace Zezo.Core.Grains.Tests
         protected async Task<IEntityGrain> CreateSingleEntityProject(ProjectNode projConfig)
         {
             var project = GrainFactory.GetGrain<IProjectGrain>(Guid.NewGuid());
+            _testOutputHelper.WriteLine("=xx============= LOADING PROJ CONFIG");
             await project.LoadConfig(projConfig);
+            _testOutputHelper.WriteLine("=xx============= LOADED PROJ CONFIG");
             var e1K = await project.CreateEntity(1);
+            _testOutputHelper.WriteLine("=xx============= CREATED ENTITY");
             var e1 = GrainFactory.GetGrain<IEntityGrain>(e1K);
             return e1;
         }
