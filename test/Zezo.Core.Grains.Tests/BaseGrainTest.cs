@@ -56,14 +56,17 @@ namespace Zezo.Core.Grains.Tests
         {
             _testOutputHelper.WriteLine("Stopping Test Silo...");
             Policy
-                .Handle<Exception>()
-                .Retry(3, async (_, __) =>
-                {
-                    await Task.Delay(3000);
-                    _testOutputHelper.WriteLine("Retrying...");
-                })
+                .Timeout(60, TimeoutStrategy.Pessimistic, (_,__,___) 
+                    => { _testOutputHelper.WriteLine("***********\n\n Timeout stopping TestSilo \n\n***********");})
+                .Wrap(
+                    Policy.Handle<Exception>()
+                    .Retry(3, async (_, __) =>
+                    {
+                        await Task.Delay(3000);
+                        _testOutputHelper.WriteLine("Retrying...");
+                    })
+                )
                 .Execute(() => { cluster.StopAllSilos(); });
-
         }
         
         protected async Task<IStepGrain> GetStepGrainById(IEntityGrain entityGrain, string id)
