@@ -19,6 +19,13 @@ namespace Zezo.Core.Grains.Tests
 {
     public class BaseGrainTest : IDisposable
     {
+        /**
+         * Whether or not there is a grain test in action.
+         * Used to prevent accidental parallel running.
+         */
+        private static int testsInAction = 0;
+        private static object locker = new object();
+        
         private TestCluster cluster;
         protected readonly ITestOutputHelper _testOutputHelper;
         private readonly IParser _parser = new Parser();
@@ -28,6 +35,19 @@ namespace Zezo.Core.Grains.Tests
 
         protected BaseGrainTest(ITestOutputHelper testOutputHelper)
         {
+            // detect and prevent parallel Grain Tests.
+            lock (locker)
+            {
+                if (testsInAction > 0)
+                {
+                    throw new InvalidOperationException("Unit Tests involving Grains and Silos should not be" +
+                                                        " run in parallel. Did you forget to a [Collection] attribute?");
+                }
+
+                ++testsInAction;
+            }
+            
+            
             _testOutputHelper = testOutputHelper;
 
             _testOutputHelper.WriteLine("Starting Test Silo...");
@@ -67,6 +87,11 @@ namespace Zezo.Core.Grains.Tests
                     })
                 )
                 .Execute(() => { cluster.StopAllSilos(); });
+
+            lock (locker)
+            {
+                testsInAction--;
+            }
         }
         
         protected async Task<IStepGrain> GetStepGrainById(IEntityGrain entityGrain, string id)

@@ -119,7 +119,6 @@ namespace Zezo.Core.Grains.Tests
                 tcs.TrySetException(new TimeoutException());
             });
             
-            
             return tcs.Task;
         }
         
