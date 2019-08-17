@@ -1,4 +1,4 @@
-//#define SiloLogging
+#define SiloLogging
 
 using System;
 using System.Threading.Tasks;
@@ -23,8 +23,8 @@ namespace Zezo.Core.Grains.Tests
          * Whether or not there is a grain test in action.
          * Used to prevent accidental parallel running.
          */
-        private static int testsInAction = 0;
-        private static object locker = new object();
+        private static int _testsInAction = 0;
+        private static readonly object _locker = new object();
         
         private TestCluster cluster;
         protected readonly ITestOutputHelper _testOutputHelper;
@@ -36,15 +36,15 @@ namespace Zezo.Core.Grains.Tests
         protected BaseGrainTest(ITestOutputHelper testOutputHelper)
         {
             // detect and prevent parallel Grain Tests.
-            lock (locker)
+            lock (_locker)
             {
-                if (testsInAction > 0)
+                if (_testsInAction > 0)
                 {
                     throw new InvalidOperationException("Unit Tests involving Grains and Silos should not be" +
                                                         " run in parallel. Did you forget to a [Collection] attribute?");
                 }
 
-                ++testsInAction;
+                ++_testsInAction;
             }
             
             
@@ -88,9 +88,9 @@ namespace Zezo.Core.Grains.Tests
                 )
                 .Execute(() => { cluster.StopAllSilos(); });
 
-            lock (locker)
+            lock (_locker)
             {
-                testsInAction--;
+                _testsInAction--;
             }
         }
         

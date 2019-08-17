@@ -1,0 +1,49 @@
+The assignment data
+	Buc
+	{
+		ImageFile:
+		Buc_Previous
+	}
+	
+		Submission:
+			AssignmentResult {
+				type: "OK"
+				text: 'bang  '
+			}
+			
+			
+Journal DataStore
+	Field 1                    Field 2 <Int>               Field 3 <String>         Field 4 <Bool>        Metadata
+	
+#1   adsd						1							dfdf					True				Time: xxxx Author: yyy Assignment Id=2
+#2   NULL						2							D						False				Time: xxxx Author: yyy Assignment Id=3
+
+Flagging DataStore (Can be cleared)
+	Segmentation Error (x5)
+		User xxx Time xxx
+		User xxx Time xxx
+		User xxx Time xxx
+		User xxx Time xxx
+		User xxx Time xxx
+	Question 
+		User xxx Time xxxx Payload x xxx
+		
+   Operations:
+   	Put(flagType, data, user)
+	Clear(flagType)
+	Count(flagType)
+	
+	
+Declarative Step:
+	Based on data store
+	  spawn child steps
+	 
+	When data changes
+	  respawn child steps
+	  
+	  
+	  
+Scripting
+DataStore
+Interactive (Assignment and Queues)
+REST API
