@@ -41,7 +41,7 @@ $(function() {
         'name': 'Eastern Min',
         'normal': [
             "〇 𠆧 価 𡅏 仱 𣍐 爿",
-            "𠋡 ⿰亻鞋 {empty:5}"
+            "𠋡 ⿰亻鞋 敎 {empty:4}"
         ]
     };
     
