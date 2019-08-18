@@ -7,7 +7,7 @@ Server=127.0.0.1;Port=5432;Database=crowdsource;User Id=<user>;Password=<passwor
 ```
 3. Add Administrator Role to one user
 ```
-dotnet run -- SetUserRole <email> Administrator
+dotnet run CrowdSource.dll SetUserRole <email> Administrator
 ```
 4. SeedDb or import SQL
 5. (Preferably) Set global options
@@ -15,6 +15,16 @@ dotnet run -- SetUserRole <email> Administrator
 
 ## Backup
 
+Run within the Postgres container:
+
 ```
-pg_dump --dbname=crowdsource --username= --password -f <file location>
+pg_dump --dbname=crowdsource --username=cs --password -f <file location>
+```
+
+## Restore backup
+
+Run within the Postgres container:
+
+```
+psql --username=cs crowdsource < backup.sql
 ```

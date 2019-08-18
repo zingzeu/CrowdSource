@@ -1,8 +1,10 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -48,6 +50,14 @@ namespace CrowdSource
             })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+
+            // See https://stackoverflow.com/questions/40575776/asp-net-core-identity-login-status-lost-after-deploy
+            services.AddDataProtection()
+                // This helps surviving a restart: a same app will find back its keys. Just ensure to create the folder.
+                .PersistKeysToFileSystem(new DirectoryInfo("/keys"))
+                // This helps surviving a site update: each app has its own store, building the site creates a new app
+                .SetApplicationName("CrowdSource")
+                .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
 
             services.AddMvc();
             services.AddScoped<IDbConfig, DbConfig>();
