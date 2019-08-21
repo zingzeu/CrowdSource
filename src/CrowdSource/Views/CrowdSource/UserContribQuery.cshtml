@@ -1,0 +1,10 @@
+@{
+    ViewData["Title"] = "查询贡献";
+}
+<h1>查询贡献</h1>
+
+用户Email:
+<form id="queryForm" asp-controller="CrowdSource" asp-action="UserContrib" method="get" role="form" autocomplete="off">
+  <input autofocus tabindex="1" name="userEmail" id="userEmail" />
+  <button type="submit">查询</button>
+</form>

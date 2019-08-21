@@ -1,0 +1,7 @@
+@model UserContribViewModel 
+@{
+    ViewData["Title"] = "查询贡献";
+}
+<h1>@Model.UserNickName 的贡献</h1>
+
+自项目开始以来，@Model.UserEmail (@Model.UserNickName) 一共录入了 @Model.Count 条。

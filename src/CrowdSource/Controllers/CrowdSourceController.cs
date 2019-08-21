@@ -96,6 +96,23 @@ namespace CrowdSource.Controllers
             });
         }
 
+        [Authorize(Roles="Administrator")]
+        [Route("CrowdSource/UserContrib")]
+        public async Task<IActionResult> UserContrib([FromQuery]string userEmail) {
+            if (userEmail != null) {
+                var user = await _context.Users.Where(u => u.Email == userEmail).SingleOrDefaultAsync();
+                if (user == null) {
+                    return View("NoSuchUser");
+                }
+                return View(new UserContribViewModel{
+                    UserEmail = userEmail,
+                    UserNickName = user.NickName,
+                    Count = await _context.Suggestions.Where(s => s.Author.Id == user.Id).CountAsync()
+                });
+            }
+            return View("UserContribQuery");
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitGroup(GroupViewModel data, [FromForm]bool? Admin, [FromForm]bool? Review)
