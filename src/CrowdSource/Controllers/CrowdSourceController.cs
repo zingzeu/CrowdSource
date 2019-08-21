@@ -84,6 +84,18 @@ namespace CrowdSource.Controllers
             return View(await FieldsToGroupViewModel(gid,fields,types));
         }
 
+        [Authorize]
+        [Route("CrowdSource/MyContrib")]
+        public async Task<IActionResult> MyContrib()
+        {
+            var currentUser = await _userMan.GetUserAsync(_httpContext.HttpContext.User);
+            string userId = currentUser.Id;
+            var count = await _context.Suggestions.Where(s => s.Author.Id == userId).CountAsync();
+            return View(new MyContribViewModel {
+                Count = count
+            });
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitGroup(GroupViewModel data, [FromForm]bool? Admin, [FromForm]bool? Review)
